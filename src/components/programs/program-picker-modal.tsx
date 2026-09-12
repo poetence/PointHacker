@@ -42,15 +42,12 @@ export function ProgramPickerModal({
         className="flex items-center gap-2 rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
       >
         {selectedProgram ? (
-          <>
-            <ProgramBadge
-              name={selectedProgram.name}
-              shortName={selectedProgram.shortName}
-              type={selectedProgram.type}
-              size="sm"
-            />
-            <span>{selectedProgram.shortName ?? selectedProgram.name}</span>
-          </>
+          <ProgramBadge
+            name={selectedProgram.name}
+            shortName={selectedProgram.shortName}
+            type={selectedProgram.type}
+            size="sm"
+          />
         ) : (
           "Choose a program"
         )}
@@ -90,12 +87,10 @@ export function ProgramPickerModal({
                     onSelect(program);
                     setIsOpen(false);
                   }}
+                  title={program.name}
                   className="flex flex-col items-center gap-2 rounded-lg p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <ProgramBadge name={program.name} shortName={program.shortName} type={program.type} />
-                  <span className="text-center text-xs text-zinc-600 dark:text-zinc-400">
-                    {program.shortName ?? program.name}
-                  </span>
                 </button>
               ))}
             </div>
