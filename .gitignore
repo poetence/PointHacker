@@ -44,4 +44,3 @@ next-env.d.ts
 # project-specific: case-insensitive filesystems treat this as CLAUDE.md too —
 # see the "Repository gotcha" section in CLAUDE.md
 claude.md
-.gitignore
