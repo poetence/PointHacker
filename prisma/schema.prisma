@@ -1,0 +1,88 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProgramType {
+  BANK_TRANSFERABLE
+  AIRLINE
+  HOTEL
+  CASHBACK
+  OTHER
+}
+
+/// Reference/seed data — a loyalty currency (Amex MR, Delta SkyMiles, Hyatt, ...)
+model RewardsProgram {
+  id                          String      @id @default(cuid())
+  name                        String      @unique
+  shortName                   String?
+  type                        ProgramType
+  defaultRedemptionValueCents Decimal     @db.Decimal(6, 3)
+  notes                       String?
+  isActive                    Boolean     @default(true)
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
+
+  creditCards    CreditCard[]
+  pointsBalances PointsBalance[]
+  transfersFrom  TransferPartner[] @relation("TransferFrom")
+  transfersTo    TransferPartner[] @relation("TransferTo")
+}
+
+/// Reference/seed data — a transfer relationship between two programs
+model TransferPartner {
+  id                             String         @id @default(cuid())
+  fromProgramId                  String
+  fromProgram                    RewardsProgram @relation("TransferFrom", fields: [fromProgramId], references: [id])
+  toProgramId                    String
+  toProgram                      RewardsProgram @relation("TransferTo", fields: [toProgramId], references: [id])
+  ratioFrom                      Int            @default(1)
+  ratioTo                        Int            @default(1)
+  minimumTransfer                Int?
+  transferFeeCents               Int?
+  estimatedRedemptionValueCents  Decimal?       @db.Decimal(6, 3)
+  notes                          String?
+  isActive                       Boolean        @default(true)
+  createdAt                      DateTime       @default(now())
+  updatedAt                      DateTime       @updatedAt
+
+  @@unique([fromProgramId, toProgramId])
+  @@index([fromProgramId])
+}
+
+/// User data — a physical/virtual credit card
+model CreditCard {
+  id               String         @id @default(cuid())
+  userId           String         @default("default-user")
+  issuer           String
+  productName      String
+  nickname         String?
+  rewardsProgramId String
+  rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  annualFeeCents   Int?
+  openedOn         DateTime?
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([rewardsProgramId])
+}
+
+/// User data — pooled balance for one program
+model PointsBalance {
+  id               String         @id @default(cuid())
+  userId           String         @default("default-user")
+  rewardsProgramId String
+  rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  balance          Int            @default(0)
+  lastUpdatedAt    DateTime       @default(now())
+  notes            String?
+
+  @@unique([userId, rewardsProgramId])
+}
