@@ -69,7 +69,7 @@ export async function getTopRedemptionOptionsForBalances(
   return result;
 }
 
-function toRedemptionProgram(program: {
+export function toRedemptionProgram(program: {
   id: string;
   name: string;
   defaultRedemptionValueCents: { toNumber(): number };
@@ -81,7 +81,7 @@ function toRedemptionProgram(program: {
   };
 }
 
-function toTransferPartnerOption(partner: {
+export function toTransferPartnerOption(partner: {
   toProgram: {
     id: string;
     name: string;
