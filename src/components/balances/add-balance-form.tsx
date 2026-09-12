@@ -2,12 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ProgramPickerModal, type PickableProgram } from "@/components/programs/program-picker-modal";
+import { sortProgramsByPriority } from "@/lib/program-priority";
 
-type Program = { id: string; name: string; shortName: string | null };
-
-export function AddBalanceForm({ programs }: { programs: Program[] }) {
+export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   const router = useRouter();
-  const [rewardsProgramId, setRewardsProgramId] = useState(programs[0]?.id ?? "");
+  const orderedPrograms = sortProgramsByPriority(programs);
+  const [selectedProgram, setSelectedProgram] = useState<PickableProgram | null>(
+    orderedPrograms[0] ?? null
+  );
   const [balance, setBalance] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,12 +26,18 @@ export function AddBalanceForm({ programs }: { programs: Program[] }) {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!selectedProgram) {
+      setError("Choose a program first.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const response = await fetch("/api/balances", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rewardsProgramId, balance: Number(balance) }),
+      body: JSON.stringify({ rewardsProgramId: selectedProgram.id, balance: Number(balance) }),
     });
 
     setIsSubmitting(false);
@@ -45,20 +54,14 @@ export function AddBalanceForm({ programs }: { programs: Program[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-sm">
+      <div className="flex flex-col gap-1 text-sm">
         Program
-        <select
-          value={rewardsProgramId}
-          onChange={(e) => setRewardsProgramId(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          {programs.map((program) => (
-            <option key={program.id} value={program.id}>
-              {program.shortName ?? program.name}
-            </option>
-          ))}
-        </select>
-      </label>
+        <ProgramPickerModal
+          programs={programs}
+          selectedProgram={selectedProgram}
+          onSelect={setSelectedProgram}
+        />
+      </div>
 
       <label className="flex flex-col gap-1 text-sm">
         Balance

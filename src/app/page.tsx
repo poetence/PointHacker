@@ -24,7 +24,7 @@ export default async function Home() {
   const allPrograms = await prisma.rewardsProgram.findMany({
     where: { isActive: true },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, shortName: true },
+    select: { id: true, name: true, shortName: true, type: true },
   });
 
   const programIdsWithBalance = new Set(balances.map((b) => b.rewardsProgramId));
