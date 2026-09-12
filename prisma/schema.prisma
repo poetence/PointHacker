@@ -16,6 +16,17 @@ enum ProgramType {
   OTHER
 }
 
+enum Region {
+  NORTH_AMERICA
+  SOUTH_AMERICA
+  EUROPE
+  ASIA
+  AFRICA
+  OCEANIA
+  MIDDLE_EAST
+  CARIBBEAN
+}
+
 /// Reference/seed data — a loyalty currency (Amex MR, Delta SkyMiles, Hyatt, ...)
 model RewardsProgram {
   id                          String      @id @default(cuid())
@@ -23,6 +34,7 @@ model RewardsProgram {
   shortName                   String?
   type                        ProgramType
   defaultRedemptionValueCents Decimal     @db.Decimal(6, 3)
+  regions                     Region[]    @default([])
   notes                       String?
   isActive                    Boolean     @default(true)
   createdAt                   DateTime    @default(now())
