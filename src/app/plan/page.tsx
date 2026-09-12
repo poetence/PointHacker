@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { requireSessionUserId } from "@/lib/user";
 import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redemption-options";
 import { formatCents } from "@/lib/format";
 import { ALL_REGIONS, REGION_LABELS, isRegion } from "@/lib/regions";
@@ -67,8 +67,10 @@ export default async function PlanPage({
 }
 
 async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
+  const userId = await requireSessionUserId();
+
   const balances = await prisma.pointsBalance.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId },
     include: { rewardsProgram: true },
   });
 

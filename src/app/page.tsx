@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { requireSessionUserId } from "@/lib/user";
 import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemption-options";
 import { formatCents } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
@@ -11,8 +11,10 @@ import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const userId = await requireSessionUserId();
+
   const balances = await prisma.pointsBalance.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId },
     include: { rewardsProgram: true },
     orderBy: { rewardsProgram: { name: "asc" } },
   });

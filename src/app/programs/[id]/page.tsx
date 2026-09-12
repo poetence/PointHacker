@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { requireSessionUserId } from "@/lib/user";
 import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption-options";
 import { formatCents, formatCentsPerPoint } from "@/lib/format";
 
@@ -11,6 +11,7 @@ export default async function ProgramDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const userId = await requireSessionUserId();
 
   const program = await prisma.rewardsProgram.findUnique({ where: { id } });
   if (!program) {
@@ -18,14 +19,14 @@ export default async function ProgramDetailPage({
   }
 
   const pointsBalance = await prisma.pointsBalance.findUnique({
-    where: { userId_rewardsProgramId: { userId: DEFAULT_USER_ID, rewardsProgramId: id } },
+    where: { userId_rewardsProgramId: { userId, rewardsProgramId: id } },
   });
   const balance = pointsBalance?.balance ?? 0;
 
   const options = await getRedemptionOptionsForProgram(id, balance);
 
   const cards = await prisma.creditCard.findMany({
-    where: { userId: DEFAULT_USER_ID, rewardsProgramId: id },
+    where: { userId, rewardsProgramId: id },
     orderBy: [{ issuer: "asc" }],
   });
 

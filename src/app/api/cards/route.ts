@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { getSessionUserId } from "@/lib/user";
 
 export async function POST(request: NextRequest) {
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const body = await request.json().catch(() => null);
 
   if (!body || typeof body !== "object") {
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   const created = await prisma.creditCard.create({
     data: {
-      userId: DEFAULT_USER_ID,
+      userId,
       issuer,
       productName,
       nickname,

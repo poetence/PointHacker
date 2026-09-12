@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { requireSessionUserId } from "@/lib/user";
 import { formatCents } from "@/lib/format";
 import { AddCardForm } from "@/components/cards/add-card-form";
 import { CardRowActions } from "@/components/cards/card-row-actions";
@@ -10,8 +10,10 @@ import { CardRowActions } from "@/components/cards/card-row-actions";
 export const dynamic = "force-dynamic";
 
 export default async function CardsPage() {
+  const userId = await requireSessionUserId();
+
   const cards = await prisma.creditCard.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId },
     include: { rewardsProgram: true },
     orderBy: [{ issuer: "asc" }, { productName: "asc" }],
   });

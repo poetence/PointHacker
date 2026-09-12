@@ -67,10 +67,62 @@ model TransferPartner {
   @@index([fromProgramId])
 }
 
+/// A person who can sign in
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+}
+
+/// An OAuth account linked to a User
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+/// Required by the Prisma adapter's type surface; unused at runtime since sessions are JWTs
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
 /// User data — a physical/virtual credit card
 model CreditCard {
   id               String         @id @default(cuid())
-  userId           String         @default("default-user")
+  userId           String
   issuer           String
   productName      String
   nickname         String?
@@ -89,7 +141,7 @@ model CreditCard {
 /// User data — pooled balance for one program
 model PointsBalance {
   id               String         @id @default(cuid())
-  userId           String         @default("default-user")
+  userId           String
   rewardsProgramId String
   rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
   balance          Int            @default(0)
