@@ -24,6 +24,11 @@ export default async function ProgramDetailPage({
 
   const options = await getRedemptionOptionsForProgram(id, balance);
 
+  const cards = await prisma.creditCard.findMany({
+    where: { userId: DEFAULT_USER_ID, rewardsProgramId: id },
+    orderBy: [{ issuer: "asc" }],
+  });
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
       <div>
@@ -95,6 +100,29 @@ export default async function ProgramDetailPage({
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Cards earning this program
+        </h2>
+
+        {cards.length === 0 ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No cards tracked for this program yet.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+            {cards.map((card) => (
+              <li key={card.id} className="py-2 text-sm text-zinc-700 dark:text-zinc-300">
+                {card.issuer} {card.productName}
+                {card.nickname && (
+                  <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );
