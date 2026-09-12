@@ -1,0 +1,244 @@
+// Maintained reference dataset for rewards programs and transfer-partner
+// relationships. Loaded by `prisma/seed.ts` via upsert, keyed on program
+// `name` and the (fromProgram, toProgram) pair — safe to edit and re-seed.
+//
+// `defaultRedemptionValueCents` / `estimatedRedemptionValueCents` are ballpark
+// cents-per-point valuations for ranking purposes, not guaranteed cash-out
+// rates. Ratios, minimums, and fees drift with issuer promotions — verify
+// against the issuer/program before relying on a specific number.
+
+export type ReferenceProgramType =
+  | "BANK_TRANSFERABLE"
+  | "AIRLINE"
+  | "HOTEL"
+  | "CASHBACK"
+  | "OTHER";
+
+export type ReferenceProgram = {
+  name: string;
+  shortName?: string;
+  type: ReferenceProgramType;
+  /** Estimated value of one point when redeemed directly, in cents. */
+  defaultRedemptionValueCents: number;
+  notes?: string;
+};
+
+export type ReferenceTransferPartner = {
+  /** `name` of the source RewardsProgram (must appear in referencePrograms). */
+  fromProgram: string;
+  /** `name` of the destination RewardsProgram. */
+  toProgram: string;
+  ratioFrom: number;
+  ratioTo: number;
+  minimumTransfer?: number;
+  transferFeeCents?: number;
+  /** Estimated value of one destination point once transferred, in cents. */
+  estimatedRedemptionValueCents?: number;
+  notes?: string;
+};
+
+export const referencePrograms: ReferenceProgram[] = [
+  // Bank transferable currencies
+  {
+    name: "American Express Membership Rewards",
+    shortName: "Amex MR",
+    type: "BANK_TRANSFERABLE",
+    defaultRedemptionValueCents: 1.0,
+    notes: "~1 cpp via Amex Travel 'Pay with Points'; transfer partners typically higher.",
+  },
+  {
+    name: "Chase Ultimate Rewards",
+    shortName: "Chase UR",
+    type: "BANK_TRANSFERABLE",
+    defaultRedemptionValueCents: 1.0,
+    notes: "1 cpp cash value; up to 1.5 cpp via Chase Travel on premium cards. Transfer partners typically higher.",
+  },
+  {
+    name: "Citi ThankYou Points",
+    shortName: "Citi TYP",
+    type: "BANK_TRANSFERABLE",
+    defaultRedemptionValueCents: 1.0,
+    notes: "1 cpp cash value; transfer partners typically higher.",
+  },
+  {
+    name: "Capital One Miles",
+    shortName: "Cap1 Miles",
+    type: "BANK_TRANSFERABLE",
+    defaultRedemptionValueCents: 1.0,
+    notes: "1 cpp against travel purchases; transfer partners typically higher.",
+  },
+  {
+    name: "Bilt Rewards",
+    shortName: "Bilt",
+    type: "BANK_TRANSFERABLE",
+    defaultRedemptionValueCents: 0.5,
+    notes: "No standard cash-out; ~0.5 cpp via merchandise/rent day redemptions. Real value realized through transfer partners.",
+  },
+
+  // Airlines
+  {
+    name: "Delta SkyMiles",
+    shortName: "Delta",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.2,
+  },
+  {
+    name: "United MileagePlus",
+    shortName: "United",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.3,
+  },
+  {
+    name: "American AAdvantage",
+    shortName: "AA",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.4,
+  },
+  {
+    name: "Southwest Rapid Rewards",
+    shortName: "Southwest",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.3,
+  },
+  {
+    name: "Air France-KLM Flying Blue",
+    shortName: "Flying Blue",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.3,
+  },
+  {
+    name: "Virgin Atlantic Flying Club",
+    shortName: "Virgin Atlantic",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.5,
+    notes: "Strong value on Delta/ANA partner awards booked through Virgin.",
+  },
+  {
+    name: "ANA Mileage Club",
+    shortName: "ANA",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.7,
+    notes: "Distance-based charts; excellent value on Star Alliance business/first.",
+  },
+  {
+    name: "Air Canada Aeroplan",
+    shortName: "Aeroplan",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.5,
+  },
+  {
+    name: "British Airways Avios",
+    shortName: "Avios",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.4,
+    notes: "Distance-based; best on short-haul partner flights.",
+  },
+  {
+    name: "Avianca LifeMiles",
+    shortName: "LifeMiles",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.4,
+  },
+  {
+    name: "JetBlue TrueBlue",
+    shortName: "JetBlue",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.3,
+  },
+  {
+    name: "Emirates Skywards",
+    shortName: "Emirates",
+    type: "AIRLINE",
+    defaultRedemptionValueCents: 1.2,
+  },
+
+  // Hotels
+  {
+    name: "World of Hyatt",
+    shortName: "Hyatt",
+    type: "HOTEL",
+    defaultRedemptionValueCents: 1.7,
+    notes: "Category-based award chart; consistently the strongest hotel program value.",
+  },
+  {
+    name: "Marriott Bonvoy",
+    shortName: "Marriott",
+    type: "HOTEL",
+    defaultRedemptionValueCents: 0.8,
+  },
+  {
+    name: "Hilton Honors",
+    shortName: "Hilton",
+    type: "HOTEL",
+    defaultRedemptionValueCents: 0.5,
+    notes: "Large point currency; low per-point value, high earn rates offset it.",
+  },
+  {
+    name: "IHG One Rewards",
+    shortName: "IHG",
+    type: "HOTEL",
+    defaultRedemptionValueCents: 0.6,
+  },
+  {
+    name: "Choice Privileges",
+    shortName: "Choice",
+    type: "HOTEL",
+    defaultRedemptionValueCents: 0.6,
+  },
+
+  // Cashback (redemption value is fixed by definition)
+  {
+    name: "Discover Cashback Bonus",
+    shortName: "Discover Cash",
+    type: "CASHBACK",
+    defaultRedemptionValueCents: 1.0,
+  },
+];
+
+export const referenceTransferPartners: ReferenceTransferPartner[] = [
+  // American Express Membership Rewards
+  { fromProgram: "American Express Membership Rewards", toProgram: "Delta SkyMiles", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "ANA Mileage Club", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "Virgin Atlantic Flying Club", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "Air Canada Aeroplan", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "Avianca LifeMiles", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "British Airways Avios", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "Marriott Bonvoy", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "American Express Membership Rewards", toProgram: "Hilton Honors", ratioFrom: 1, ratioTo: 2 },
+
+  // Chase Ultimate Rewards
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "United MileagePlus", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "Southwest Rapid Rewards", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "Air France-KLM Flying Blue", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "Virgin Atlantic Flying Club", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "British Airways Avios", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "Air Canada Aeroplan", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "World of Hyatt", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "IHG One Rewards", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Chase Ultimate Rewards", toProgram: "Marriott Bonvoy", ratioFrom: 1, ratioTo: 1 },
+
+  // Citi ThankYou Points
+  { fromProgram: "Citi ThankYou Points", toProgram: "Air France-KLM Flying Blue", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Citi ThankYou Points", toProgram: "Virgin Atlantic Flying Club", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Citi ThankYou Points", toProgram: "Avianca LifeMiles", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Citi ThankYou Points", toProgram: "Emirates Skywards", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Citi ThankYou Points", toProgram: "JetBlue TrueBlue", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Citi ThankYou Points", toProgram: "Choice Privileges", ratioFrom: 1, ratioTo: 1 },
+
+  // Capital One Miles
+  { fromProgram: "Capital One Miles", toProgram: "Air France-KLM Flying Blue", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Capital One Miles", toProgram: "British Airways Avios", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Capital One Miles", toProgram: "Air Canada Aeroplan", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Capital One Miles", toProgram: "Avianca LifeMiles", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Capital One Miles", toProgram: "Emirates Skywards", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Capital One Miles", toProgram: "Virgin Atlantic Flying Club", ratioFrom: 1, ratioTo: 1 },
+
+  // Bilt Rewards
+  { fromProgram: "Bilt Rewards", toProgram: "American AAdvantage", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "United MileagePlus", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "Air France-KLM Flying Blue", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "World of Hyatt", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "Air Canada Aeroplan", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "Virgin Atlantic Flying Club", ratioFrom: 1, ratioTo: 1 },
+  { fromProgram: "Bilt Rewards", toProgram: "Avianca LifeMiles", ratioFrom: 1, ratioTo: 1 },
+];
