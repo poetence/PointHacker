@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { DEFAULT_USER_ID } from "@/lib/user";
+
+async function findOwnedBalance(id: string) {
+  const record = await prisma.pointsBalance.findUnique({ where: { id } });
+  if (!record || record.userId !== DEFAULT_USER_ID) {
+    return null;
+  }
+  return record;
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const existing = await findOwnedBalance(id);
+  if (!existing) {
+    return NextResponse.json({ error: "Balance not found." }, { status: 404 });
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Request body must be a JSON object." }, { status: 400 });
+  }
+
+  const { balance, notes } = body as Record<string, unknown>;
+
+  if (
+    balance !== undefined &&
+    (typeof balance !== "number" || !Number.isFinite(balance) || !Number.isInteger(balance) || balance < 0)
+  ) {
+    return NextResponse.json(
+      { error: "balance must be a non-negative integer." },
+      { status: 400 }
+    );
+  }
+
+  if (notes !== undefined && notes !== null && typeof notes !== "string") {
+    return NextResponse.json({ error: "notes must be a string." }, { status: 400 });
+  }
+
+  const updated = await prisma.pointsBalance.update({
+    where: { id },
+    data: {
+      ...(balance !== undefined && { balance, lastUpdatedAt: new Date() }),
+      ...(notes !== undefined && { notes }),
+    },
+    include: { rewardsProgram: true },
+  });
+
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const existing = await findOwnedBalance(id);
+  if (!existing) {
+    return NextResponse.json({ error: "Balance not found." }, { status: 404 });
+  }
+
+  await prisma.pointsBalance.delete({ where: { id } });
+
+  return new NextResponse(null, { status: 204 });
+}
