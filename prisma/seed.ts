@@ -16,6 +16,7 @@ async function main() {
         shortName: program.shortName,
         type: program.type,
         defaultRedemptionValueCents: program.defaultRedemptionValueCents,
+        regions: program.regions ?? [],
         notes: program.notes,
       },
       create: {
@@ -23,6 +24,7 @@ async function main() {
         shortName: program.shortName,
         type: program.type,
         defaultRedemptionValueCents: program.defaultRedemptionValueCents,
+        regions: program.regions ?? [],
         notes: program.notes,
       },
     });

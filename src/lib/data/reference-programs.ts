@@ -14,12 +14,27 @@ export type ReferenceProgramType =
   | "CASHBACK"
   | "OTHER";
 
+export type ReferenceRegion =
+  | "NORTH_AMERICA"
+  | "SOUTH_AMERICA"
+  | "EUROPE"
+  | "ASIA"
+  | "AFRICA"
+  | "OCEANIA"
+  | "MIDDLE_EAST"
+  | "CARIBBEAN";
+
 export type ReferenceProgram = {
   name: string;
   shortName?: string;
   type: ReferenceProgramType;
   /** Estimated value of one point when redeemed directly, in cents. */
   defaultRedemptionValueCents: number;
+  /**
+   * Coarse regions this program is strong in — only meaningful for AIRLINE/HOTEL
+   * types. A heuristic for "plan a trip" filtering, not a precise award chart.
+   */
+  regions?: ReferenceRegion[];
   notes?: string;
 };
 
@@ -81,30 +96,35 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Delta",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.2,
+    regions: ["NORTH_AMERICA", "EUROPE", "CARIBBEAN"],
   },
   {
     name: "United MileagePlus",
     shortName: "United",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.3,
+    regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "SOUTH_AMERICA"],
   },
   {
     name: "American AAdvantage",
     shortName: "AA",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
+    regions: ["NORTH_AMERICA", "CARIBBEAN", "SOUTH_AMERICA", "EUROPE"],
   },
   {
     name: "Southwest Rapid Rewards",
     shortName: "Southwest",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.3,
+    regions: ["NORTH_AMERICA", "CARIBBEAN"],
   },
   {
     name: "Air France-KLM Flying Blue",
     shortName: "Flying Blue",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.3,
+    regions: ["EUROPE", "AFRICA", "NORTH_AMERICA"],
   },
   {
     name: "Virgin Atlantic Flying Club",
@@ -112,6 +132,7 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.5,
     notes: "Strong value on Delta/ANA partner awards booked through Virgin.",
+    regions: ["EUROPE", "NORTH_AMERICA", "CARIBBEAN"],
   },
   {
     name: "ANA Mileage Club",
@@ -119,12 +140,14 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.7,
     notes: "Distance-based charts; excellent value on Star Alliance business/first.",
+    regions: ["ASIA"],
   },
   {
     name: "Air Canada Aeroplan",
     shortName: "Aeroplan",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.5,
+    regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "CARIBBEAN"],
   },
   {
     name: "British Airways Avios",
@@ -132,24 +155,28 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
     notes: "Distance-based; best on short-haul partner flights.",
+    regions: ["EUROPE", "MIDDLE_EAST", "CARIBBEAN"],
   },
   {
     name: "Avianca LifeMiles",
     shortName: "LifeMiles",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
+    regions: ["SOUTH_AMERICA", "NORTH_AMERICA", "CARIBBEAN"],
   },
   {
     name: "JetBlue TrueBlue",
     shortName: "JetBlue",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.3,
+    regions: ["NORTH_AMERICA", "CARIBBEAN"],
   },
   {
     name: "Emirates Skywards",
     shortName: "Emirates",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.2,
+    regions: ["MIDDLE_EAST", "ASIA", "AFRICA", "OCEANIA"],
   },
 
   // Hotels
@@ -159,12 +186,23 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "HOTEL",
     defaultRedemptionValueCents: 1.7,
     notes: "Category-based award chart; consistently the strongest hotel program value.",
+    regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "CARIBBEAN"],
   },
   {
     name: "Marriott Bonvoy",
     shortName: "Marriott",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.8,
+    regions: [
+      "NORTH_AMERICA",
+      "SOUTH_AMERICA",
+      "EUROPE",
+      "ASIA",
+      "AFRICA",
+      "OCEANIA",
+      "MIDDLE_EAST",
+      "CARIBBEAN",
+    ],
   },
   {
     name: "Hilton Honors",
@@ -172,18 +210,30 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "HOTEL",
     defaultRedemptionValueCents: 0.5,
     notes: "Large point currency; low per-point value, high earn rates offset it.",
+    regions: [
+      "NORTH_AMERICA",
+      "SOUTH_AMERICA",
+      "EUROPE",
+      "ASIA",
+      "AFRICA",
+      "OCEANIA",
+      "MIDDLE_EAST",
+      "CARIBBEAN",
+    ],
   },
   {
     name: "IHG One Rewards",
     shortName: "IHG",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.6,
+    regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "AFRICA", "MIDDLE_EAST", "CARIBBEAN"],
   },
   {
     name: "Choice Privileges",
     shortName: "Choice",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.6,
+    regions: ["NORTH_AMERICA", "EUROPE"],
   },
 
   // Cashback (redemption value is fixed by definition)
