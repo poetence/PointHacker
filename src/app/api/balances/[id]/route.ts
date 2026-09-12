@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_USER_ID } from "@/lib/user";
+import { getSessionUserId } from "@/lib/user";
 
-async function findOwnedBalance(id: string) {
+async function findOwnedBalance(id: string, userId: string) {
   const record = await prisma.pointsBalance.findUnique({ where: { id } });
-  if (!record || record.userId !== DEFAULT_USER_ID) {
+  if (!record || record.userId !== userId) {
     return null;
   }
   return record;
@@ -13,7 +13,12 @@ async function findOwnedBalance(id: string) {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const existing = await findOwnedBalance(id);
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const existing = await findOwnedBalance(id, userId);
   if (!existing) {
     return NextResponse.json({ error: "Balance not found." }, { status: 404 });
   }
@@ -54,7 +59,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const existing = await findOwnedBalance(id);
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const existing = await findOwnedBalance(id, userId);
   if (!existing) {
     return NextResponse.json({ error: "Balance not found." }, { status: 404 });
   }
