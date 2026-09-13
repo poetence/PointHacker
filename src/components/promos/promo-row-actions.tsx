@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export function PromoRowActions({ id }: { id: string }) {
   const router = useRouter();
@@ -15,8 +16,8 @@ export function PromoRowActions({ id }: { id: string }) {
   }
 
   return (
-    <button onClick={handleDelete} className="text-sm text-red-600 dark:text-red-400">
+    <Button size="sm" variant="danger" onClick={handleDelete}>
       Delete
-    </button>
+    </Button>
   );
 }

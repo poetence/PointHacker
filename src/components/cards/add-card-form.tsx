@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Program = { id: string; name: string; shortName: string | null };
 
@@ -60,82 +64,53 @@ export function AddCardForm({ programs }: { programs: Program[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Issuer
-        <input
-          type="text"
-          required
-          value={issuer}
-          onChange={(e) => setIssuer(e.target.value)}
-          className="w-32 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Issuer" className="w-36">
+        <Input type="text" required placeholder="Chase" value={issuer} onChange={(e) => setIssuer(e.target.value)} />
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Card name
-        <input
+      <Field label="Card name" className="w-48">
+        <Input
           type="text"
           required
+          placeholder="Sapphire Preferred"
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
-          className="w-40 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Nickname
-        <input
-          type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          className="w-28 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Nickname" className="w-32">
+        <Input type="text" placeholder="Optional" value={nickname} onChange={(e) => setNickname(e.target.value)} />
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Program
-        <select
-          value={rewardsProgramId}
-          onChange={(e) => setRewardsProgramId(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        >
+      <Field label="Program" className="w-44">
+        <Select value={rewardsProgramId} onChange={(e) => setRewardsProgramId(e.target.value)}>
           {programs.map((program) => (
             <option key={program.id} value={program.id}>
               {program.shortName ?? program.name}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Annual fee ($)
-        <input
+      <Field label="Annual fee" className="w-28">
+        <Input
           type="number"
           min={0}
-          step={0.01}
+          step={1}
+          placeholder="0"
+          prefix="$"
           value={annualFee}
           onChange={(e) => setAnnualFee(e.target.value)}
-          className="w-24 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Opened
-        <input
-          type="date"
-          value={openedOn}
-          onChange={(e) => setOpenedOn(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Opened">
+        <Input type="date" value={openedOn} onChange={(e) => setOpenedOn(e.target.value)} />
+      </Field>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         Add card
-      </button>
+      </Button>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>

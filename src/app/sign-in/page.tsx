@@ -1,5 +1,6 @@
 import { signIn } from "@/lib/auth";
 import { LogoMarkIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
 
 export default function SignInPage() {
   return (
@@ -23,12 +24,9 @@ export default function SignInPage() {
           await signIn("google", { redirectTo: "/" });
         }}
       >
-        <button
-          type="submit"
-          className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Button type="submit" className="px-5">
           Sign in with Google
-        </button>
+        </Button>
       </form>
     </div>
   );

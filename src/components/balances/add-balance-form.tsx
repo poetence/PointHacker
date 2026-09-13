@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProgramPickerModal, type PickableProgram } from "@/components/programs/program-picker-modal";
 import { sortProgramsByPriority } from "@/lib/program-priority";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   const router = useRouter();
@@ -60,8 +63,8 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-      <div className="flex flex-col gap-1 text-sm">
-        Program
+      <div className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-zinc-700 dark:text-zinc-300">Program</span>
         <ProgramPickerModal
           programs={programs}
           selectedProgram={selectedProgram}
@@ -69,36 +72,25 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
         />
       </div>
 
-      <label className="flex flex-col gap-1 text-sm">
-        {selectedProgram?.pointsUnit === "miles" ? "Miles" : "Points"}
-        <input
+      <Field label={selectedProgram?.pointsUnit === "miles" ? "Miles" : "Points"} className="w-36">
+        <Input
           type="number"
           min={0}
           step={1}
           required
+          placeholder="0"
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
-          className="w-32 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Expires on (override)
-        <input
-          type="date"
-          value={expiresOn}
-          onChange={(e) => setExpiresOn(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Expires on (optional)">
+        <Input type="date" value={expiresOn} onChange={(e) => setExpiresOn(e.target.value)} />
+      </Field>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         Add balance
-      </button>
+      </Button>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>

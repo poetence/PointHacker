@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { LogoMarkIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -48,12 +49,9 @@ export async function Nav() {
               await signOut({ redirectTo: "/sign-in" });
             }}
           >
-            <button
-              type="submit"
-              className="text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
-            >
+            <Button size="sm" variant="link" type="submit">
               Sign out
-            </button>
+            </Button>
           </form>
         </div>
       )}

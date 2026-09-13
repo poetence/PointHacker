@@ -8,6 +8,9 @@ import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemption
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { CompassIcon } from "@/components/icons";
+import { Field } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // Balances mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -37,14 +40,9 @@ export default async function PlanPage({
         </div>
       </header>
 
-      <form method="GET" className="flex items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Region
-          <select
-            name="region"
-            defaultValue={region ?? ""}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-          >
+      <form method="GET" className="flex flex-wrap items-end gap-3">
+        <Field label="Region" className="w-56">
+          <Select name="region" defaultValue={region ?? ""}>
             <option value="" disabled>
               Choose a region
             </option>
@@ -53,14 +51,9 @@ export default async function PlanPage({
                 {REGION_LABELS[r]}
               </option>
             ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          Show options
-        </button>
+          </Select>
+        </Field>
+        <Button type="submit">Show options</Button>
       </form>
 
       {region ? (

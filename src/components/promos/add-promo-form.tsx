@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export type PromoPartner = {
   id: string;
@@ -57,13 +61,8 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Transfer
-        <select
-          value={transferPartnerId}
-          onChange={(e) => setTransferPartnerId(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        >
+      <Field label="Transfer" className="w-64">
+        <Select value={transferPartnerId} onChange={(e) => setTransferPartnerId(e.target.value)}>
           {[...groups.entries()].map(([fromName, group]) => (
             <optgroup key={fromName} label={fromName}>
               {group.map((partner) => (
@@ -73,52 +72,34 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
               ))}
             </optgroup>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Bonus %
-        <input
+      <Field label="Bonus" className="w-24">
+        <Input
           type="number"
           min={1}
           max={500}
           step={1}
           required
+          placeholder="30"
+          suffix="%"
           value={bonusPercent}
           onChange={(e) => setBonusPercent(e.target.value)}
-          className="w-20 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Starts
-        <input
-          type="date"
-          required
-          value={startsOn}
-          onChange={(e) => setStartsOn(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Starts">
+        <Input type="date" required value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm">
-        Ends
-        <input
-          type="date"
-          required
-          value={endsOn}
-          onChange={(e) => setEndsOn(e.target.value)}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
+      <Field label="Ends">
+        <Input type="date" required value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
+      </Field>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         Add promo
-      </button>
+      </Button>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>

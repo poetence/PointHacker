@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function CardRowActions({
   id,
@@ -59,49 +61,44 @@ export function CardRowActions({
   if (isEditing) {
     return (
       <form onSubmit={handleSave} className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
+          size="sm"
           type="text"
           placeholder="Nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="w-28 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="w-32"
         />
-        <input
+        <Input
+          size="sm"
           type="number"
           min={0}
-          step={0.01}
-          placeholder="Annual fee"
+          step={1}
+          placeholder="Fee"
+          prefix="$"
           value={annualFee}
           onChange={(e) => setAnnualFee(e.target.value)}
-          className="w-24 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="w-24"
         />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="text-sm font-medium text-zinc-900 underline disabled:opacity-50 dark:text-zinc-100"
-        >
+        <Button size="sm" type="submit" disabled={isSubmitting}>
           Save
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsEditing(false)}
-          className="text-sm text-zinc-500 dark:text-zinc-400"
-        >
+        </Button>
+        <Button size="sm" variant="link" type="button" onClick={() => setIsEditing(false)}>
           Cancel
-        </button>
+        </Button>
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       </form>
     );
   }
 
   return (
-    <div className="flex items-center gap-3 text-sm">
-      <button onClick={() => setIsEditing(true)} className="text-zinc-600 underline dark:text-zinc-400">
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="link" onClick={() => setIsEditing(true)}>
         Edit
-      </button>
-      <button onClick={handleDelete} className="text-red-600 dark:text-red-400">
+      </Button>
+      <Button size="sm" variant="danger" onClick={handleDelete}>
         Delete
-      </button>
+      </Button>
     </div>
   );
 }

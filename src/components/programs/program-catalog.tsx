@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
+import { Input } from "@/components/ui/input";
 
 type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
@@ -38,12 +39,12 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <input
-        type="text"
-        placeholder="Filter by name..."
+      <Input
+        type="search"
+        placeholder="Filter by name…"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="max-w-sm"
       />
 
       {TYPE_GROUPS.map(({ type, label }) => {

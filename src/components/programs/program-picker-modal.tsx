@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { sortProgramsByPriority } from "@/lib/program-priority";
+import { controlClass } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export type PickableProgram = {
   id: string;
@@ -40,7 +42,7 @@ export function ProgramPickerModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className={`${controlClass} flex h-10 items-center gap-2 px-2`}
       >
         {selectedProgram ? (
           <ProgramBadge
@@ -70,13 +72,9 @@ export function ProgramPickerModal({
               <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
                 Choose a program
               </h2>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
-              >
+              <Button size="sm" variant="link" type="button" onClick={() => setIsOpen(false)}>
                 Close
-              </button>
+              </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
