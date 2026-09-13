@@ -35,6 +35,14 @@ export type ReferenceProgram = {
    * types. A heuristic for "plan a trip" filtering, not a precise award chart.
    */
   regions?: ReferenceRegion[];
+  /**
+   * Months of inactivity before points expire, if the program has a rolling
+   * inactivity policy. Omit (or leave undefined) for programs that don't
+   * expire points or have no meaningful inactivity policy — this is a
+   * best-effort estimate like the redemption values above; verify against
+   * the program before relying on it.
+   */
+  pointsExpirationMonths?: number;
   notes?: string;
 };
 
@@ -110,6 +118,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "AA",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
+    pointsExpirationMonths: 24,
     regions: ["NORTH_AMERICA", "CARIBBEAN", "SOUTH_AMERICA", "EUROPE"],
   },
   {
@@ -124,6 +133,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Flying Blue",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.3,
+    pointsExpirationMonths: 24,
     regions: ["EUROPE", "AFRICA", "NORTH_AMERICA"],
   },
   {
@@ -131,6 +141,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Virgin Atlantic",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.5,
+    pointsExpirationMonths: 36,
     notes: "Strong value on Delta/ANA partner awards booked through Virgin.",
     regions: ["EUROPE", "NORTH_AMERICA", "CARIBBEAN"],
   },
@@ -139,6 +150,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "ANA",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.7,
+    pointsExpirationMonths: 36,
     notes: "Distance-based charts; excellent value on Star Alliance business/first.",
     regions: ["ASIA"],
   },
@@ -154,6 +166,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Avios",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
+    pointsExpirationMonths: 24,
     notes: "Distance-based; best on short-haul partner flights.",
     regions: ["EUROPE", "MIDDLE_EAST", "CARIBBEAN"],
   },
@@ -162,6 +175,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "LifeMiles",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.4,
+    pointsExpirationMonths: 12,
     regions: ["SOUTH_AMERICA", "NORTH_AMERICA", "CARIBBEAN"],
   },
   {
@@ -176,6 +190,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Emirates",
     type: "AIRLINE",
     defaultRedemptionValueCents: 1.2,
+    pointsExpirationMonths: 36,
     regions: ["MIDDLE_EAST", "ASIA", "AFRICA", "OCEANIA"],
   },
 
@@ -185,6 +200,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Hyatt",
     type: "HOTEL",
     defaultRedemptionValueCents: 1.7,
+    pointsExpirationMonths: 24,
     notes: "Category-based award chart; consistently the strongest hotel program value.",
     regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "CARIBBEAN"],
   },
@@ -193,6 +209,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Marriott",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.8,
+    pointsExpirationMonths: 24,
     regions: [
       "NORTH_AMERICA",
       "SOUTH_AMERICA",
@@ -226,6 +243,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "IHG",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.6,
+    pointsExpirationMonths: 12,
     regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "AFRICA", "MIDDLE_EAST", "CARIBBEAN"],
   },
   {
@@ -233,6 +251,7 @@ export const referencePrograms: ReferenceProgram[] = [
     shortName: "Choice",
     type: "HOTEL",
     defaultRedemptionValueCents: 0.6,
+    pointsExpirationMonths: 18,
     regions: ["NORTH_AMERICA", "EUROPE"],
   },
 

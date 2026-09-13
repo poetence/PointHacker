@@ -35,6 +35,8 @@ model RewardsProgram {
   type                        ProgramType
   defaultRedemptionValueCents Decimal     @db.Decimal(6, 3)
   regions                     Region[]    @default([])
+  /// Months of inactivity before points expire; null means never expires / no known policy
+  pointsExpirationMonths      Int?
   notes                       String?
   isActive                    Boolean     @default(true)
   createdAt                   DateTime    @default(now())
@@ -48,20 +50,20 @@ model RewardsProgram {
 
 /// Reference/seed data — a transfer relationship between two programs
 model TransferPartner {
-  id                             String         @id @default(cuid())
-  fromProgramId                  String
-  fromProgram                    RewardsProgram @relation("TransferFrom", fields: [fromProgramId], references: [id])
-  toProgramId                    String
-  toProgram                      RewardsProgram @relation("TransferTo", fields: [toProgramId], references: [id])
-  ratioFrom                      Int            @default(1)
-  ratioTo                        Int            @default(1)
-  minimumTransfer                Int?
-  transferFeeCents               Int?
-  estimatedRedemptionValueCents  Decimal?       @db.Decimal(6, 3)
-  notes                          String?
-  isActive                       Boolean        @default(true)
-  createdAt                      DateTime       @default(now())
-  updatedAt                      DateTime       @updatedAt
+  id                            String         @id @default(cuid())
+  fromProgramId                 String
+  fromProgram                   RewardsProgram @relation("TransferFrom", fields: [fromProgramId], references: [id])
+  toProgramId                   String
+  toProgram                     RewardsProgram @relation("TransferTo", fields: [toProgramId], references: [id])
+  ratioFrom                     Int            @default(1)
+  ratioTo                       Int            @default(1)
+  minimumTransfer               Int?
+  transferFeeCents              Int?
+  estimatedRedemptionValueCents Decimal?       @db.Decimal(6, 3)
+  notes                         String?
+  isActive                      Boolean        @default(true)
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
 
   @@unique([fromProgramId, toProgramId])
   @@index([fromProgramId])
@@ -140,13 +142,15 @@ model CreditCard {
 
 /// User data — pooled balance for one program
 model PointsBalance {
-  id               String         @id @default(cuid())
-  userId           String
-  rewardsProgramId String
-  rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
-  balance          Int            @default(0)
-  lastUpdatedAt    DateTime       @default(now())
-  notes            String?
+  id                String         @id @default(cuid())
+  userId            String
+  rewardsProgramId  String
+  rewardsProgram    RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  balance           Int            @default(0)
+  lastUpdatedAt     DateTime       @default(now())
+  /// Manual override for a fixed expiration date, when known, instead of the program's inactivity policy
+  expiresOverrideAt DateTime?
+  notes             String?
 
   @@unique([userId, rewardsProgramId])
 }

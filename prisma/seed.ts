@@ -17,6 +17,7 @@ async function main() {
         type: program.type,
         defaultRedemptionValueCents: program.defaultRedemptionValueCents,
         regions: program.regions ?? [],
+        pointsExpirationMonths: program.pointsExpirationMonths ?? null,
         notes: program.notes,
       },
       create: {
@@ -25,6 +26,7 @@ async function main() {
         type: program.type,
         defaultRedemptionValueCents: program.defaultRedemptionValueCents,
         regions: program.regions ?? [],
+        pointsExpirationMonths: program.pointsExpirationMonths ?? null,
         notes: program.notes,
       },
     });
