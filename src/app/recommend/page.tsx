@@ -8,7 +8,7 @@ import {
 } from "@/lib/recommendations/get-card-recommendations";
 import { effectiveRate } from "@/lib/recommendations/score-cards";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
-import { ProgramBadge } from "@/components/programs/program-badge";
+import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
 
 // No dynamic route segment here, so Next would otherwise try to statically
@@ -74,20 +74,16 @@ export default async function RecommendPage() {
                       index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <ProgramBadge
-                        name={rec.card.program.name}
-                        shortName={rec.card.program.shortName}
-                        type={rec.card.program.type}
-                        size="sm"
-                      />
+                    <div className="flex items-center gap-4">
+                      <CardArt issuer={rec.card.issuer} name={rec.card.name} />
                       <div>
                         <p className="font-medium text-black dark:text-zinc-50">
                           #{index + 1} {rec.card.issuer} {rec.card.name}
                         </p>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                          {Math.round(rec.annualPoints).toLocaleString()} {rec.card.program.pointsUnit}
-                          /yr &middot;{" "}
+                          {Math.round(rec.annualPoints).toLocaleString()}{" "}
+                          {rec.card.program.shortName ?? rec.card.program.name}{" "}
+                          {rec.card.program.pointsUnit}/yr &middot;{" "}
                           {rec.card.annualFeeCents > 0
                             ? `${formatCents(rec.card.annualFeeCents)} fee`
                             : "no annual fee"}

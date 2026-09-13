@@ -17,6 +17,8 @@ export type ReferenceCard = {
   /** Points per dollar on anything not listed in earnRates. */
   baseEarnRate: number;
   earnRates?: EarnRates;
+  /** Drives the generated card-art tile; premium cards get a dark metallic treatment. */
+  tier?: "premium";
   notes?: string;
 };
 
@@ -37,6 +39,7 @@ export const referenceCards: ReferenceCard[] = [
   {
     issuer: "Chase",
     name: "Sapphire Reserve",
+    tier: "premium",
     program: "Chase Ultimate Rewards",
     annualFeeCents: 79500,
     welcomeBonusPoints: 60000,
@@ -107,6 +110,7 @@ export const referenceCards: ReferenceCard[] = [
   {
     issuer: "American Express",
     name: "Platinum Card",
+    tier: "premium",
     program: "American Express Membership Rewards",
     annualFeeCents: 69500,
     welcomeBonusPoints: 80000,
@@ -166,6 +170,7 @@ export const referenceCards: ReferenceCard[] = [
   {
     issuer: "Capital One",
     name: "Venture X",
+    tier: "premium",
     program: "Capital One Miles",
     annualFeeCents: 39500,
     welcomeBonusPoints: 75000,
