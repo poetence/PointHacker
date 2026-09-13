@@ -272,6 +272,24 @@ export const referencePrograms: ReferenceProgram[] = [
     type: "CASHBACK",
     defaultRedemptionValueCents: 1.0,
   },
+  {
+    name: "Amex Blue Cash Reward Dollars",
+    shortName: "Amex Cash",
+    type: "CASHBACK",
+    defaultRedemptionValueCents: 1.0,
+  },
+  {
+    name: "Capital One Cash Back",
+    shortName: "Cap1 Cash",
+    type: "CASHBACK",
+    defaultRedemptionValueCents: 1.0,
+  },
+  {
+    name: "Wells Fargo Rewards",
+    shortName: "WF Rewards",
+    type: "CASHBACK",
+    defaultRedemptionValueCents: 1.0,
+  },
 ];
 
 export const referenceTransferPartners: ReferenceTransferPartner[] = [

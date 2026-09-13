@@ -3,6 +3,7 @@ import {
   referencePrograms,
   referenceTransferPartners,
 } from "../src/lib/data/reference-programs";
+import { referenceCards } from "../src/lib/data/reference-cards";
 
 const prisma = new PrismaClient();
 
@@ -69,8 +70,32 @@ async function main() {
     });
   }
 
+  for (const card of referenceCards) {
+    const rewardsProgramId = programIdByName.get(card.program);
+    if (!rewardsProgramId) {
+      throw new Error(`Unknown program for card ${card.issuer} ${card.name}: ${card.program}`);
+    }
+
+    const data = {
+      rewardsProgramId,
+      annualFeeCents: card.annualFeeCents,
+      welcomeBonusPoints: card.welcomeBonusPoints ?? null,
+      welcomeBonusSpendCents: card.welcomeBonusSpendCents ?? null,
+      welcomeBonusMonths: card.welcomeBonusMonths ?? null,
+      baseEarnRate: card.baseEarnRate,
+      earnRates: card.earnRates ?? {},
+      notes: card.notes,
+    };
+
+    await prisma.cardProduct.upsert({
+      where: { issuer_name: { issuer: card.issuer, name: card.name } },
+      update: data,
+      create: { issuer: card.issuer, name: card.name, ...data },
+    });
+  }
+
   console.log(
-    `Seeded ${referencePrograms.length} programs and ${referenceTransferPartners.length} transfer partners.`
+    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, and ${referenceCards.length} cards.`
   );
 }
 
