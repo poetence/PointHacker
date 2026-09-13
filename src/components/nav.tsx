@@ -8,6 +8,7 @@ const links = [
   { href: "/programs", label: "Catalog" },
   { href: "/plan", label: "Plan a Trip" },
   { href: "/promos", label: "Promos" },
+  { href: "/recommend", label: "Recommend" },
 ];
 
 export async function Nav() {

@@ -46,6 +46,7 @@ model RewardsProgram {
 
   creditCards    CreditCard[]
   pointsBalances PointsBalance[]
+  cardProducts   CardProduct[]
   transfersFrom  TransferPartner[] @relation("TransferFrom")
   transfersTo    TransferPartner[] @relation("TransferTo")
 }
@@ -184,4 +185,44 @@ model BalanceSnapshot {
   recordedAt      DateTime      @default(now())
 
   @@index([pointsBalanceId, recordedAt])
+}
+
+/// Reference/seed data — a credit card product and what it earns
+model CardProduct {
+  id                     String         @id @default(cuid())
+  issuer                 String
+  name                   String
+  rewardsProgramId       String
+  rewardsProgram         RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  annualFeeCents         Int            @default(0)
+  welcomeBonusPoints     Int?
+  welcomeBonusSpendCents Int?
+  welcomeBonusMonths     Int?
+  /// Points per dollar on anything not in earnRates
+  baseEarnRate           Decimal        @db.Decimal(4, 2)
+  /// { DINING: 4, GROCERIES: 4, ... } overrides keyed by SpendCategory
+  earnRates              Json           @default("{}")
+  notes                  String?
+  isActive               Boolean        @default(true)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  @@unique([issuer, name])
+}
+
+/// User data — monthly spend by category + preferences, one per user
+model SpendingProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  diningCents       Int      @default(0)
+  groceriesCents    Int      @default(0)
+  travelCents       Int      @default(0)
+  gasCents          Int      @default(0)
+  transitCents      Int      @default(0)
+  onlineCents       Int      @default(0)
+  otherCents        Int      @default(0)
+  /// "ANY" | "TRAVEL" | "CASHBACK"
+  rewardsPreference String   @default("ANY")
+  maxAnnualFeeCents Int?
+  updatedAt         DateTime @updatedAt
 }
