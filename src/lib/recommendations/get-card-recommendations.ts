@@ -36,7 +36,7 @@ export async function getCardRecommendations(
     }),
     prisma.creditCard.findMany({
       where: { userId },
-      select: { issuer: true, productName: true },
+      select: { issuer: true, productName: true, cardProductId: true },
     }),
   ]);
 
@@ -62,5 +62,8 @@ export async function getCardRecommendations(
       earnRates: (card.earnRates ?? {}) as EarnRates,
     })),
     heldCardKeys: new Set(heldCards.map((c) => cardKey(c.issuer, c.productName))),
+    heldCardProductIds: new Set(
+      heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : []))
+    ),
   });
 }

@@ -149,6 +149,9 @@ model CreditCard {
   nickname         String?
   rewardsProgramId String
   rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  /// Set when the card was picked from the catalog; null for custom/free-text cards
+  cardProductId    String?
+  cardProduct      CardProduct?   @relation(fields: [cardProductId], references: [id], onDelete: SetNull)
   annualFeeCents   Int?
   openedOn         DateTime?
   notes            String?
@@ -206,6 +209,8 @@ model CardProduct {
   isActive               Boolean        @default(true)
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
+
+  creditCards CreditCard[]
 
   @@unique([issuer, name])
 }
