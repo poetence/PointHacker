@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { isBonusActive } from "@/lib/redemptions/transfer-bonus";
@@ -11,6 +12,46 @@ export const dynamic = "force-dynamic";
 
 function formatDate(date: Date) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+type PromoWithPartner = Prisma.TransferBonusGetPayload<{
+  include: { transferPartner: { include: { fromProgram: true; toProgram: true } } };
+}>;
+
+function PromoList({ title, items }: { title: string; items: PromoWithPartner[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+        {title}
+      </h2>
+      <ul className="flex flex-col gap-3">
+        {items.map((promo) => {
+          const from = promo.transferPartner.fromProgram;
+          const to = promo.transferPartner.toProgram;
+          return (
+            <li
+              key={promo.id}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+            >
+              <div>
+                <p className="font-medium text-black dark:text-zinc-50">
+                  {from.shortName ?? from.name} → {to.shortName ?? to.name}
+                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                    +{promo.bonusPercent}%
+                  </span>
+                </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {formatDate(promo.startsOn)} – {formatDate(promo.endsOn)}
+                </p>
+              </div>
+              <PromoRowActions id={promo.id} />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }
 
 export default async function PromosPage() {
@@ -38,42 +79,6 @@ export default async function PromosPage() {
     fromProgramName: p.fromProgram.shortName ?? p.fromProgram.name,
     toProgramName: p.toProgram.shortName ?? p.toProgram.name,
   }));
-
-  function PromoList({ title, items }: { title: string; items: typeof promos }) {
-    if (items.length === 0) return null;
-    return (
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
-          {title}
-        </h2>
-        <ul className="flex flex-col gap-3">
-          {items.map((promo) => {
-            const from = promo.transferPartner.fromProgram;
-            const to = promo.transferPartner.toProgram;
-            return (
-              <li
-                key={promo.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
-              >
-                <div>
-                  <p className="font-medium text-black dark:text-zinc-50">
-                    {from.shortName ?? from.name} → {to.shortName ?? to.name}
-                    <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      +{promo.bonusPercent}%
-                    </span>
-                  </p>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    {formatDate(promo.startsOn)} – {formatDate(promo.endsOn)}
-                  </p>
-                </div>
-                <PromoRowActions id={promo.id} />
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
