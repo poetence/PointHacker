@@ -43,6 +43,8 @@ export type ReferenceProgram = {
    * the program before relying on it.
    */
   pointsExpirationMonths?: number;
+  /** What the program calls its unit. Defaults to "points"; most airlines use "miles". */
+  pointsUnit?: "points" | "miles";
   notes?: string;
 };
 
@@ -87,6 +89,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "Capital One Miles",
     shortName: "Cap1 Miles",
     type: "BANK_TRANSFERABLE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.0,
     notes: "1 cpp against travel purchases; transfer partners typically higher.",
   },
@@ -103,6 +106,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "Delta SkyMiles",
     shortName: "Delta",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.2,
     regions: ["NORTH_AMERICA", "EUROPE", "CARIBBEAN"],
   },
@@ -110,6 +114,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "United MileagePlus",
     shortName: "United",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.3,
     regions: ["NORTH_AMERICA", "EUROPE", "ASIA", "SOUTH_AMERICA"],
   },
@@ -117,6 +122,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "American AAdvantage",
     shortName: "AA",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.4,
     pointsExpirationMonths: 24,
     regions: ["NORTH_AMERICA", "CARIBBEAN", "SOUTH_AMERICA", "EUROPE"],
@@ -132,6 +138,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "Air France-KLM Flying Blue",
     shortName: "Flying Blue",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.3,
     pointsExpirationMonths: 24,
     regions: ["EUROPE", "AFRICA", "NORTH_AMERICA"],
@@ -149,6 +156,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "ANA Mileage Club",
     shortName: "ANA",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.7,
     pointsExpirationMonths: 36,
     notes: "Distance-based charts; excellent value on Star Alliance business/first.",
@@ -174,6 +182,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "Avianca LifeMiles",
     shortName: "LifeMiles",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.4,
     pointsExpirationMonths: 12,
     regions: ["SOUTH_AMERICA", "NORTH_AMERICA", "CARIBBEAN"],
@@ -189,6 +198,7 @@ export const referencePrograms: ReferenceProgram[] = [
     name: "Emirates Skywards",
     shortName: "Emirates",
     type: "AIRLINE",
+    pointsUnit: "miles",
     defaultRedemptionValueCents: 1.2,
     pointsExpirationMonths: 36,
     regions: ["MIDDLE_EAST", "ASIA", "AFRICA", "OCEANIA"],

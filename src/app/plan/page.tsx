@@ -137,7 +137,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
                       {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
                     </Link>
                     <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      {balance.balance.toLocaleString()} points
+                      {balance.balance.toLocaleString()} {balance.rewardsProgram.pointsUnit}
                       <ExpirationPill
                         lastUpdatedAt={balance.lastUpdatedAt}
                         expirationMonths={balance.rewardsProgram.pointsExpirationMonths}

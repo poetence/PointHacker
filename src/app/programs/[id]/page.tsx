@@ -26,6 +26,7 @@ export default async function ProgramDetailPage({
   const balance = pointsBalance?.balance ?? 0;
 
   const options = await getRedemptionOptionsForProgram(id, balance);
+  const unitSingular = program.pointsUnit === "miles" ? "mile" : "point";
 
   const cards = await prisma.creditCard.findMany({
     where: { userId, rewardsProgramId: id },
@@ -47,8 +48,8 @@ export default async function ProgramDetailPage({
             {program.name}
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-400">
-            {balance.toLocaleString()} points &middot; direct value{" "}
-            {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/point
+            {balance.toLocaleString()} {program.pointsUnit} &middot; direct value{" "}
+            {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/{unitSingular}
             {pointsBalance && (
               <ExpirationPill
                 lastUpdatedAt={pointsBalance.lastUpdatedAt}
@@ -60,12 +61,12 @@ export default async function ProgramDetailPage({
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {program.pointsExpirationMonths
               ? `Expires after ${program.pointsExpirationMonths} months without activity.`
-              : "Points don't expire (or no known inactivity policy)."}
+              : `${program.pointsUnit === "miles" ? "Miles" : "Points"} don't expire (or no known inactivity policy).`}
           </p>
           {pointsBalance === null && (
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               You don&apos;t have a balance tracked for this program yet — options below assume 0
-              points. Add a balance from the dashboard to see real numbers.
+              {program.pointsUnit}. Add a balance from the dashboard to see real numbers.
             </p>
           )}
         </div>
@@ -91,8 +92,8 @@ export default async function ProgramDetailPage({
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   {option.kind === "direct"
-                    ? `${option.pointsUsed.toLocaleString()} points used`
-                    : `${option.pointsUsed.toLocaleString()} points -> ${option.pointsReceived.toLocaleString()} received${
+                    ? `${option.pointsUsed.toLocaleString()} ${program.pointsUnit} used`
+                    : `${option.pointsUsed.toLocaleString()} ${program.pointsUnit} -> ${option.pointsReceived.toLocaleString()} received${
                         option.transferFeeCents > 0
                           ? ` · ${formatCents(option.transferFeeCents)} fee`
                           : ""
@@ -101,8 +102,8 @@ export default async function ProgramDetailPage({
                 {option.kind === "transfer" && !option.isViable && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     {option.minimumTransfer !== null
-                      ? `Requires at least ${option.minimumTransfer.toLocaleString()} points to transfer.`
-                      : "Not enough points for a full transfer block."}
+                      ? `Requires at least ${option.minimumTransfer.toLocaleString()} ${program.pointsUnit} to transfer.`
+                      : `Not enough ${program.pointsUnit} for a full transfer block.`}
                   </p>
                 )}
               </div>
@@ -112,7 +113,7 @@ export default async function ProgramDetailPage({
                   {formatCents(option.totalValueCents)}
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {formatCentsPerPoint(option.valuePerPointCents)}/point
+                  {formatCentsPerPoint(option.valuePerPointCents)}/{unitSingular}
                 </p>
               </div>
             </li>

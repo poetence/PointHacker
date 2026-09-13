@@ -37,6 +37,8 @@ model RewardsProgram {
   regions                     Region[]    @default([])
   /// Months of inactivity before points expire; null means never expires / no known policy
   pointsExpirationMonths      Int?
+  /// What the program calls its currency unit: "points" or "miles"
+  pointsUnit                  String      @default("points")
   notes                       String?
   isActive                    Boolean     @default(true)
   createdAt                   DateTime    @default(now())

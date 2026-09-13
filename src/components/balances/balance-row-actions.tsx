@@ -7,10 +7,12 @@ export function BalanceRowActions({
   id,
   currentBalance,
   currentExpiresOverrideAt,
+  pointsUnit,
 }: {
   id: string;
   currentBalance: number;
   currentExpiresOverrideAt: Date | null;
+  pointsUnit: string;
 }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -61,6 +63,8 @@ export function BalanceRowActions({
           min={0}
           step={1}
           required
+          title={pointsUnit === "miles" ? "Miles" : "Points"}
+          placeholder={pointsUnit === "miles" ? "Miles" : "Points"}
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
           className="w-24 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"

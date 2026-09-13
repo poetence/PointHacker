@@ -9,6 +9,7 @@ export type PickableProgram = {
   name: string;
   shortName: string | null;
   type: "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+  pointsUnit: string;
 };
 
 export function ProgramPickerModal({

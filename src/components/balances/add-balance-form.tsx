@@ -70,7 +70,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
       </div>
 
       <label className="flex flex-col gap-1 text-sm">
-        Balance
+        {selectedProgram?.pointsUnit === "miles" ? "Miles" : "Points"}
         <input
           type="number"
           min={0}

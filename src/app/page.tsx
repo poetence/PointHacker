@@ -29,7 +29,7 @@ export default async function Home() {
   const allPrograms = await prisma.rewardsProgram.findMany({
     where: { isActive: true },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, shortName: true, type: true },
+    select: { id: true, name: true, shortName: true, type: true, pointsUnit: true },
   });
 
   const programIdsWithBalance = new Set(balances.map((b) => b.rewardsProgramId));
@@ -94,7 +94,7 @@ export default async function Home() {
                         {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
                       </Link>
                       <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        {balance.balance.toLocaleString()} points
+                        {balance.balance.toLocaleString()} {balance.rewardsProgram.pointsUnit}
                         <ExpirationPill
                           lastUpdatedAt={balance.lastUpdatedAt}
                           expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
@@ -119,6 +119,7 @@ export default async function Home() {
                     id={balance.id}
                     currentBalance={balance.balance}
                     currentExpiresOverrideAt={balance.expiresOverrideAt}
+                    pointsUnit={balance.rewardsProgram.pointsUnit}
                   />
                 </li>
               );
