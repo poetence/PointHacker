@@ -5,6 +5,7 @@ import { requireSessionUserId } from "@/lib/user";
 import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption-options";
 import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { ProgramBadge } from "@/components/programs/program-badge";
+import { ExpirationPill } from "@/components/balances/expiration-pill";
 
 export default async function ProgramDetailPage({
   params,
@@ -45,9 +46,21 @@ export default async function ProgramDetailPage({
           <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             {program.name}
           </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-400">
             {balance.toLocaleString()} points &middot; direct value{" "}
             {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/point
+            {pointsBalance && (
+              <ExpirationPill
+                lastUpdatedAt={pointsBalance.lastUpdatedAt}
+                expirationMonths={program.pointsExpirationMonths}
+                overrideAt={pointsBalance.expiresOverrideAt}
+              />
+            )}
+          </p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            {program.pointsExpirationMonths
+              ? `Expires after ${program.pointsExpirationMonths} months without activity.`
+              : "Points don't expire (or no known inactivity policy)."}
           </p>
           {pointsBalance === null && (
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">

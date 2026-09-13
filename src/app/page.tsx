@@ -6,6 +6,7 @@ import { formatCents } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
+import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { CoinsIcon } from "@/components/icons";
 
 // Balances change via API mutations after build, so this page must be
@@ -92,8 +93,13 @@ export default async function Home() {
                       >
                         {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
                       </Link>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                         {balance.balance.toLocaleString()} points
+                        <ExpirationPill
+                          lastUpdatedAt={balance.lastUpdatedAt}
+                          expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
+                          overrideAt={balance.expiresOverrideAt}
+                        />
                       </p>
                     </div>
                   </div>
@@ -109,7 +115,11 @@ export default async function Home() {
                     )}
                   </div>
 
-                  <BalanceRowActions id={balance.id} currentBalance={balance.balance} />
+                  <BalanceRowActions
+                    id={balance.id}
+                    currentBalance={balance.balance}
+                    currentExpiresOverrideAt={balance.expiresOverrideAt}
+                  />
                 </li>
               );
             })}

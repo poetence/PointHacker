@@ -12,6 +12,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
     orderedPrograms[0] ?? null
   );
   const [balance, setBalance] = useState("");
+  const [expiresOn, setExpiresOn] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +38,11 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
     const response = await fetch("/api/balances", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rewardsProgramId: selectedProgram.id, balance: Number(balance) }),
+      body: JSON.stringify({
+        rewardsProgramId: selectedProgram.id,
+        balance: Number(balance),
+        expiresOverrideAt: expiresOn || undefined,
+      }),
     });
 
     setIsSubmitting(false);
@@ -49,6 +54,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
     }
 
     setBalance("");
+    setExpiresOn("");
     router.refresh();
   }
 
@@ -73,6 +79,16 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
           className="w-32 rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm">
+        Expires on (override)
+        <input
+          type="date"
+          value={expiresOn}
+          onChange={(e) => setExpiresOn(e.target.value)}
+          className="rounded border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         />
       </label>
 

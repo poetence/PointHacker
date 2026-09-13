@@ -3,10 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function BalanceRowActions({ id, currentBalance }: { id: string; currentBalance: number }) {
+export function BalanceRowActions({
+  id,
+  currentBalance,
+  currentExpiresOverrideAt,
+}: {
+  id: string;
+  currentBalance: number;
+  currentExpiresOverrideAt: Date | null;
+}) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [balance, setBalance] = useState(String(currentBalance));
+  const [expiresOn, setExpiresOn] = useState(
+    currentExpiresOverrideAt ? currentExpiresOverrideAt.toISOString().slice(0, 10) : ""
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,7 +29,7 @@ export function BalanceRowActions({ id, currentBalance }: { id: string; currentB
     const response = await fetch(`/api/balances/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ balance: Number(balance) }),
+      body: JSON.stringify({ balance: Number(balance), expiresOverrideAt: expiresOn || null }),
     });
 
     setIsSubmitting(false);
@@ -53,6 +64,13 @@ export function BalanceRowActions({ id, currentBalance }: { id: string; currentB
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
           className="w-24 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+        <input
+          type="date"
+          title="Expires on (override)"
+          value={expiresOn}
+          onChange={(e) => setExpiresOn(e.target.value)}
+          className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
         />
         <button
           type="submit"

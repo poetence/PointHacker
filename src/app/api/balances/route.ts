@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Request body must be a JSON object." }, { status: 400 });
   }
 
-  const { rewardsProgramId, balance, notes } = body as Record<string, unknown>;
+  const { rewardsProgramId, balance, notes, expiresOverrideAt } = body as Record<string, unknown>;
 
   if (typeof rewardsProgramId !== "string" || rewardsProgramId.length === 0) {
     return NextResponse.json({ error: "rewardsProgramId is required." }, { status: 400 });
@@ -32,6 +32,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "notes must be a string." }, { status: 400 });
   }
 
+  let expiresOverrideAtDate: Date | undefined;
+  if (expiresOverrideAt !== undefined) {
+    if (typeof expiresOverrideAt !== "string") {
+      return NextResponse.json({ error: "expiresOverrideAt must be a date string." }, { status: 400 });
+    }
+    expiresOverrideAtDate = new Date(expiresOverrideAt);
+    if (Number.isNaN(expiresOverrideAtDate.getTime())) {
+      return NextResponse.json({ error: "expiresOverrideAt must be a valid date." }, { status: 400 });
+    }
+  }
+
   const program = await prisma.rewardsProgram.findUnique({ where: { id: rewardsProgramId } });
   if (!program) {
     return NextResponse.json({ error: "rewardsProgramId does not exist." }, { status: 400 });
@@ -44,6 +55,7 @@ export async function POST(request: NextRequest) {
         rewardsProgramId,
         balance,
         notes,
+        expiresOverrideAt: expiresOverrideAtDate,
         lastUpdatedAt: new Date(),
       },
       include: { rewardsProgram: true },
