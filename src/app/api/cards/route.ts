@@ -14,8 +14,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Request body must be a JSON object." }, { status: 400 });
   }
 
-  const { issuer, productName, nickname, rewardsProgramId, annualFeeCents, openedOn, notes } =
-    body as Record<string, unknown>;
+  const { cardProductId, nickname, openedOn, notes } = body as Record<string, unknown>;
+  let { issuer, productName, rewardsProgramId, annualFeeCents } = body as Record<string, unknown>;
+
+  // Picking from the catalog fills in everything the user would otherwise type.
+  if (cardProductId !== undefined) {
+    if (typeof cardProductId !== "string" || cardProductId.length === 0) {
+      return NextResponse.json({ error: "cardProductId must be a string." }, { status: 400 });
+    }
+    const product = await prisma.cardProduct.findUnique({ where: { id: cardProductId } });
+    if (!product) {
+      return NextResponse.json({ error: "cardProductId does not exist." }, { status: 400 });
+    }
+    issuer = product.issuer;
+    productName = product.name;
+    rewardsProgramId = product.rewardsProgramId;
+    annualFeeCents = annualFeeCents ?? product.annualFeeCents;
+  }
 
   if (typeof issuer !== "string" || issuer.length === 0) {
     return NextResponse.json({ error: "issuer is required." }, { status: 400 });
@@ -73,6 +88,7 @@ export async function POST(request: NextRequest) {
       productName,
       nickname,
       rewardsProgramId,
+      cardProductId: typeof cardProductId === "string" ? cardProductId : undefined,
       annualFeeCents,
       openedOn: openedOnDate,
       notes,

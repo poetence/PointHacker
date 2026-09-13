@@ -68,16 +68,18 @@ export function scoreCards({
   profile,
   cards,
   heldCardKeys,
+  heldCardProductIds = new Set(),
 }: {
   profile: ScoringProfile;
   cards: ScoringCard[];
   heldCardKeys: Set<string>;
+  heldCardProductIds?: Set<string>;
 }): ScoreCardsResult {
   const alreadyHeld: ScoringCard[] = [];
   const candidates: ScoringCard[] = [];
 
   for (const card of cards) {
-    if (heldCardKeys.has(cardKey(card.issuer, card.name))) {
+    if (heldCardProductIds.has(card.id) || heldCardKeys.has(cardKey(card.issuer, card.name))) {
       alreadyHeld.push(card);
       continue;
     }

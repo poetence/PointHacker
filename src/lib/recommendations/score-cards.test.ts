@@ -104,13 +104,18 @@ describe("scoreCards", () => {
     expect(cashOnly.ranked.map((r) => r.card.id)).toEqual(["cash"]);
   });
 
-  it("moves cards already in the wallet to alreadyHeld, matching case-insensitively", () => {
+  it("moves cards already in the wallet to alreadyHeld, by catalog id or case-insensitive name", () => {
     const { ranked, alreadyHeld } = scoreCards({
       profile: profile(),
-      cards: [card({ id: "held", issuer: "Chase", name: "Sapphire Preferred" }), card({ id: "new" })],
+      cards: [
+        card({ id: "held-by-name", issuer: "Chase", name: "Sapphire Preferred" }),
+        card({ id: "held-by-id", issuer: "Amex", name: "Gold" }),
+        card({ id: "new" }),
+      ],
       heldCardKeys: new Set([cardKey("chase", "sapphire preferred")]),
+      heldCardProductIds: new Set(["held-by-id"]),
     });
-    expect(alreadyHeld.map((c) => c.id)).toEqual(["held"]);
+    expect(alreadyHeld.map((c) => c.id)).toEqual(["held-by-name", "held-by-id"]);
     expect(ranked.map((r) => r.card.id)).toEqual(["new"]);
   });
 
