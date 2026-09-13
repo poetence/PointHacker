@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         notes,
         expiresOverrideAt: expiresOverrideAtDate,
         lastUpdatedAt: new Date(),
+        snapshots: { create: { balance } },
       },
       include: { rewardsProgram: true },
     });

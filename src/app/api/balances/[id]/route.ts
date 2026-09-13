@@ -61,7 +61,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const updated = await prisma.pointsBalance.update({
     where: { id },
     data: {
-      ...(balance !== undefined && { balance, lastUpdatedAt: new Date() }),
+      ...(balance !== undefined && {
+        balance,
+        lastUpdatedAt: new Date(),
+        ...(balance !== existing.balance && { snapshots: { create: { balance } } }),
+      }),
       ...(notes !== undefined && { notes }),
       ...(expiresOverrideAt !== undefined && { expiresOverrideAt: expiresOverrideAtDate }),
     },

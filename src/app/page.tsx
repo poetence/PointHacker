@@ -7,6 +7,7 @@ import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
+import { BalanceSparkline } from "@/components/balances/balance-sparkline";
 import { CoinsIcon } from "@/components/icons";
 
 // Balances change via API mutations after build, so this page must be
@@ -18,7 +19,10 @@ export default async function Home() {
 
   const balances = await prisma.pointsBalance.findMany({
     where: { userId },
-    include: { rewardsProgram: true },
+    include: {
+      rewardsProgram: true,
+      snapshots: { orderBy: { recordedAt: "desc" }, take: 12 },
+    },
     orderBy: { rewardsProgram: { name: "asc" } },
   });
 
@@ -74,6 +78,9 @@ export default async function Home() {
           <ul className="flex flex-col gap-3">
             {balances.map((balance) => {
               const top = topOptions.get(balance.rewardsProgramId);
+              const history = balance.snapshots.map((s) => s.balance).reverse();
+              const previous = history.length >= 2 ? history[history.length - 2] : null;
+              const delta = previous === null ? null : balance.balance - previous;
               return (
                 <li
                   key={balance.id}
@@ -95,6 +102,18 @@ export default async function Home() {
                       </Link>
                       <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                         {balance.balance.toLocaleString()} {balance.rewardsProgram.pointsUnit}
+                        {delta !== null && delta !== 0 && (
+                          <span
+                            className={
+                              delta > 0
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-zinc-400 dark:text-zinc-500"
+                            }
+                          >
+                            {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString()}
+                          </span>
+                        )}
+                        <BalanceSparkline values={history} />
                         <ExpirationPill
                           lastUpdatedAt={balance.lastUpdatedAt}
                           expirationMonths={balance.rewardsProgram.pointsExpirationMonths}

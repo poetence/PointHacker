@@ -22,6 +22,7 @@ export default async function ProgramDetailPage({
 
   const pointsBalance = await prisma.pointsBalance.findUnique({
     where: { userId_rewardsProgramId: { userId, rewardsProgramId: id } },
+    include: { snapshots: { orderBy: { recordedAt: "desc" }, take: 50 } },
   });
   const balance = pointsBalance?.balance ?? 0;
 
@@ -120,6 +121,50 @@ export default async function ProgramDetailPage({
           ))}
         </ul>
       </section>
+
+      {pointsBalance && pointsBalance.snapshots.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+            Balance history
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {pointsBalance.snapshots.map((snapshot, index) => {
+              const older = pointsBalance.snapshots[index + 1];
+              const change = older ? snapshot.balance - older.balance : null;
+              return (
+                <li
+                  key={snapshot.id}
+                  className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {snapshot.recordedAt.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className="flex items-center gap-3">
+                    {change !== null && change !== 0 && (
+                      <span
+                        className={
+                          change > 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-zinc-400 dark:text-zinc-500"
+                        }
+                      >
+                        {change > 0 ? "+" : "−"}{Math.abs(change).toLocaleString()}
+                      </span>
+                    )}
+                    <span className="font-medium text-black dark:text-zinc-50">
+                      {snapshot.balance.toLocaleString()} {program.pointsUnit}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">

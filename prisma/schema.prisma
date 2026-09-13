@@ -154,5 +154,18 @@ model PointsBalance {
   expiresOverrideAt DateTime?
   notes             String?
 
+  snapshots BalanceSnapshot[]
+
   @@unique([userId, rewardsProgramId])
+}
+
+/// User data — a point-in-time record of a balance, written on every balance change
+model BalanceSnapshot {
+  id              String        @id @default(cuid())
+  pointsBalanceId String
+  pointsBalance   PointsBalance @relation(fields: [pointsBalanceId], references: [id], onDelete: Cascade)
+  balance         Int
+  recordedAt      DateTime      @default(now())
+
+  @@index([pointsBalanceId, recordedAt])
 }
