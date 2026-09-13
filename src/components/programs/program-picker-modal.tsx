@@ -42,7 +42,7 @@ export function ProgramPickerModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`${controlClass} flex h-10 items-center gap-2 px-2`}
+        className={`${controlClass} flex items-center gap-2 p-1.5`}
       >
         {selectedProgram ? (
           <ProgramBadge

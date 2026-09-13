@@ -135,7 +135,7 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
                 value={Math.min(value, SLIDER_MAX[category])}
                 onChange={(e) => setCategory(category, e.target.value)}
                 aria-label={`${SPEND_CATEGORY_LABELS[category]} slider`}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-emerald-600 dark:bg-zinc-800"
+                className="w-full cursor-pointer accent-emerald-600"
               />
             </div>
           );
