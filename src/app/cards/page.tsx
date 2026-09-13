@@ -6,6 +6,7 @@ import { AddCardForm } from "@/components/cards/add-card-form";
 import { CardRowActions } from "@/components/cards/card-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { WalletIcon } from "@/components/icons";
+import { CardArt } from "@/components/recommendations/card-art";
 
 // Cards mutate via the API after build, so this page must be re-rendered per
 // request rather than statically prerendered at build time.
@@ -20,11 +21,29 @@ export default async function CardsPage() {
     orderBy: [{ issuer: "asc" }, { productName: "asc" }],
   });
 
-  const programs = await prisma.rewardsProgram.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, shortName: true },
-  });
+  const [programs, catalog] = await Promise.all([
+    prisma.rewardsProgram.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, shortName: true },
+    }),
+    prisma.cardProduct.findMany({
+      where: { isActive: true },
+      orderBy: [{ issuer: "asc" }, { name: "asc" }],
+      include: { rewardsProgram: { select: { name: true, shortName: true } } },
+    }),
+  ]);
+
+  const heldProductIds = new Set(cards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : [])));
+  const pickableCatalog = catalog
+    .filter((c) => !heldProductIds.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      issuer: c.issuer,
+      name: c.name,
+      programLabel: c.rewardsProgram.shortName ?? c.rewardsProgram.name,
+      annualFeeCents: c.annualFeeCents,
+    }));
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
@@ -46,7 +65,7 @@ export default async function CardsPage() {
         <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Add a card
         </h2>
-        <AddCardForm programs={programs} />
+        <AddCardForm programs={programs} catalog={pickableCatalog} />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -67,12 +86,16 @@ export default async function CardsPage() {
                 className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
               >
                 <div className="flex items-center gap-3">
-                  <ProgramBadge
-                    name={card.rewardsProgram.name}
-                    shortName={card.rewardsProgram.shortName}
-                    type={card.rewardsProgram.type}
-                    size="sm"
-                  />
+                  {card.cardProductId ? (
+                    <CardArt issuer={card.issuer} name={card.productName} />
+                  ) : (
+                    <ProgramBadge
+                      name={card.rewardsProgram.name}
+                      shortName={card.rewardsProgram.shortName}
+                      type={card.rewardsProgram.type}
+                      size="sm"
+                    />
+                  )}
                   <div>
                     <p className="font-medium text-black dark:text-zinc-50">
                       {card.issuer} {card.productName}
