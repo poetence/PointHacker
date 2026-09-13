@@ -15,6 +15,8 @@ export type TransferPartnerOption = {
   minimumTransfer?: number | null;
   transferFeeCents?: number | null;
   estimatedRedemptionValueCents?: number | null;
+  /** Set by the caller when a promo has already been folded into the ratio above. */
+  activeBonusPercent?: number | null;
 };
 
 export type ComputeBestRedemptionsInput = {
@@ -45,6 +47,7 @@ export type TransferRedemptionOption = {
   totalValueCents: number;
   isViable: boolean;
   minimumTransfer: number | null;
+  activeBonusPercent: number | null;
 };
 
 export type RedemptionOption = DirectRedemptionOption | TransferRedemptionOption;
@@ -109,5 +112,6 @@ function computeTransferOption(
     totalValueCents,
     isViable,
     minimumTransfer,
+    activeBonusPercent: partner.activeBonusPercent ?? null,
   };
 }

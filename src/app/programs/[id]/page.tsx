@@ -90,6 +90,11 @@ export default async function ProgramDetailPage({
                 <p className="font-medium text-black dark:text-zinc-50">
                   #{index + 1}{" "}
                   {option.kind === "direct" ? "Direct redemption" : `Transfer to ${option.partnerProgramName}`}
+                  {option.kind === "transfer" && option.activeBonusPercent && (
+                    <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                      +{option.activeBonusPercent}% bonus
+                    </span>
+                  )}
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   {option.kind === "direct"

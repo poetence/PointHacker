@@ -127,7 +127,9 @@ export default async function Home() {
                     {top ? (
                       <p className="text-sm text-zinc-700 dark:text-zinc-300">
                         {formatCents(top.totalValueCents)} —{" "}
-                        {top.kind === "direct" ? "direct redemption" : `transfer to ${top.partnerProgramName}`}
+                        {top.kind === "direct"
+                          ? "direct redemption"
+                          : `transfer to ${top.partnerProgramName}${top.activeBonusPercent ? ` (+${top.activeBonusPercent}% bonus)` : ""}`}
                       </p>
                     ) : (
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">No options available</p>

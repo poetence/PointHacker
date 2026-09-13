@@ -5,6 +5,11 @@ import {
   type RedemptionProgram,
   type TransferPartnerOption,
 } from "./compute-best-redemptions";
+import { applyTransferBonus } from "./transfer-bonus";
+
+export function activeBonusFilter(now: Date) {
+  return { where: { startsOn: { lte: now }, endsOn: { gte: now } } };
+}
 
 export async function getRedemptionOptionsForProgram(
   rewardsProgramId: string,
@@ -16,7 +21,7 @@ export async function getRedemptionOptionsForProgram(
 
   const transferPartners = await prisma.transferPartner.findMany({
     where: { fromProgramId: rewardsProgramId, isActive: true },
-    include: { toProgram: true },
+    include: { toProgram: true, bonuses: activeBonusFilter(new Date()) },
   });
 
   return computeBestRedemptions({
@@ -35,7 +40,7 @@ export async function getTopRedemptionOptionsForBalances(
     prisma.rewardsProgram.findMany({ where: { id: { in: programIds } } }),
     prisma.transferPartner.findMany({
       where: { fromProgramId: { in: programIds }, isActive: true },
-      include: { toProgram: true },
+      include: { toProgram: true, bonuses: activeBonusFilter(new Date()) },
     }),
   ]);
 
@@ -92,8 +97,9 @@ export function toTransferPartnerOption(partner: {
   minimumTransfer: number | null;
   transferFeeCents: number | null;
   estimatedRedemptionValueCents: { toNumber(): number } | null;
+  bonuses?: { bonusPercent: number }[];
 }): TransferPartnerOption {
-  return {
+  const base: TransferPartnerOption = {
     toProgram: toRedemptionProgram(partner.toProgram),
     ratioFrom: partner.ratioFrom,
     ratioTo: partner.ratioTo,
@@ -101,4 +107,7 @@ export function toTransferPartnerOption(partner: {
     transferFeeCents: partner.transferFeeCents,
     estimatedRedemptionValueCents: partner.estimatedRedemptionValueCents?.toNumber() ?? null,
   };
+
+  const bestBonus = Math.max(0, ...(partner.bonuses ?? []).map((b) => b.bonusPercent));
+  return applyTransferBonus(base, bestBonus);
 }

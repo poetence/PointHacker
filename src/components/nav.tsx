@@ -7,6 +7,7 @@ const links = [
   { href: "/cards", label: "Cards" },
   { href: "/programs", label: "Catalog" },
   { href: "/plan", label: "Plan a Trip" },
+  { href: "/promos", label: "Promos" },
 ];
 
 export async function Nav() {

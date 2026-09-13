@@ -149,7 +149,9 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
 
                 <p className="text-sm text-zinc-700 dark:text-zinc-300">
                   {formatCents(option.totalValueCents)} —{" "}
-                  {option.kind === "direct" ? "direct redemption" : `transfer to ${option.partnerProgramName}`}
+                  {option.kind === "direct"
+                    ? "direct redemption"
+                    : `transfer to ${option.partnerProgramName}${option.activeBonusPercent ? ` (+${option.activeBonusPercent}% bonus)` : ""}`}
                 </p>
               </li>
             ))}

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { computeBestRedemptions, type RedemptionOption } from "./compute-best-redemptions";
-import { toRedemptionProgram, toTransferPartnerOption } from "./get-redemption-options";
+import {
+  activeBonusFilter,
+  toRedemptionProgram,
+  toTransferPartnerOption,
+} from "./get-redemption-options";
 import { isRegionRelevant, type RegionRelevanceProgramType } from "./region-relevance";
 
 type ProgramRelevanceInfo = { type: RegionRelevanceProgramType; regions: string[] };
@@ -15,7 +19,7 @@ export async function getRegionRedemptionOptions(
     prisma.rewardsProgram.findMany({ where: { id: { in: programIds } } }),
     prisma.transferPartner.findMany({
       where: { fromProgramId: { in: programIds }, isActive: true },
-      include: { toProgram: true },
+      include: { toProgram: true, bonuses: activeBonusFilter(new Date()) },
     }),
   ]);
 

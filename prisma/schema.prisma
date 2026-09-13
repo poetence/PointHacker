@@ -67,8 +67,24 @@ model TransferPartner {
   createdAt                     DateTime       @default(now())
   updatedAt                     DateTime       @updatedAt
 
+  bonuses TransferBonus[]
+
   @@unique([fromProgramId, toProgramId])
   @@index([fromProgramId])
+}
+
+/// Shared data — a time-boxed promo that boosts a transfer ratio (e.g. +30% for a month)
+model TransferBonus {
+  id                String          @id @default(cuid())
+  transferPartnerId String
+  transferPartner   TransferPartner @relation(fields: [transferPartnerId], references: [id], onDelete: Cascade)
+  bonusPercent      Int
+  startsOn          DateTime
+  endsOn            DateTime
+  notes             String?
+  createdAt         DateTime        @default(now())
+
+  @@index([transferPartnerId, endsOn])
 }
 
 /// A person who can sign in
