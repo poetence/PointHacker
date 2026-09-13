@@ -5,6 +5,8 @@ import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemp
 import { formatCents } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
+import { ProgramBadge } from "@/components/programs/program-badge";
+import { CoinsIcon } from "@/components/icons";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -34,47 +36,66 @@ export default async function Home() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          PointHacker
-        </h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          Your reward point balances and the best way to use each one.
-        </p>
+      <header className="flex items-center gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
+          <CoinsIcon className="h-7 w-7" />
+        </span>
+        <div>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+            Your reward point balances and the best way to use each one.
+          </p>
+        </div>
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Add a balance
         </h2>
         <AddBalanceForm programs={addablePrograms} />
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Your balances
         </h2>
 
         {balances.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No balances yet — add one above to see your best redemption options.
-          </p>
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
+            <CoinsIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              No balances yet — add one above to see your best redemption options.
+            </p>
+          </div>
         ) : (
-          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+          <ul className="flex flex-col gap-3">
             {balances.map((balance) => {
               const top = topOptions.get(balance.rewardsProgramId);
               return (
-                <li key={balance.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
-                  <div>
-                    <Link
-                      href={`/programs/${balance.rewardsProgramId}`}
-                      className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
-                    >
-                      {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
-                    </Link>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {balance.balance.toLocaleString()} points
-                    </p>
+                <li
+                  key={balance.id}
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <ProgramBadge
+                      name={balance.rewardsProgram.name}
+                      shortName={balance.rewardsProgram.shortName}
+                      type={balance.rewardsProgram.type}
+                      size="sm"
+                    />
+                    <div>
+                      <Link
+                        href={`/programs/${balance.rewardsProgramId}`}
+                        className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                      >
+                        {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                      </Link>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {balance.balance.toLocaleString()} points
+                      </p>
+                    </div>
                   </div>
 
                   <div className="text-right">

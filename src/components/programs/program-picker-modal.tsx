@@ -39,7 +39,7 @@ export function ProgramPickerModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
       >
         {selectedProgram ? (
           <ProgramBadge
@@ -66,7 +66,7 @@ export function ProgramPickerModal({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
+              <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
                 Choose a program
               </h2>
               <button

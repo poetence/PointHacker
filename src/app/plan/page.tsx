@@ -5,6 +5,8 @@ import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redempt
 import { formatCents } from "@/lib/format";
 import { ALL_REGIONS, REGION_LABELS, isRegion } from "@/lib/regions";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
+import { ProgramBadge } from "@/components/programs/program-badge";
+import { CompassIcon } from "@/components/icons";
 
 // Balances mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -20,13 +22,18 @@ export default async function PlanPage({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Plan a trip
-        </h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          Pick a region to see which of your balances are actually worth using there.
-        </p>
+      <header className="flex items-center gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-violet-50 text-violet-700 shadow-sm dark:from-violet-950 dark:to-violet-900 dark:text-violet-300">
+          <CompassIcon className="h-7 w-7" />
+        </span>
+        <div>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            Plan a trip
+          </h1>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+            Pick a region to see which of your balances are actually worth using there.
+          </p>
+        </div>
       </header>
 
       <form method="GET" className="flex items-end gap-3">
@@ -99,7 +106,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
   return (
     <>
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Best for {REGION_LABELS[region]}
         </h2>
 
@@ -108,19 +115,30 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
             None of your current balances have a good option for this region.
           </p>
         ) : (
-          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+          <ul className="flex flex-col gap-3">
             {ranked.map(({ balance, option }) => (
-              <li key={balance.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
-                <div>
-                  <Link
-                    href={`/programs/${balance.rewardsProgramId}`}
-                    className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
-                  >
-                    {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
-                  </Link>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    {balance.balance.toLocaleString()} points
-                  </p>
+              <li
+                key={balance.id}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+              >
+                <div className="flex items-center gap-3">
+                  <ProgramBadge
+                    name={balance.rewardsProgram.name}
+                    shortName={balance.rewardsProgram.shortName}
+                    type={balance.rewardsProgram.type}
+                    size="sm"
+                  />
+                  <div>
+                    <Link
+                      href={`/programs/${balance.rewardsProgramId}`}
+                      className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                    >
+                      {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                    </Link>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {balance.balance.toLocaleString()} points
+                    </p>
+                  </div>
                 </div>
 
                 <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -135,7 +153,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
 
       {excluded.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
             No {REGION_LABELS[region]} options
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

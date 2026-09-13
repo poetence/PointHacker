@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { LogoMarkIcon } from "@/components/icons";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -12,17 +13,26 @@ export async function Nav() {
   const session = await auth();
 
   return (
-    <nav className="flex items-center justify-between gap-4 border-b border-zinc-200 px-6 py-3 text-sm dark:border-zinc-800">
-      <div className="flex items-center gap-4">
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
-          >
-            {link.label}
-          </Link>
-        ))}
+    <nav className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-zinc-200 bg-white/80 px-6 py-3 text-sm backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+      <div className="flex items-center gap-6">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 font-display text-base font-semibold tracking-tight text-black dark:text-zinc-50"
+        >
+          <LogoMarkIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          PointHacker
+        </Link>
+        <div className="flex items-center gap-4">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {session?.user && (

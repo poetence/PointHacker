@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ProgramBadge } from "@/components/programs/program-badge";
 
 type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
@@ -42,7 +43,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
         placeholder="Filter by name..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
       />
 
       {TYPE_GROUPS.map(({ type, label }) => {
@@ -51,12 +52,21 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
 
         return (
           <section key={type} className="flex flex-col gap-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
               {label}
             </h2>
-            <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ul className="flex flex-col gap-3">
               {group.map((program) => (
-                <li key={program.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <li
+                  key={program.id}
+                  className="flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <ProgramBadge
+                    name={program.name}
+                    shortName={program.shortName}
+                    type={program.type}
+                    size="sm"
+                  />
                   <div>
                     <Link
                       href={`/programs/${program.id}`}

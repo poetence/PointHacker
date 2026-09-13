@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption-options";
 import { formatCents, formatCentsPerPoint } from "@/lib/format";
+import { ProgramBadge } from "@/components/programs/program-badge";
 
 export default async function ProgramDetailPage({
   params,
@@ -38,34 +39,37 @@ export default async function ProgramDetailPage({
         </Link>
       </div>
 
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          {program.name}
-        </h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          {balance.toLocaleString()} points &middot; direct value{" "}
-          {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/point
-        </p>
-        {pointsBalance === null && (
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            You don&apos;t have a balance tracked for this program yet — options below assume 0
-            points. Add a balance from the dashboard to see real numbers.
+      <header className="flex items-center gap-4">
+        <ProgramBadge name={program.name} shortName={program.shortName} type={program.type} />
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            {program.name}
+          </h1>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+            {balance.toLocaleString()} points &middot; direct value{" "}
+            {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/point
           </p>
-        )}
+          {pointsBalance === null && (
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              You don&apos;t have a balance tracked for this program yet — options below assume 0
+              points. Add a balance from the dashboard to see real numbers.
+            </p>
+          )}
+        </div>
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Redemption options, ranked
         </h2>
 
-        <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+        <ul className="flex flex-col gap-3">
           {options.map((option, index) => (
             <li
               key={option.kind === "direct" ? "direct" : option.partnerProgramId}
-              className={`flex flex-wrap items-center justify-between gap-3 py-4 ${
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
                 option.kind === "transfer" && !option.isViable ? "opacity-50" : ""
-              }`}
+              } ${index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""}`}
             >
               <div>
                 <p className="font-medium text-black dark:text-zinc-50">
@@ -104,7 +108,7 @@ export default async function ProgramDetailPage({
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
           Cards earning this program
         </h2>
 
@@ -113,9 +117,12 @@ export default async function ProgramDetailPage({
             No cards tracked for this program yet.
           </p>
         ) : (
-          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+          <ul className="flex flex-col gap-2">
             {cards.map((card) => (
-              <li key={card.id} className="py-2 text-sm text-zinc-700 dark:text-zinc-300">
+              <li
+                key={card.id}
+                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
+              >
                 {card.issuer} {card.productName}
                 {card.nickname && (
                   <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>

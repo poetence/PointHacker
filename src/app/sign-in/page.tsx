@@ -1,10 +1,15 @@
 import { signIn } from "@/lib/auth";
+import { LogoMarkIcon } from "@/components/icons";
 
 export default function SignInPage() {
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-6 py-24 text-center">
+      <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
+        <LogoMarkIcon className="h-8 w-8" />
+      </span>
+
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-zinc-50">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
           PointHacker
         </h1>
         <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -20,7 +25,7 @@ export default function SignInPage() {
       >
         <button
           type="submit"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md dark:bg-zinc-100 dark:text-zinc-900"
         >
           Sign in with Google
         </button>
