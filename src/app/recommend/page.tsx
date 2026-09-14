@@ -70,44 +70,68 @@ export default async function RecommendPage() {
                 {top.map((rec, index) => (
                   <li
                     key={rec.card.id}
-                    className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                    className={`flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
                       index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                     }`}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                       <CardArt issuer={rec.card.issuer} name={rec.card.name} />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-black dark:text-zinc-50">
                           #{index + 1} {rec.card.issuer} {rec.card.name}
                         </p>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
                           {Math.round(rec.annualPoints).toLocaleString()}{" "}
                           {rec.card.program.shortName ?? rec.card.program.name}{" "}
-                          {rec.card.program.pointsUnit}/yr &middot;{" "}
-                          {rec.card.annualFeeCents > 0
-                            ? `${formatCents(rec.card.annualFeeCents)} fee`
-                            : "no annual fee"}
-                          {rec.card.welcomeBonusPoints !== null && (
-                            <>
-                              {" "}
-                              &middot;{" "}
-                              {rec.bonusEarned
-                                ? `${rec.card.welcomeBonusPoints.toLocaleString()} bonus reachable`
-                                : `bonus needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`}
-                            </>
-                          )}
+                          {rec.card.program.pointsUnit}/yr
+                        </p>
+                      </div>
+                      <div className="w-full sm:w-auto sm:text-right">
+                        <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
+                          {formatCents(rec.firstYearValueCents)}
+                        </p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          net first year &middot; {formatCents(rec.ongoingValueCents)}/yr after
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <p className="font-medium text-black dark:text-zinc-50">
-                        {formatCents(rec.firstYearValueCents)}
-                      </p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        first year &middot; {formatCents(rec.ongoingValueCents)}/yr after
-                      </p>
-                    </div>
+                    <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
+                      <div className="flex gap-1.5">
+                        <dt className="text-zinc-500 dark:text-zinc-400">Earns</dt>
+                        <dd className="font-medium text-emerald-600 dark:text-emerald-400">
+                          +{formatCents(rec.earnValueCents)}
+                        </dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="text-zinc-500 dark:text-zinc-400">Welcome bonus</dt>
+                        <dd
+                          className={
+                            rec.bonusEarned
+                              ? "font-medium text-emerald-600 dark:text-emerald-400"
+                              : "text-zinc-400 dark:text-zinc-500"
+                          }
+                        >
+                          {rec.card.welcomeBonusPoints === null
+                            ? "none"
+                            : rec.bonusEarned
+                              ? `+${formatCents(rec.welcomeBonusValueCents)}`
+                              : `needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`}
+                        </dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="text-zinc-500 dark:text-zinc-400">Annual fee</dt>
+                        <dd
+                          className={
+                            rec.card.annualFeeCents > 0
+                              ? "font-medium text-red-600 dark:text-red-400"
+                              : "text-zinc-400 dark:text-zinc-500"
+                          }
+                        >
+                          {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
+                        </dd>
+                      </div>
+                    </dl>
                   </li>
                 ))}
               </ul>
