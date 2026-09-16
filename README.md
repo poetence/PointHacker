@@ -19,8 +19,9 @@ account only sees and manages its own cards and balances.
   delta and sparkline, and a warning pill when points are expiring soon or likely expired
 - **Program detail** — the full ranked list of redemption options for one program, the
   program's expiration policy, your balance history, and which of your cards feed it
-- **Award goals** — say "Tokyo, business class, 2 people, next spring" (or "Kyoto, upscale hotel,
-  4 nights") and the app estimates the points needed in every program that flies or has rooms
+- **Award goals** — pick "Tokyo, business class, 2 people, next spring" (or "Kyoto, upscale hotel,
+  4 nights") from curated destination and month pickers — no free text to mistype — and the app
+  estimates the points needed in every program that flies or has rooms
   there (from rough flight and per-night award-cost tables, nudged by which US state you fly
   from), shows how close each of your
   balances gets you — including the exact transfers (with active promos) that would close the gap
