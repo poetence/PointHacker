@@ -4,6 +4,7 @@ import {
   referenceTransferPartners,
 } from "../src/lib/data/reference-programs";
 import { referenceCards } from "../src/lib/data/reference-cards";
+import { REFERENCE_CABINS, referenceAwardCosts } from "../src/lib/data/reference-award-costs";
 
 const prisma = new PrismaClient();
 
@@ -94,8 +95,31 @@ async function main() {
     });
   }
 
+  const regionsByProgramName = new Map(referencePrograms.map((p) => [p.name, p.regions ?? []]));
+  let awardCostRows = 0;
+  for (const cost of referenceAwardCosts) {
+    const rewardsProgramId = programIdByName.get(cost.program);
+    if (!rewardsProgramId) {
+      throw new Error(`Unknown program in award cost: ${cost.program}`);
+    }
+    if (!regionsByProgramName.get(cost.program)?.includes(cost.region)) {
+      throw new Error(`Award cost for ${cost.program} -> ${cost.region} but the program isn't tagged with that region`);
+    }
+
+    for (const cabin of REFERENCE_CABINS) {
+      const pointsOneWay = cost.oneWay[cabin];
+      if (pointsOneWay === undefined) continue;
+      await prisma.awardCost.upsert({
+        where: { rewardsProgramId_region_cabin: { rewardsProgramId, region: cost.region, cabin } },
+        update: { pointsOneWay, notes: cost.notes },
+        create: { rewardsProgramId, region: cost.region, cabin, pointsOneWay, notes: cost.notes },
+      });
+      awardCostRows += 1;
+    }
+  }
+
   console.log(
-    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, and ${referenceCards.length} cards.`
+    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, ${referenceCards.length} cards, and ${awardCostRows} award costs.`
   );
 }
 

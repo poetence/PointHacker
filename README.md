@@ -18,13 +18,18 @@ account only sees and manages its own cards and balances.
   delta and sparkline, and a warning pill when points are expiring soon or likely expired
 - **Program detail** — the full ranked list of redemption options for one program, the
   program's expiration policy, your balance history, and which of your cards feed it
+- **Award goals** — say "Tokyo, business class, 2 people, next spring" and the app estimates the
+  miles needed in every program that flies there (from a rough award-cost table), shows how close
+  each of your balances gets you — including the exact transfers (with active promos) that would
+  close the gap — and which catalog card's welcome bonus would finish the job
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
 - **Transfer bonuses** — record time-limited promos (e.g. +30% Chase → Hyatt); active ones are
   folded into every ranking and tagged wherever they drive a recommendation
-- **Which card next?** — set your monthly spend by category (sliders) and preferences; a
-  curated catalog of 19 popular cards is scored by estimated first-year value, each shown as a
-  generated card-art tile with an explicit earns / welcome bonus / annual fee breakdown, the
-  best card per category, and cards you already hold excluded
+- **Which card next?** — leads with which card's welcome bonus closes the gap on your goal, then
+  set your monthly spend by category (sliders) and preferences; a curated catalog of 19 popular
+  cards is scored by estimated first-year value, each shown as a generated card-art tile with an
+  explicit earns / welcome bonus / annual fee breakdown, the best card per category, and cards
+  you already hold excluded
 - **Card wallet** — add the cards you hold by picking from the catalog (or as a custom entry),
   so they feed the right program balance and drop out of recommendations
 - **Catalog** — browse all 26 seeded reference programs (bank-transferable currencies, airlines,

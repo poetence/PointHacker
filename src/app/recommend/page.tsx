@@ -1,6 +1,14 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { formatCents } from "@/lib/format";
+import { REGION_LABELS } from "@/lib/regions";
+import { describeGoal } from "@/lib/goals/cabins";
+import { getGoalProgress } from "@/lib/goals/get-goal-progress";
+import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
+import { GapCardPill } from "@/components/goals/gap-card-pill";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { SPEND_CATEGORIES, SPEND_CATEGORY_LABELS } from "@/lib/spend-categories";
 import {
   getCardRecommendations,
@@ -18,12 +26,26 @@ export const dynamic = "force-dynamic";
 const sectionTitle =
   "font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50";
 
-export default async function RecommendPage() {
+export default async function RecommendPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ goal?: string }>;
+}) {
+  const { goal: goalParam } = await searchParams;
   const userId = await requireSessionUserId();
 
-  const profile = await prisma.spendingProfile.findUnique({ where: { userId } });
+  const [profile, goals] = await Promise.all([
+    prisma.spendingProfile.findUnique({ where: { userId } }),
+    prisma.awardGoal.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
+  ]);
   const result = profile ? await getCardRecommendations(userId, profile) : null;
   const top = result?.ranked.slice(0, 8) ?? [];
+
+  const activeGoal = goals.find((g) => g.id === goalParam) ?? goals[0] ?? null;
+  const progress = activeGoal ? await getGoalProgress(userId, activeGoal) : null;
+  const bestPlan = progress?.plans[0] ?? null;
+  const gapCards =
+    progress && bestPlan && !bestPlan.isReachable ? await getGoalGapCards(userId, progress) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
@@ -36,10 +58,100 @@ export default async function RecommendPage() {
             Which card next?
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Cards ranked by estimated first-year value for how you actually spend.
+            Which welcome bonus closes the gap on your goal — and which cards earn the most for how
+            you actually spend.
           </p>
         </div>
       </header>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className={sectionTitle}>
+            {activeGoal ? `Closing the gap for ${activeGoal.label}` : "Working toward a goal?"}
+          </h2>
+          {goals.length > 1 && activeGoal && (
+            <form method="GET" className="flex items-center gap-2">
+              <Select name="goal" size="sm" defaultValue={activeGoal.id} aria-label="Goal" className="w-48">
+                {goals.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.label}
+                  </option>
+                ))}
+              </Select>
+              <Button type="submit" size="sm" variant="secondary">
+                Switch
+              </Button>
+            </form>
+          )}
+        </div>
+
+        {!activeGoal ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href="/goals" className="underline-offset-2 hover:underline">
+              Set an award goal
+            </Link>{" "}
+            and this page will tell you which card&apos;s welcome bonus gets you there.
+          </p>
+        ) : !bestPlan ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No program in the catalog prices this trip yet, so there&apos;s no gap to close.{" "}
+            <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
+              View goal &rarr;
+            </Link>
+          </p>
+        ) : bestPlan.isReachable ? (
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <span className="font-medium text-emerald-600 dark:text-emerald-400">Already bookable</span>{" "}
+            via {bestPlan.program.shortName ?? bestPlan.program.name} — the ranking below is pure
+            spending value.{" "}
+            <Link href={`/goals/${activeGoal.id}`} className="text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400">
+              View goal &rarr;
+            </Link>
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {REGION_LABELS[activeGoal.region]} · {describeGoal(activeGoal)} · closest route is{" "}
+              {bestPlan.program.shortName ?? bestPlan.program.name},{" "}
+              {bestPlan.shortfall.toLocaleString()} {bestPlan.program.pointsUnit} short.{" "}
+              <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
+                View goal &rarr;
+              </Link>
+            </p>
+
+            {gapCards && gapCards.ranked.length === 0 ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                No catalog card&apos;s welcome bonus lands in a program that prices this trip.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {gapCards?.ranked.slice(0, 3).map(({ card, contribution }) => (
+                  <li
+                    key={card.id}
+                    className={`flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                      contribution.closesGap ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
+                    }`}
+                  >
+                    <CardArt issuer={card.issuer} name={card.name} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-black dark:text-zinc-50">
+                        {card.issuer} {card.name}
+                      </p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {card.welcomeBonusPoints?.toLocaleString()}{" "}
+                        {card.program.shortName ?? card.program.name} {card.program.pointsUnit} after{" "}
+                        {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
+                        {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
+                      </p>
+                    </div>
+                    <GapCardPill contribution={contribution} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
 
       <section className="flex flex-col gap-4">
         <h2 className={sectionTitle}>Your spending</h2>
@@ -67,7 +179,9 @@ export default async function RecommendPage() {
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {top.map((rec, index) => (
+                {top.map((rec, index) => {
+                  const contribution = gapCards?.byCardId.get(rec.card.id);
+                  return (
                   <li
                     key={rec.card.id}
                     className={`flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
@@ -95,6 +209,12 @@ export default async function RecommendPage() {
                         </p>
                       </div>
                     </div>
+
+                    {contribution && (
+                      <div className="flex">
+                        <GapCardPill contribution={contribution} />
+                      </div>
+                    )}
 
                     <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
                       <div className="flex gap-1.5">
@@ -133,7 +253,8 @@ export default async function RecommendPage() {
                       </div>
                     </dl>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </section>

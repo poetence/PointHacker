@@ -150,7 +150,7 @@ export const referencePrograms: ReferenceProgram[] = [
     defaultRedemptionValueCents: 1.5,
     pointsExpirationMonths: 36,
     notes: "Strong value on Delta/ANA partner awards booked through Virgin.",
-    regions: ["EUROPE", "NORTH_AMERICA", "CARIBBEAN"],
+    regions: ["EUROPE", "NORTH_AMERICA", "CARIBBEAN", "ASIA"],
   },
   {
     name: "ANA Mileage Club",
