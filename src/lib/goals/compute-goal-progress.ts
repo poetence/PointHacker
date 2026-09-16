@@ -5,10 +5,9 @@
 // the ratio by the caller). Pure and DB-agnostic — callers map Prisma records
 // into these input shapes.
 
-export type GoalSpec = {
-  travelers: number;
-  roundTrip: boolean;
-};
+export type GoalSpec =
+  | { kind: "FLIGHT"; travelers: number; roundTrip: boolean }
+  | { kind: "HOTEL"; nights: number; rooms: number };
 
 export type GoalProgram = {
   id: string;
@@ -19,8 +18,8 @@ export type GoalProgram = {
 
 export type GoalAwardCost = {
   program: GoalProgram;
-  /** One-way, per-person price in the program's currency. */
-  pointsOneWay: number;
+  /** Price of one unit in the program's currency: one-way per person (flights) or one night per room (hotels). */
+  pointsPerUnit: number;
 };
 
 export type GoalBalance = {
@@ -71,8 +70,10 @@ export type ComputeGoalProgressInput = {
   transferRoutes: GoalTransferRoute[];
 };
 
-export function pointsNeededForGoal(goal: GoalSpec, pointsOneWay: number): number {
-  return pointsOneWay * (goal.roundTrip ? 2 : 1) * goal.travelers;
+export function pointsNeededForGoal(goal: GoalSpec, pointsPerUnit: number): number {
+  return goal.kind === "FLIGHT"
+    ? pointsPerUnit * (goal.roundTrip ? 2 : 1) * goal.travelers
+    : pointsPerUnit * goal.nights * goal.rooms;
 }
 
 /** Points a source balance can send along a route in whole ratio blocks, honoring the minimum. */
@@ -114,7 +115,7 @@ function planTarget(
   balanceByProgramId: Map<string, GoalBalance>,
   routes: GoalTransferRoute[]
 ): GoalTargetPlan {
-  const pointsNeeded = pointsNeededForGoal(goal, cost.pointsOneWay);
+  const pointsNeeded = pointsNeededForGoal(goal, cost.pointsPerUnit);
   const heldPoints = balanceByProgramId.get(cost.program.id)?.balance ?? 0;
 
   // Best ratio first (a bonus route beats a plain 1:1), then the deepest balance

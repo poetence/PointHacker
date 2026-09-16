@@ -3,8 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ALL_REGIONS, REGION_LABELS, type Region } from "@/lib/regions";
-import { ALL_CABINS, CABIN_LABELS, type Cabin } from "@/lib/goals/cabins";
-import { MAX_TRAVELERS } from "@/lib/goals/parse-goal-input";
+import {
+  ALL_CABINS,
+  ALL_GOAL_KINDS,
+  ALL_HOTEL_TIERS,
+  CABIN_LABELS,
+  GOAL_KIND_LABELS,
+  HOTEL_TIER_LABELS,
+  type Cabin,
+  type GoalKind,
+  type HotelTier,
+} from "@/lib/goals/cabins";
+import { MAX_NIGHTS, MAX_ROOMS, MAX_TRAVELERS } from "@/lib/goals/parse-goal-input";
 import type { GoalFormValues } from "@/lib/goals/goal-form-values";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -13,10 +23,14 @@ import { Button } from "@/components/ui/button";
 
 const EMPTY: GoalFormValues = {
   label: "",
+  kind: "FLIGHT",
   region: "ASIA",
   cabin: "BUSINESS",
   travelers: 2,
   roundTrip: true,
+  hotelTier: "UPSCALE",
+  nights: 4,
+  rooms: 1,
   targetMonth: "",
   notes: "",
 };
@@ -51,6 +65,8 @@ export function GoalForm({
       body: JSON.stringify({
         ...values,
         travelers: Number(values.travelers),
+        nights: Number(values.nights),
+        rooms: Number(values.rooms),
         targetMonth: values.targetMonth || null,
         notes: values.notes || null,
       }),
@@ -96,41 +112,96 @@ export function GoalForm({
           </Select>
         </Field>
 
-        <Field label="Cabin">
-          <Select value={values.cabin} onChange={(e) => set("cabin", e.target.value as Cabin)}>
-            {ALL_CABINS.map((c) => (
-              <option key={c} value={c}>
-                {CABIN_LABELS[c]}
+        <Field label="What">
+          <Select value={values.kind} onChange={(e) => set("kind", e.target.value as GoalKind)}>
+            {ALL_GOAL_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {GOAL_KIND_LABELS[k]}
               </option>
             ))}
           </Select>
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Travelers">
-            <Input
-              type="number"
-              min={1}
-              max={MAX_TRAVELERS}
-              step={1}
-              required
-              value={values.travelers}
-              onChange={(e) => set("travelers", Number(e.target.value))}
-            />
-          </Field>
+        {values.kind === "FLIGHT" ? (
+          <>
+            <Field label="Cabin">
+              <Select value={values.cabin} onChange={(e) => set("cabin", e.target.value as Cabin)}>
+                {ALL_CABINS.map((c) => (
+                  <option key={c} value={c}>
+                    {CABIN_LABELS[c]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
 
-          <Field label="Trip">
-            <Select
-              value={values.roundTrip ? "round" : "one-way"}
-              onChange={(e) => set("roundTrip", e.target.value === "round")}
-            >
-              <option value="round">Round trip</option>
-              <option value="one-way">One way</option>
-            </Select>
-          </Field>
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Travelers">
+                <Input
+                  type="number"
+                  min={1}
+                  max={MAX_TRAVELERS}
+                  step={1}
+                  required
+                  value={values.travelers}
+                  onChange={(e) => set("travelers", Number(e.target.value))}
+                />
+              </Field>
 
-        <Field label="When" hint="Optional — roughly when you want to fly.">
+              <Field label="Trip">
+                <Select
+                  value={values.roundTrip ? "round" : "one-way"}
+                  onChange={(e) => set("roundTrip", e.target.value === "round")}
+                >
+                  <option value="round">Round trip</option>
+                  <option value="one-way">One way</option>
+                </Select>
+              </Field>
+            </div>
+          </>
+        ) : (
+          <>
+            <Field label="Hotel tier" hint="Standard ≈ mid-market, upscale ≈ full-service, luxury ≈ top brands.">
+              <Select
+                value={values.hotelTier}
+                onChange={(e) => set("hotelTier", e.target.value as HotelTier)}
+              >
+                {ALL_HOTEL_TIERS.map((t) => (
+                  <option key={t} value={t}>
+                    {HOTEL_TIER_LABELS[t]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Nights">
+                <Input
+                  type="number"
+                  min={1}
+                  max={MAX_NIGHTS}
+                  step={1}
+                  required
+                  value={values.nights}
+                  onChange={(e) => set("nights", Number(e.target.value))}
+                />
+              </Field>
+
+              <Field label="Rooms">
+                <Input
+                  type="number"
+                  min={1}
+                  max={MAX_ROOMS}
+                  step={1}
+                  required
+                  value={values.rooms}
+                  onChange={(e) => set("rooms", Number(e.target.value))}
+                />
+              </Field>
+            </div>
+          </>
+        )}
+
+        <Field label="When" hint="Optional — roughly when you want to go.">
           <Input
             type="month"
             value={values.targetMonth}

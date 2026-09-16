@@ -5,6 +5,10 @@ import {
 } from "../src/lib/data/reference-programs";
 import { referenceCards } from "../src/lib/data/reference-cards";
 import { REFERENCE_CABINS, referenceAwardCosts } from "../src/lib/data/reference-award-costs";
+import {
+  REFERENCE_HOTEL_TIERS,
+  referenceHotelAwardCosts,
+} from "../src/lib/data/reference-hotel-award-costs";
 
 const prisma = new PrismaClient();
 
@@ -118,8 +122,30 @@ async function main() {
     }
   }
 
+  let hotelCostRows = 0;
+  for (const cost of referenceHotelAwardCosts) {
+    const rewardsProgramId = programIdByName.get(cost.program);
+    if (!rewardsProgramId) {
+      throw new Error(`Unknown program in hotel award cost: ${cost.program}`);
+    }
+    if (!regionsByProgramName.get(cost.program)?.includes(cost.region)) {
+      throw new Error(`Hotel award cost for ${cost.program} -> ${cost.region} but the program isn't tagged with that region`);
+    }
+
+    for (const tier of REFERENCE_HOTEL_TIERS) {
+      const pointsPerNight = cost.perNight[tier];
+      if (pointsPerNight === undefined) continue;
+      await prisma.hotelAwardCost.upsert({
+        where: { rewardsProgramId_region_tier: { rewardsProgramId, region: cost.region, tier } },
+        update: { pointsPerNight, notes: cost.notes },
+        create: { rewardsProgramId, region: cost.region, tier, pointsPerNight, notes: cost.notes },
+      });
+      hotelCostRows += 1;
+    }
+  }
+
   console.log(
-    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, ${referenceCards.length} cards, and ${awardCostRows} award costs.`
+    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, ${referenceCards.length} cards, ${awardCostRows} flight award costs, and ${hotelCostRows} hotel award costs.`
   );
 }
 

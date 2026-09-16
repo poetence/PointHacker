@@ -109,7 +109,8 @@ export default async function GoalsPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      No program in the catalog prices this cabin to {REGION_LABELS[goal.region]} yet.
+                      No program in the catalog prices this {goal.kind === "FLIGHT" ? "cabin" : "tier"} in{" "}
+                      {REGION_LABELS[goal.region]} yet.
                     </p>
                   )}
                 </li>
