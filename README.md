@@ -21,10 +21,12 @@ account only sees and manages its own cards and balances.
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
 - **Transfer bonuses** — record time-limited promos (e.g. +30% Chase → Hyatt); active ones are
   folded into every ranking and tagged wherever they drive a recommendation
-- **Which card next?** — enter your monthly spend by category and preferences; a curated
-  catalog of 19 popular cards is scored by estimated first-year value (earn + reachable welcome
-  bonus − fee), with the best card per category and cards you already hold called out
-- **Card wallet** — track which physical cards feed which program
+- **Which card next?** — set your monthly spend by category (sliders) and preferences; a
+  curated catalog of 19 popular cards is scored by estimated first-year value, each shown as a
+  generated card-art tile with an explicit earns / welcome bonus / annual fee breakdown, the
+  best card per category, and cards you already hold excluded
+- **Card wallet** — add the cards you hold by picking from the catalog (or as a custom entry),
+  so they feed the right program balance and drop out of recommendations
 - **Catalog** — browse all 26 seeded reference programs (bank-transferable currencies, airlines,
   hotels, cashback) without needing a balance first
 
