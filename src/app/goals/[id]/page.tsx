@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { formatCents } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
-import { CABIN_LABELS, describeGoal } from "@/lib/goals/cabins";
+import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
@@ -81,7 +81,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {best.pointsNeeded.toLocaleString()} {best.program.pointsUnit} for{" "}
-            {CABIN_LABELS[goal.cabin].toLowerCase()} · you hold {best.heldPoints.toLocaleString()}{" "}
+            {describeGoalUnit(goal)} · you hold {best.heldPoints.toLocaleString()}{" "}
             there and can transfer in{" "}
             {(best.potentialPoints - best.heldPoints).toLocaleString()} more.
           </p>
@@ -90,8 +90,9 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
           <TargetIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No program in the catalog prices {CABIN_LABELS[goal.cabin].toLowerCase()} to{" "}
-            {REGION_LABELS[goal.region]} yet — try another cabin.
+            No program in the catalog prices {describeGoalUnit(goal)} in{" "}
+            {REGION_LABELS[goal.region]} yet — try another{" "}
+            {goal.kind === "FLIGHT" ? "cabin" : "tier"}.
           </p>
         </div>
       )}
@@ -112,7 +113,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                     <ProgramBadge
                       name={plan.program.name}
                       shortName={plan.program.shortName}
-                      type={programTypeById.get(plan.program.id) ?? "AIRLINE"}
+                      type={programTypeById.get(plan.program.id) ?? (goal.kind === "HOTEL" ? "HOTEL" : "AIRLINE")}
                       size="sm"
                     />
                     <div>
@@ -232,8 +233,10 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       )}
 
       <p className="text-xs text-zinc-400 dark:text-zinc-500">
-        Award prices are rough saver-level estimates from North America and change constantly;
-        availability isn&apos;t modeled. Verify with the program before moving points — transfers
+        {goal.kind === "FLIGHT"
+          ? "Flight award prices are rough saver-level estimates from North America"
+          : "Hotel award prices are rough standard-room estimates per tier"}{" "}
+        and change constantly; availability, peak dates, and free-night perks aren&apos;t modeled. Verify with the program before moving points — transfers
         are one-way.
       </p>
     </div>
