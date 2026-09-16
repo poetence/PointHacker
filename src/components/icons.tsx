@@ -103,6 +103,16 @@ export function BookOpenIcon(props: IconProps) {
   );
 }
 
+export function TargetIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" />
+    </svg>
+  );
+}
+
 export function LogoMarkIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
