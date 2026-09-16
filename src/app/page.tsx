@@ -8,7 +8,10 @@ import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { BalanceSparkline } from "@/components/balances/balance-sparkline";
-import { CoinsIcon } from "@/components/icons";
+import { CoinsIcon, TargetIcon } from "@/components/icons";
+import { describeGoal } from "@/lib/goals/cabins";
+import { getGoalProgress } from "@/lib/goals/get-goal-progress";
+import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -36,6 +39,13 @@ export default async function Home() {
     select: { id: true, name: true, shortName: true, type: true, pointsUnit: true },
   });
 
+  const goals = await prisma.awardGoal.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+  });
+  const goalProgress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
+
   const programIdsWithBalance = new Set(balances.map((b) => b.rewardsProgramId));
   const addablePrograms = allPrograms.filter((p) => !programIdsWithBalance.has(p.id));
 
@@ -54,6 +64,74 @@ export default async function Home() {
           </p>
         </div>
       </header>
+
+      {goals.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+              Your goals
+            </h2>
+            <Link
+              href="/goals"
+              className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
+            >
+              All goals &rarr;
+            </Link>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {goals.map((goal, index) => {
+              const best = goalProgress[index].plans[0] ?? null;
+              return (
+                <li
+                  key={goal.id}
+                  className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
+                      <TargetIcon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/goals/${goal.id}`}
+                        className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                      >
+                        {goal.label}
+                      </Link>
+                      <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                        {describeGoal(goal)}
+                      </p>
+                    </div>
+                  </div>
+                  {best ? (
+                    <>
+                      <GoalProgressBar
+                        heldPoints={best.heldPoints}
+                        pointsCovered={best.pointsCovered}
+                        pointsNeeded={best.pointsNeeded}
+                      />
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                        {best.isReachable ? (
+                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                            Bookable via {best.program.shortName ?? best.program.name}
+                          </span>
+                        ) : (
+                          <>
+                            {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
+                            {best.program.shortName ?? best.program.name} ·{" "}
+                            {best.shortfall.toLocaleString()} short
+                          </>
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">No pricing yet</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
