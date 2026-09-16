@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ALL_REGIONS, REGION_LABELS, type Region } from "@/lib/regions";
+import { useMemo, useState } from "react";
+import { REGION_LABELS } from "@/lib/regions";
+import { DESTINATIONS_BY_REGION, findDestination } from "@/lib/goals/destinations";
+import { targetMonthOptions } from "@/lib/goals/target-months";
 import {
   ALL_CABINS,
   ALL_GOAL_KINDS,
@@ -23,7 +25,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
 const EMPTY: GoalFormValues = {
-  label: "",
+  label: "Tokyo",
   kind: "FLIGHT",
   region: "ASIA",
   cabin: "BUSINESS",
@@ -59,8 +61,29 @@ export function GoalForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Goals saved before the picker existed may carry a free-text label; keep it selectable
+  // under its region so editing doesn't silently rename the trip.
+  const destinationGroups = useMemo(() => {
+    const label = initial?.label;
+    if (!label || findDestination(label)) return DESTINATIONS_BY_REGION;
+    return DESTINATIONS_BY_REGION.map((group) =>
+      group.region === initial.region
+        ? { ...group, destinations: [{ label, region: group.region }, ...group.destinations] }
+        : group
+    );
+  }, [initial]);
+  const monthOptions = useMemo(
+    () => targetMonthOptions(new Date(), initial?.targetMonth ?? ""),
+    [initial]
+  );
+
   function set<K extends keyof GoalFormValues>(key: K, value: GoalFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function setDestination(label: string) {
+    const region = findDestination(label)?.region ?? initial?.region ?? values.region;
+    setValues((prev) => ({ ...prev, label, region }));
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -103,21 +126,16 @@ export function GoalForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Where to?" hint="Free text — the region below is what prices it.">
-          <Input
-            required
-            placeholder="Tokyo"
-            value={values.label}
-            onChange={(e) => set("label", e.target.value)}
-          />
-        </Field>
-
-        <Field label="Region">
-          <Select value={values.region} onChange={(e) => set("region", e.target.value as Region)}>
-            {ALL_REGIONS.map((r) => (
-              <option key={r} value={r}>
-                {REGION_LABELS[r]}
-              </option>
+        <Field label="Where to?" hint={`Priced as ${REGION_LABELS[values.region]}.`}>
+          <Select value={values.label} onChange={(e) => setDestination(e.target.value)}>
+            {destinationGroups.map((group) => (
+              <optgroup key={group.region} label={REGION_LABELS[group.region]}>
+                {group.destinations.map((d) => (
+                  <option key={d.label} value={d.label}>
+                    {d.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </Select>
         </Field>
@@ -222,12 +240,15 @@ export function GoalForm({
           </>
         )}
 
-        <Field label="When" hint="Optional — roughly when you want to go.">
-          <Input
-            type="month"
-            value={values.targetMonth}
-            onChange={(e) => set("targetMonth", e.target.value)}
-          />
+        <Field label="When" hint="Roughly when you want to go.">
+          <Select value={values.targetMonth} onChange={(e) => set("targetMonth", e.target.value)}>
+            <option value="">Not sure yet</option>
+            {monthOptions.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </Select>
         </Field>
 
         <Field label="Notes">

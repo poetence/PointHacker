@@ -1,6 +1,7 @@
 import { isRegion, type Region } from "@/lib/regions";
 import { isCabin, isGoalKind, isHotelTier, type Cabin, type GoalKind, type HotelTier } from "./cabins";
 import { isUsState, type UsState } from "./origin-adjustment";
+import { findDestination } from "./destinations";
 
 export type GoalInput = {
   label: string;
@@ -47,6 +48,11 @@ export function parseGoalInput(body: unknown): { input: GoalInput } | { error: s
   }
   if (typeof region !== "string" || !isRegion(region)) {
     return { error: "region must be a known region." };
+  }
+  // Labels are free-form for older goals, but a curated destination must sit in its own region.
+  const destination = findDestination(label.trim());
+  if (destination && destination.region !== region) {
+    return { error: `${destination.label} is in ${destination.region}, not ${region}.` };
   }
 
   const flight = {
