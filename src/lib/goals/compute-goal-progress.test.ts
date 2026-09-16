@@ -20,12 +20,39 @@ const amexToVirgin: GoalTransferRoute = {
 const chaseToVirgin: GoalTransferRoute = { ...amexToVirgin, fromProgramId: "chase", fromProgramName: "Chase UR" };
 const chaseToUnited: GoalTransferRoute = { ...chaseToVirgin, toProgramId: "united" };
 
-const tokyoBusinessForTwo = { travelers: 2, roundTrip: true };
+const tokyoBusinessForTwo = { kind: "FLIGHT" as const, travelers: 2, roundTrip: true };
 
 describe("pointsNeededForGoal", () => {
   it("multiplies the one-way price by legs and travelers", () => {
-    expect(pointsNeededForGoal({ travelers: 2, roundTrip: true }, 47_500)).toBe(190_000);
-    expect(pointsNeededForGoal({ travelers: 1, roundTrip: false }, 47_500)).toBe(47_500);
+    expect(pointsNeededForGoal({ kind: "FLIGHT", travelers: 2, roundTrip: true }, 47_500)).toBe(190_000);
+    expect(pointsNeededForGoal({ kind: "FLIGHT", travelers: 1, roundTrip: false }, 47_500)).toBe(47_500);
+  });
+
+  it("multiplies the per-night price by nights and rooms for hotels", () => {
+    expect(pointsNeededForGoal({ kind: "HOTEL", nights: 5, rooms: 2 }, 17_000)).toBe(170_000);
+  });
+});
+
+describe("computeGoalProgress for a hotel goal", () => {
+  const hyatt = { id: "hyatt", name: "World of Hyatt", shortName: "Hyatt", pointsUnit: "points" };
+
+  it("plans transfers into a hotel program the same way as flights", () => {
+    const [plan] = computeGoalProgress({
+      goal: { kind: "HOTEL", nights: 4, rooms: 1 },
+      awardCosts: [{ program: hyatt, pointsPerUnit: 17_000 }],
+      balances: [
+        { programId: "hyatt", programName: "Hyatt", balance: 8_000 },
+        { programId: "chase", programName: "Chase UR", balance: 100_000 },
+      ],
+      transferRoutes: [{ ...chaseToVirgin, toProgramId: "hyatt" }],
+    });
+
+    expect(plan).toMatchObject({
+      pointsNeeded: 68_000,
+      heldPoints: 8_000,
+      transfers: [{ fromProgramId: "chase", pointsToTransfer: 60_000, pointsReceived: 60_000 }],
+      isReachable: true,
+    });
   });
 });
 
@@ -41,7 +68,7 @@ describe("computeGoalProgress", () => {
   it("counts a balance held directly in the target program", () => {
     const [plan] = computeGoalProgress({
       goal: tokyoBusinessForTwo,
-      awardCosts: [{ program: virgin, pointsOneWay: 47_500 }],
+      awardCosts: [{ program: virgin, pointsPerUnit: 47_500 }],
       balances: [{ programId: "virgin", programName: "Virgin", balance: 200_000 }],
       transferRoutes: [],
     });
@@ -59,7 +86,7 @@ describe("computeGoalProgress", () => {
   it("only transfers as much as needed, preferring the best ratio then the deepest balance", () => {
     const [plan] = computeGoalProgress({
       goal: tokyoBusinessForTwo,
-      awardCosts: [{ program: virgin, pointsOneWay: 47_500 }],
+      awardCosts: [{ program: virgin, pointsPerUnit: 47_500 }],
       balances: [
         { programId: "virgin", programName: "Virgin", balance: 20_000 },
         { programId: "amex", programName: "Amex MR", balance: 100_000 },
@@ -95,8 +122,8 @@ describe("computeGoalProgress", () => {
 
   it("rounds a partial transfer up to a whole block", () => {
     const [plan] = computeGoalProgress({
-      goal: { travelers: 1, roundTrip: false },
-      awardCosts: [{ program: virgin, pointsOneWay: 47_505 }],
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 47_505 }],
       balances: [{ programId: "amex", programName: "Amex MR", balance: 100_000 }],
       transferRoutes: [{ ...amexToVirgin, ratioFrom: 10, ratioTo: 13 }],
     });
@@ -108,7 +135,7 @@ describe("computeGoalProgress", () => {
   it("reports the shortfall when balances and transfers don't reach the goal", () => {
     const [plan] = computeGoalProgress({
       goal: tokyoBusinessForTwo,
-      awardCosts: [{ program: virgin, pointsOneWay: 47_500 }],
+      awardCosts: [{ program: virgin, pointsPerUnit: 47_500 }],
       balances: [{ programId: "amex", programName: "Amex MR", balance: 60_000 }],
       transferRoutes: [amexToVirgin],
     });
@@ -124,8 +151,8 @@ describe("computeGoalProgress", () => {
 
   it("ignores sources that can't meet the route's minimum transfer", () => {
     const [plan] = computeGoalProgress({
-      goal: { travelers: 1, roundTrip: false },
-      awardCosts: [{ program: virgin, pointsOneWay: 10_000 }],
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 10_000 }],
       balances: [{ programId: "amex", programName: "Amex MR", balance: 500 }],
       transferRoutes: [{ ...amexToVirgin, minimumTransfer: 1_000 }],
     });
@@ -136,11 +163,11 @@ describe("computeGoalProgress", () => {
 
   it("ranks reachable programs first, then by smallest shortfall, then cheapest", () => {
     const plans = computeGoalProgress({
-      goal: { travelers: 1, roundTrip: false },
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
       awardCosts: [
-        { program: ana, pointsOneWay: 62_500 },
-        { program: virgin, pointsOneWay: 47_500 },
-        { program: united, pointsOneWay: 88_000 },
+        { program: ana, pointsPerUnit: 62_500 },
+        { program: virgin, pointsPerUnit: 47_500 },
+        { program: united, pointsPerUnit: 88_000 },
       ],
       balances: [{ programId: "chase", programName: "Chase UR", balance: 100_000 }],
       transferRoutes: [chaseToVirgin, chaseToUnited],

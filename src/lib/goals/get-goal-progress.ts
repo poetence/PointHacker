@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { activeBonusFilter, toTransferPartnerOption } from "@/lib/redemptions/get-redemption-options";
 import {
   computeGoalProgress,
+  type GoalAwardCost,
+  type GoalSpec,
   type GoalTargetPlan,
   type GoalTransferRoute,
 } from "./compute-goal-progress";
@@ -13,19 +15,41 @@ export type GoalProgressResult = {
   transferRoutes: GoalTransferRoute[];
 };
 
+const programSelect = { select: { id: true, name: true, shortName: true, pointsUnit: true } };
+
+/** Flight and hotel goals price off different reference tables; both reduce to a per-unit cost. */
+async function findAwardCosts(goal: AwardGoal): Promise<GoalAwardCost[]> {
+  if (goal.kind === "HOTEL") {
+    const rows = await prisma.hotelAwardCost.findMany({
+      where: { region: goal.region, tier: goal.hotelTier, rewardsProgram: { isActive: true } },
+      include: { rewardsProgram: programSelect },
+    });
+    return rows.map((row) => ({ program: row.rewardsProgram, pointsPerUnit: row.pointsPerNight }));
+  }
+
+  const rows = await prisma.awardCost.findMany({
+    where: { region: goal.region, cabin: goal.cabin, rewardsProgram: { isActive: true } },
+    include: { rewardsProgram: programSelect },
+  });
+  return rows.map((row) => ({ program: row.rewardsProgram, pointsPerUnit: row.pointsOneWay }));
+}
+
+export function toGoalSpec(goal: AwardGoal): GoalSpec {
+  return goal.kind === "HOTEL"
+    ? { kind: "HOTEL", nights: goal.nights, rooms: goal.rooms }
+    : { kind: "FLIGHT", travelers: goal.travelers, roundTrip: goal.roundTrip };
+}
+
 export async function getGoalProgress(userId: string, goal: AwardGoal): Promise<GoalProgressResult> {
   const [awardCosts, balances] = await Promise.all([
-    prisma.awardCost.findMany({
-      where: { region: goal.region, cabin: goal.cabin, rewardsProgram: { isActive: true } },
-      include: { rewardsProgram: true },
-    }),
+    findAwardCosts(goal),
     prisma.pointsBalance.findMany({
       where: { userId },
       include: { rewardsProgram: { select: { name: true } } },
     }),
   ]);
 
-  const targetIds = awardCosts.map((c) => c.rewardsProgramId);
+  const targetIds = awardCosts.map((c) => c.program.id);
   const partners = await prisma.transferPartner.findMany({
     where: { toProgramId: { in: targetIds }, isActive: true },
     include: {
@@ -49,16 +73,8 @@ export async function getGoalProgress(userId: string, goal: AwardGoal): Promise<
   });
 
   const plans = computeGoalProgress({
-    goal: { travelers: goal.travelers, roundTrip: goal.roundTrip },
-    awardCosts: awardCosts.map((cost) => ({
-      program: {
-        id: cost.rewardsProgram.id,
-        name: cost.rewardsProgram.name,
-        shortName: cost.rewardsProgram.shortName,
-        pointsUnit: cost.rewardsProgram.pointsUnit,
-      },
-      pointsOneWay: cost.pointsOneWay,
-    })),
+    goal: toGoalSpec(goal),
+    awardCosts,
     balances: balances.map((b) => ({
       programId: b.rewardsProgramId,
       programName: b.rewardsProgram.name,
