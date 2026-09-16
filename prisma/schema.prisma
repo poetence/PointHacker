@@ -34,6 +34,18 @@ enum AwardCabin {
   FIRST
 }
 
+enum AwardGoalKind {
+  FLIGHT
+  HOTEL
+}
+
+/// Rough property tier — maps onto each hotel program's own category/award bands
+enum HotelTier {
+  STANDARD
+  UPSCALE
+  LUXURY
+}
+
 /// Reference/seed data — a loyalty currency (Amex MR, Delta SkyMiles, Hyatt, ...)
 model RewardsProgram {
   id                          String      @id @default(cuid())
@@ -55,6 +67,7 @@ model RewardsProgram {
   pointsBalances PointsBalance[]
   cardProducts   CardProduct[]
   awardCosts     AwardCost[]
+  hotelAwardCosts HotelAwardCost[]
   transfersFrom  TransferPartner[] @relation("TransferFrom")
   transfersTo    TransferPartner[] @relation("TransferTo")
 }
@@ -74,16 +87,36 @@ model AwardCost {
   @@index([region, cabin])
 }
 
-/// User data — a trip the user is saving points toward
+/// Reference/seed data — a ballpark per-night, per-room award price for a hotel
+/// program's properties of a given tier in a region, in the program's own currency
+model HotelAwardCost {
+  id               String         @id @default(cuid())
+  rewardsProgramId String
+  rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  region           Region
+  tier             HotelTier
+  pointsPerNight   Int
+  notes            String?
+
+  @@unique([rewardsProgramId, region, tier])
+  @@index([region, tier])
+}
+
+/// User data — a trip the user is saving points toward. FLIGHT goals use
+/// cabin/travelers/roundTrip; HOTEL goals use hotelTier/nights/rooms.
 model AwardGoal {
-  id         String     @id @default(cuid())
+  id         String        @id @default(cuid())
   userId     String
   /// Free-text destination ("Tokyo"); region is what the estimate actually keys on
   label      String
+  kind       AwardGoalKind @default(FLIGHT)
   region     Region
-  cabin      AwardCabin @default(ECONOMY)
-  travelers  Int        @default(1)
-  roundTrip  Boolean    @default(true)
+  cabin      AwardCabin    @default(ECONOMY)
+  travelers  Int           @default(1)
+  roundTrip  Boolean       @default(true)
+  hotelTier  HotelTier     @default(UPSCALE)
+  nights     Int           @default(1)
+  rooms      Int           @default(1)
   /// First of the month the user wants to travel, if known
   targetMonth DateTime?
   notes      String?
