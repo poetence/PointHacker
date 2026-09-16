@@ -2,9 +2,10 @@
 
 A full-stack web app for maximizing the value of your credit-card reward points — compare
 direct portal redemptions against every transfer-partner option and see which one is actually
-worth the most. Around that it ranks your points by travel region, tracks which cards feed which
-program, keeps a history of every balance, warns before points expire, factors in transfer-bonus
-promos, and recommends which card to apply for next.
+worth the most. Around that it lets you set an award goal ("Tokyo, business class, 2 people") and
+see how close your points get you, ranks your points by travel region, tracks which cards feed
+which program, keeps a history of every balance, warns before points expire, factors in
+transfer-bonus promos, and recommends which card's welcome bonus closes the gap.
 
 **Live:** [point-hacker.vercel.app](https://point-hacker.vercel.app) — sign in with Google; each
 account only sees and manages its own cards and balances.
@@ -36,8 +37,10 @@ account only sees and manages its own cards and balances.
 - **Catalog** — browse all 26 seeded reference programs (bank-transferable currencies, airlines,
   hotels, cashback) without needing a balance first
 
-All valuations, earn rates, transfer ratios, and expiration policies are best-effort estimates
-maintained as reference data in `src/lib/data/` — verify with the issuer/program before acting.
+All valuations, earn rates, transfer ratios, award prices, and expiration policies are
+best-effort estimates maintained as reference data in `src/lib/data/` — flight awards assume a
+North America origin, hotel awards a standard room — verify with the issuer/program before
+acting.
 
 ## Stack
 
@@ -46,7 +49,7 @@ maintained as reference data in `src/lib/data/` — verify with the issuer/progr
 - Postgres (Supabase) via Prisma ORM
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
-  expiration, card scoring)
+  expiration, card scoring, goal progress, gap-closing cards)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR
 
 ## Getting started
