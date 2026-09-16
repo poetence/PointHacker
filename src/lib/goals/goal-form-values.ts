@@ -13,6 +13,8 @@ export type GoalFormValues = {
   hotelTier: HotelTier;
   nights: number;
   rooms: number;
+  /** Two-letter state or "" for "anywhere in the US" */
+  originState: string;
   /** "YYYY-MM" or "" */
   targetMonth: string;
   notes: string;
@@ -29,6 +31,7 @@ export function toGoalFormValues(goal: AwardGoal): GoalFormValues {
     hotelTier: goal.hotelTier,
     nights: goal.nights,
     rooms: goal.rooms,
+    originState: goal.originState ?? "",
     targetMonth: goal.targetMonth ? goal.targetMonth.toISOString().slice(0, 7) : "",
     notes: goal.notes ?? "",
   };

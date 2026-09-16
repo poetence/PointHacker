@@ -16,6 +16,7 @@ import {
 } from "@/lib/goals/cabins";
 import { MAX_NIGHTS, MAX_ROOMS, MAX_TRAVELERS } from "@/lib/goals/parse-goal-input";
 import type { GoalFormValues } from "@/lib/goals/goal-form-values";
+import { ALL_US_STATES, US_STATES } from "@/lib/goals/origin-adjustment";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -31,22 +32,30 @@ const EMPTY: GoalFormValues = {
   hotelTier: "UPSCALE",
   nights: 4,
   rooms: 1,
+  originState: "",
   targetMonth: "",
   notes: "",
 };
 
-/** Creates a goal when `goalId` is absent; otherwise replaces that goal. */
+/**
+ * Creates a goal when `goalId` is absent; otherwise replaces that goal.
+ * `defaultOriginState` pre-fills "Flying from" on a new goal (typically the last goal's origin).
+ */
 export function GoalForm({
   goalId,
   initial,
+  defaultOriginState = "",
   onSaved,
 }: {
   goalId?: string;
   initial?: GoalFormValues;
+  defaultOriginState?: string;
   onSaved?: () => void;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState<GoalFormValues>(initial ?? EMPTY);
+  const [values, setValues] = useState<GoalFormValues>(
+    initial ?? { ...EMPTY, originState: defaultOriginState }
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -67,6 +76,7 @@ export function GoalForm({
         travelers: Number(values.travelers),
         nights: Number(values.nights),
         rooms: Number(values.rooms),
+        originState: values.originState || null,
         targetMonth: values.targetMonth || null,
         notes: values.notes || null,
       }),
@@ -157,6 +167,17 @@ export function GoalForm({
                 </Select>
               </Field>
             </div>
+
+            <Field label="Flying from" hint="Nudges prices by coast — Asia is cheaper from the West, Europe from the East.">
+              <Select value={values.originState} onChange={(e) => set("originState", e.target.value)}>
+                <option value="">Anywhere in the US</option>
+                {ALL_US_STATES.map((code) => (
+                  <option key={code} value={code}>
+                    {US_STATES[code]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           </>
         ) : (
           <>

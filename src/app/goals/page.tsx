@@ -44,7 +44,7 @@ export default async function GoalsPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className={sectionTitle}>Set a goal</h2>
-        <GoalForm />
+        <GoalForm defaultOriginState={goals.find((g) => g.originState)?.originState ?? ""} />
       </section>
 
       <section className="flex flex-col gap-4">

@@ -1,5 +1,6 @@
 import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { adjustForOrigin, isUsState, originZoneForState, type OriginZone } from "./origin-adjustment";
 import { activeBonusFilter, toTransferPartnerOption } from "@/lib/redemptions/get-redemption-options";
 import {
   computeGoalProgress,
@@ -31,7 +32,18 @@ async function findAwardCosts(goal: AwardGoal): Promise<GoalAwardCost[]> {
     where: { region: goal.region, cabin: goal.cabin, rewardsProgram: { isActive: true } },
     include: { rewardsProgram: programSelect },
   });
-  return rows.map((row) => ({ program: row.rewardsProgram, pointsPerUnit: row.pointsOneWay }));
+  const zone = goalOriginZone(goal);
+  return rows.map((row) => ({
+    program: row.rewardsProgram,
+    pointsPerUnit: adjustForOrigin(row.pointsOneWay, goal.region, zone),
+  }));
+}
+
+/** The coast a flight goal departs from, or null when no origin is set (or it's a hotel goal). */
+export function goalOriginZone(goal: AwardGoal): OriginZone | null {
+  return goal.kind === "FLIGHT" && goal.originState && isUsState(goal.originState)
+    ? originZoneForState(goal.originState)
+    : null;
 }
 
 export function toGoalSpec(goal: AwardGoal): GoalSpec {

@@ -6,7 +6,8 @@ import { formatCents } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
-import { getGoalProgress } from "@/lib/goals/get-goal-progress";
+import { getGoalProgress, goalOriginZone } from "@/lib/goals/get-goal-progress";
+import { ORIGIN_ZONE_LABELS, originMultiplier } from "@/lib/goals/origin-adjustment";
 import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
 import { GoalActions } from "@/components/goals/goal-actions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
@@ -41,6 +42,9 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   );
 
   const gapCards = best && !best.isReachable ? await getGoalGapCards(userId, progress) : null;
+
+  const originZone = goalOriginZone(goal);
+  const originPct = originZone ? Math.round((originMultiplier(goal.region, originZone) - 1) * 100) : 0;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
@@ -84,6 +88,13 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
             {describeGoalUnit(goal)} · you hold {best.heldPoints.toLocaleString()}{" "}
             there and can transfer in{" "}
             {(best.potentialPoints - best.heldPoints).toLocaleString()} more.
+            {originZone && originPct !== 0 && (
+              <>
+                {" "}
+                Prices {originPct < 0 ? "trimmed" : "bumped"} {Math.abs(originPct)}% for a{" "}
+                {ORIGIN_ZONE_LABELS[originZone]} departure.
+              </>
+            )}
           </p>
         </div>
       ) : (
