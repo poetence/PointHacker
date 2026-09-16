@@ -21,7 +21,8 @@ account only sees and manages its own cards and balances.
   program's expiration policy, your balance history, and which of your cards feed it
 - **Award goals** — say "Tokyo, business class, 2 people, next spring" (or "Kyoto, upscale hotel,
   4 nights") and the app estimates the points needed in every program that flies or has rooms
-  there (from rough flight and per-night award-cost tables), shows how close each of your
+  there (from rough flight and per-night award-cost tables, nudged by which US state you fly
+  from), shows how close each of your
   balances gets you — including the exact transfers (with active promos) that would close the gap
   — and which catalog card's welcome bonus would finish the job
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
@@ -38,9 +39,9 @@ account only sees and manages its own cards and balances.
   hotels, cashback) without needing a balance first
 
 All valuations, earn rates, transfer ratios, award prices, and expiration policies are
-best-effort estimates maintained as reference data in `src/lib/data/` — flight awards assume a
-North America origin, hotel awards a standard room — verify with the issuer/program before
-acting.
+best-effort estimates maintained as reference data in `src/lib/data/` — flight awards are priced
+from a generic US origin and adjusted by coast when you set a departure state, hotel awards
+assume a standard room — verify with the issuer/program before acting.
 
 ## Stack
 

@@ -1,5 +1,6 @@
 import { isRegion, type Region } from "@/lib/regions";
 import { isCabin, isGoalKind, isHotelTier, type Cabin, type GoalKind, type HotelTier } from "./cabins";
+import { isUsState, type UsState } from "./origin-adjustment";
 
 export type GoalInput = {
   label: string;
@@ -11,6 +12,7 @@ export type GoalInput = {
   hotelTier: HotelTier;
   nights: number;
   rooms: number;
+  originState: UsState | null;
   targetMonth: Date | null;
   notes: string | null;
 };
@@ -32,8 +34,9 @@ export function parseGoalInput(body: unknown): { input: GoalInput } | { error: s
   if (!body || typeof body !== "object") {
     return { error: "Request body must be a JSON object." };
   }
-  const { label, kind, region, cabin, travelers, roundTrip, hotelTier, nights, rooms, targetMonth, notes } =
-    body as Record<string, unknown>;
+  const {
+    label, kind, region, cabin, travelers, roundTrip, hotelTier, nights, rooms, originState, targetMonth, notes,
+  } = body as Record<string, unknown>;
 
   if (typeof label !== "string" || label.trim().length === 0) {
     return { error: "label is required." };
@@ -76,6 +79,14 @@ export function parseGoalInput(body: unknown): { input: GoalInput } | { error: s
     return { error: `rooms must be an integer between 1 and ${MAX_ROOMS}.` };
   }
 
+  let origin: UsState | null = null;
+  if (originState !== null && originState !== undefined && originState !== "") {
+    if (typeof originState !== "string" || !isUsState(originState)) {
+      return { error: "originState must be a two-letter US state code or null." };
+    }
+    origin = originState;
+  }
+
   let targetMonthDate: Date | null = null;
   if (targetMonth !== null && targetMonth !== undefined) {
     // Accepts "YYYY-MM" (from <input type="month">) or any ISO date; snaps to the 1st.
@@ -104,6 +115,7 @@ export function parseGoalInput(body: unknown): { input: GoalInput } | { error: s
       hotelTier: hotel.hotelTier,
       nights: hotel.nights,
       rooms: hotel.rooms,
+      originState: origin,
       targetMonth: targetMonthDate,
       notes: typeof notes === "string" && notes.trim().length > 0 ? notes.trim() : null,
     },

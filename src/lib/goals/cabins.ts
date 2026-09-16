@@ -1,3 +1,5 @@
+import { US_STATES, isUsState } from "./origin-adjustment";
+
 export const CABIN_LABELS = {
   ECONOMY: "Economy",
   PREMIUM_ECONOMY: "Premium economy",
@@ -48,6 +50,7 @@ type DescribableGoal = {
   hotelTier: HotelTier;
   nights: number;
   rooms: number;
+  originState: string | null;
   targetMonth: Date | null;
 };
 
@@ -59,6 +62,7 @@ export function describeGoal(goal: DescribableGoal): string {
           CABIN_LABELS[goal.cabin],
           `${goal.travelers} ${goal.travelers === 1 ? "traveler" : "travelers"}`,
           goal.roundTrip ? "round trip" : "one way",
+          ...(goal.originState && isUsState(goal.originState) ? [`from ${US_STATES[goal.originState]}`] : []),
         ]
       : [
           `${HOTEL_TIER_LABELS[goal.hotelTier]} hotel`,
