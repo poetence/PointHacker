@@ -12,8 +12,11 @@ account only sees and manages its own cards and balances.
 
 ## Features
 
-- **Sign-in** — Google OAuth (Auth.js); every user's cards, balances, and spending profile are
-  private to their account, while the program catalog, card catalog, and promos are shared
+- **Sign-in** — Google OAuth (Auth.js), optionally restricted to an `ALLOWED_EMAILS` invite
+  list; every user's cards, balances, and spending profile are
+  private to their account, while the program catalog, card catalog, and promos are shared.
+  Every table has row-level security enabled (no policies) so Supabase's public Data API
+  can't reach the data — only the app, via Prisma, can
 - **Dashboard** — every program you hold a balance in (labelled in points or miles as the
   program calls them), with its best redemption option ranked automatically, a change-vs-last
   delta and sparkline, and a warning pill when points are expiring soon or likely expired
@@ -66,7 +69,9 @@ npm run dev
 
 You'll also need a Google OAuth client (redirect URI
 `http://localhost:3000/api/auth/callback/google`) for `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`, plus
-an `AUTH_SECRET` (`npx auth secret`) — see `.env.example` for the full list.
+an `AUTH_SECRET` (`npx auth secret`) — see `.env.example` for the full list. Set
+`ALLOWED_EMAILS` (comma-separated) to limit sign-in to specific Google accounts; leave it empty
+to let anyone sign in. `OWNER_EMAIL` is always allowed.
 
 Open [http://localhost:3000](http://localhost:3000).
 
