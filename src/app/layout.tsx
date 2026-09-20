@@ -30,9 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <Nav />
-        {children}
+        <main className="rise-in flex-1">{children}</main>
+        <footer className="border-t border-zinc-200/80 px-6 py-6 text-center text-xs text-zinc-500 dark:border-zinc-800/80 dark:text-zinc-500">
+          Values and award prices are ballpark estimates — always check the program before you
+          transfer.
+        </footer>
       </body>
     </html>
   );
