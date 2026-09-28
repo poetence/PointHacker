@@ -76,7 +76,7 @@ export function CatalogCardPicker({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+              <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
                 Choose a card
               </h2>
               <Button size="sm" variant="link" type="button" onClick={() => setIsOpen(false)}>

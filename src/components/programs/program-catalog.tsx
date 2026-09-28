@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { Input } from "@/components/ui/input";
+import { rowCardClass } from "@/components/ui/card";
 
 type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
@@ -52,15 +53,15 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
         if (group.length === 0) return null;
 
         return (
-          <section key={type} className="flex flex-col gap-4">
-            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+          <section key={type} className="flex flex-col gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
               {label}
             </h2>
             <ul className="flex flex-col gap-3">
               {group.map((program) => (
                 <li
                   key={program.id}
-                  className="flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-wrap items-center gap-4 ${rowCardClass}`}
                 >
                   <ProgramBadge
                     name={program.name}

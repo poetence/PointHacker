@@ -8,13 +8,14 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { GoalDeleteButton } from "@/components/goals/goal-actions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
+import { rowCardClass } from "@/components/ui/card";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
 export const dynamic = "force-dynamic";
 
 const sectionTitle =
-  "font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50";
+  "font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50";
 
 export default async function GoalsPage() {
   const userId = await requireSessionUserId();
@@ -27,13 +28,13 @@ export default async function GoalsPage() {
   const progress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <header className="flex items-center gap-4">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 shadow-sm dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
           <TargetIcon className="h-7 w-7" />
         </span>
         <div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Award goals
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -42,12 +43,12 @@ export default async function GoalsPage() {
         </div>
       </header>
 
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3">
         <h2 className={sectionTitle}>Set a goal</h2>
         <GoalForm defaultOriginState={goals.find((g) => g.originState)?.originState ?? ""} />
       </section>
 
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3">
         <h2 className={sectionTitle}>Your goals</h2>
 
         {goals.length === 0 ? (
@@ -64,13 +65,13 @@ export default async function GoalsPage() {
               return (
                 <li
                   key={goal.id}
-                  className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-col gap-3 ${rowCardClass}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <Link
                         href={`/goals/${goal.id}`}
-                        className="font-display text-lg font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                        className="font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
                       >
                         {goal.label}
                       </Link>

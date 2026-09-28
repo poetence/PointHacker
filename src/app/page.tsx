@@ -12,6 +12,8 @@ import { CoinsIcon, TargetIcon } from "@/components/icons";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
+import { getExpirationStatus } from "@/lib/points-expiration";
+import { rowCardClass } from "@/components/ui/card";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -49,14 +51,28 @@ export default async function Home() {
   const programIdsWithBalance = new Set(balances.map((b) => b.rewardsProgramId));
   const addablePrograms = allPrograms.filter((p) => !programIdsWithBalance.has(p.id));
 
+  const totalPoints = balances.reduce((sum, b) => sum + b.balance, 0);
+  const totalValueCents = balances.reduce(
+    (sum, b) => sum + (topOptions.get(b.rewardsProgramId)?.totalValueCents ?? 0),
+    0
+  );
+  const expiringCount = balances.filter(
+    (b) =>
+      getExpirationStatus({
+        lastUpdatedAt: b.lastUpdatedAt,
+        expirationMonths: b.rewardsProgram.pointsExpirationMonths,
+        overrideAt: b.expiresOverrideAt,
+      }).status !== "none"
+  ).length;
+
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <header className="flex items-center gap-4">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
           <CoinsIcon className="h-7 w-7" />
         </span>
         <div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Dashboard
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -65,10 +81,39 @@ export default async function Home() {
         </div>
       </header>
 
+      {balances.length > 0 && (
+        <dl className="grid grid-cols-3 divide-x divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="px-4 py-3">
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points held</dt>
+            <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
+              {totalPoints.toLocaleString()}
+            </dd>
+          </div>
+          <div className="px-4 py-3">
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Best-case value</dt>
+            <dd className="font-display text-xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl">
+              {formatCents(totalValueCents)}
+            </dd>
+          </div>
+          <div className="px-4 py-3">
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">At risk</dt>
+            <dd
+              className={`font-display text-xl font-semibold tracking-tight sm:text-2xl ${
+                expiringCount > 0
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-black dark:text-zinc-50"
+              }`}
+            >
+              {expiringCount === 0 ? "None" : `${expiringCount} of ${balances.length}`}
+            </dd>
+          </div>
+        </dl>
+      )}
+
       {goals.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
               Your goals
             </h2>
             <Link
@@ -84,7 +129,7 @@ export default async function Home() {
               return (
                 <li
                   key={goal.id}
-                  className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-col gap-2 ${rowCardClass}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
@@ -133,15 +178,8 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
-          Add a balance
-        </h2>
-        <AddBalanceForm programs={addablePrograms} />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Your balances
         </h2>
 
@@ -149,7 +187,7 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
             <CoinsIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No balances yet — add one above to see your best redemption options.
+              No balances yet — add one below to see your best redemption options.
             </p>
           </div>
         ) : (
@@ -162,69 +200,105 @@ export default async function Home() {
               return (
                 <li
                   key={balance.id}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-col gap-3 ${rowCardClass}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <ProgramBadge
-                      name={balance.rewardsProgram.name}
-                      shortName={balance.rewardsProgram.shortName}
-                      type={balance.rewardsProgram.type}
-                      size="sm"
-                    />
-                    <div>
-                      <Link
-                        href={`/programs/${balance.rewardsProgramId}`}
-                        className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
-                      >
-                        {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
-                      </Link>
-                      <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        {balance.balance.toLocaleString()} {balance.rewardsProgram.pointsUnit}
-                        {delta !== null && delta !== 0 && (
-                          <span
-                            className={
-                              delta > 0
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-zinc-400 dark:text-zinc-500"
-                            }
-                          >
-                            {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString()}
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ProgramBadge
+                        name={balance.rewardsProgram.name}
+                        shortName={balance.rewardsProgram.shortName}
+                        type={balance.rewardsProgram.type}
+                        size="sm"
+                      />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/programs/${balance.rewardsProgramId}`}
+                          className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                        >
+                          {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                        </Link>
+                        <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                          <span className="font-display text-base font-semibold tabular-nums text-black dark:text-zinc-50">
+                            {balance.balance.toLocaleString()}
                           </span>
-                        )}
-                        <BalanceSparkline values={history} />
-                        <ExpirationPill
-                          lastUpdatedAt={balance.lastUpdatedAt}
-                          expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
-                          overrideAt={balance.expiresOverrideAt}
-                        />
-                      </p>
+                          {balance.rewardsProgram.pointsUnit}
+                          {delta !== null && delta !== 0 && (
+                            <span
+                              className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                                delta > 0
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                              }`}
+                            >
+                              {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString()}
+                            </span>
+                          )}
+                          <BalanceSparkline values={history} />
+                          <ExpirationPill
+                            lastUpdatedAt={balance.lastUpdatedAt}
+                            expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
+                            overrideAt={balance.expiresOverrideAt}
+                          />
+                        </p>
+                      </div>
                     </div>
+
+                    <BalanceRowActions
+                      id={balance.id}
+                      currentBalance={balance.balance}
+                      currentExpiresOverrideAt={balance.expiresOverrideAt}
+                      pointsUnit={balance.rewardsProgram.pointsUnit}
+                    />
                   </div>
 
-                  <div className="text-right">
+                  <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
                     {top ? (
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                        {formatCents(top.totalValueCents)} —{" "}
-                        {top.kind === "direct"
-                          ? "direct redemption"
-                          : `transfer to ${top.partnerProgramName}${top.activeBonusPercent ? ` (+${top.activeBonusPercent}% bonus)` : ""}`}
-                      </p>
+                      <>
+                        <div className="flex gap-1.5">
+                          <dt className="text-zinc-500 dark:text-zinc-400">Worth up to</dt>
+                          <dd className="font-medium text-emerald-600 dark:text-emerald-400">
+                            {formatCents(top.totalValueCents)}
+                          </dd>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <dt className="text-zinc-500 dark:text-zinc-400">Best use</dt>
+                          <dd className="text-zinc-700 dark:text-zinc-300">
+                            {top.kind === "direct" ? (
+                              "direct redemption"
+                            ) : (
+                              <>
+                                transfer to {top.partnerProgramName}
+                                {top.activeBonusPercent ? (
+                                  <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                                    +{top.activeBonusPercent}% bonus
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </dd>
+                        </div>
+                      </>
                     ) : (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">No options available</p>
+                      <div className="text-zinc-500 dark:text-zinc-400">No options available</div>
                     )}
-                  </div>
-
-                  <BalanceRowActions
-                    id={balance.id}
-                    currentBalance={balance.balance}
-                    currentExpiresOverrideAt={balance.expiresOverrideAt}
-                    pointsUnit={balance.rewardsProgram.pointsUnit}
-                  />
+                  </dl>
                 </li>
               );
             })}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-xl border border-dashed border-zinc-300 p-5 dark:border-zinc-700">
+        <div>
+          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            Add a balance
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Track another program to see where its points are worth the most.
+          </p>
+        </div>
+        <AddBalanceForm programs={addablePrograms} />
       </section>
     </div>
   );

@@ -69,7 +69,7 @@ export function ProgramPickerModal({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+              <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
                 Choose a program
               </h2>
               <Button size="sm" variant="link" type="button" onClick={() => setIsOpen(false)}>

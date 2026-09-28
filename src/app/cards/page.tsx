@@ -7,6 +7,7 @@ import { CardRowActions } from "@/components/cards/card-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { WalletIcon } from "@/components/icons";
 import { CardArt } from "@/components/recommendations/card-art";
+import { rowCardClass } from "@/components/ui/card";
 
 // Cards mutate via the API after build, so this page must be re-rendered per
 // request rather than statically prerendered at build time.
@@ -46,13 +47,13 @@ export default async function CardsPage() {
     }));
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <header className="flex items-center gap-4">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 text-sky-700 shadow-sm dark:from-sky-950 dark:to-sky-900 dark:text-sky-300">
           <WalletIcon className="h-7 w-7" />
         </span>
         <div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Your cards
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -61,15 +62,15 @@ export default async function CardsPage() {
         </div>
       </header>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Add a card
         </h2>
         <AddCardForm programs={programs} catalog={pickableCatalog} />
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Your wallet
         </h2>
 
@@ -83,7 +84,7 @@ export default async function CardsPage() {
             {cards.map((card) => (
               <li
                 key={card.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
               >
                 <div className="flex items-center gap-3">
                   {card.cardProductId ? (

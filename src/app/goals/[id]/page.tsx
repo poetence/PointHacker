@@ -15,9 +15,10 @@ import { GapCardPill } from "@/components/goals/gap-card-pill";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { CardArt } from "@/components/recommendations/card-art";
 import { TargetIcon } from "@/components/icons";
+import { rowCardClass } from "@/components/ui/card";
 
 const sectionTitle =
-  "font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50";
+  "font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50";
 
 export default async function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -47,7 +48,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   const originPct = originZone ? Math.round((originMultiplier(goal.region, originZone) - 1) * 100) : 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <div>
         <Link href="/goals" className="text-sm text-zinc-500 underline dark:text-zinc-400">
           &larr; All goals
@@ -59,7 +60,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
           <TargetIcon className="h-7 w-7" />
         </span>
         <div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             {goal.label}
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -109,13 +110,13 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       )}
 
       {plans.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <h2 className={sectionTitle}>Ways to book it</h2>
           <ul className="flex flex-col gap-3">
             {plans.map((plan, index) => (
               <li
                 key={plan.program.id}
-                className={`flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                className={`flex flex-col gap-3 ${rowCardClass} ${
                   index === 0 && plan.isReachable ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                 }`}
               >
@@ -201,7 +202,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       )}
 
       {gapCards && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className={sectionTitle}>Close the gap with a card</h2>
             <Link
@@ -221,7 +222,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
               {gapCards.ranked.slice(0, 3).map(({ card, contribution }) => (
                 <li
                   key={card.id}
-                  className="flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-wrap items-center gap-4 ${rowCardClass}`}
                 >
                   <CardArt issuer={card.issuer} name={card.name} />
                   <div className="min-w-0 flex-1">

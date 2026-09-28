@@ -6,6 +6,7 @@ import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption
 import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
+import { rowCardClass } from "@/components/ui/card";
 
 export default async function ProgramDetailPage({
   params,
@@ -35,7 +36,7 @@ export default async function ProgramDetailPage({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <div>
         <Link href="/" className="text-sm text-zinc-500 underline dark:text-zinc-400">
           &larr; Back to dashboard
@@ -73,8 +74,8 @@ export default async function ProgramDetailPage({
         </div>
       </header>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Redemption options, ranked
         </h2>
 
@@ -82,7 +83,7 @@ export default async function ProgramDetailPage({
           {options.map((option, index) => (
             <li
               key={option.kind === "direct" ? "direct" : option.partnerProgramId}
-              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+              className={`flex flex-wrap items-center justify-between gap-3 ${rowCardClass} ${
                 option.kind === "transfer" && !option.isViable ? "opacity-50" : ""
               } ${index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""}`}
             >
@@ -128,8 +129,8 @@ export default async function ProgramDetailPage({
       </section>
 
       {pointsBalance && pointsBalance.snapshots.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Balance history
           </h2>
           <ul className="flex flex-col gap-2">
@@ -171,8 +172,8 @@ export default async function ProgramDetailPage({
         </section>
       )}
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Cards earning this program
         </h2>
 
