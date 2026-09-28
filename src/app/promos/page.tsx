@@ -5,6 +5,7 @@ import { isBonusActive } from "@/lib/redemptions/transfer-bonus";
 import { AddPromoForm } from "@/components/promos/add-promo-form";
 import { PromoRowActions } from "@/components/promos/promo-row-actions";
 import { SparkleIcon } from "@/components/icons";
+import { rowCardClass } from "@/components/ui/card";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -32,7 +33,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
           return (
             <li
               key={promo.id}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+              className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
             >
               <div>
                 <p className="font-medium text-black dark:text-zinc-50">

@@ -18,6 +18,7 @@ import { effectiveRate } from "@/lib/recommendations/score-cards";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
+import { rowCardClass } from "@/components/ui/card";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -128,7 +129,7 @@ export default async function RecommendPage({
                 {gapCards?.ranked.slice(0, 3).map(({ card, contribution }) => (
                   <li
                     key={card.id}
-                    className={`flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                    className={`flex flex-wrap items-center gap-4 ${rowCardClass} ${
                       contribution.closesGap ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                     }`}
                   >
@@ -184,7 +185,7 @@ export default async function RecommendPage({
                   return (
                   <li
                     key={rec.card.id}
-                    className={`flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                    className={`flex flex-col gap-3 ${rowCardClass} ${
                       index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                     }`}
                   >

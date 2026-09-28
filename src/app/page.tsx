@@ -13,6 +13,7 @@ import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
+import { rowCardClass } from "@/components/ui/card";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -128,7 +129,7 @@ export default async function Home() {
               return (
                 <li
                   key={goal.id}
-                  className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-col gap-2 ${rowCardClass}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
@@ -199,7 +200,7 @@ export default async function Home() {
               return (
                 <li
                   key={balance.id}
-                  className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-col gap-3 ${rowCardClass}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3">

@@ -7,6 +7,7 @@ import { CardRowActions } from "@/components/cards/card-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { WalletIcon } from "@/components/icons";
 import { CardArt } from "@/components/recommendations/card-art";
+import { rowCardClass } from "@/components/ui/card";
 
 // Cards mutate via the API after build, so this page must be re-rendered per
 // request rather than statically prerendered at build time.
@@ -83,7 +84,7 @@ export default async function CardsPage() {
             {cards.map((card) => (
               <li
                 key={card.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
               >
                 <div className="flex items-center gap-3">
                   {card.cardProductId ? (

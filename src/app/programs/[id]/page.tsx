@@ -6,6 +6,7 @@ import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption
 import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
+import { rowCardClass } from "@/components/ui/card";
 
 export default async function ProgramDetailPage({
   params,
@@ -82,7 +83,7 @@ export default async function ProgramDetailPage({
           {options.map((option, index) => (
             <li
               key={option.kind === "direct" ? "direct" : option.partnerProgramId}
-              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+              className={`flex flex-wrap items-center justify-between gap-3 ${rowCardClass} ${
                 option.kind === "transfer" && !option.isViable ? "opacity-50" : ""
               } ${index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""}`}
             >

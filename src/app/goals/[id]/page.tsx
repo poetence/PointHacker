@@ -15,6 +15,7 @@ import { GapCardPill } from "@/components/goals/gap-card-pill";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { CardArt } from "@/components/recommendations/card-art";
 import { TargetIcon } from "@/components/icons";
+import { rowCardClass } from "@/components/ui/card";
 
 const sectionTitle =
   "font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50";
@@ -115,7 +116,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
             {plans.map((plan, index) => (
               <li
                 key={plan.program.id}
-                className={`flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 ${
+                className={`flex flex-col gap-3 ${rowCardClass} ${
                   index === 0 && plan.isReachable ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
                 }`}
               >
@@ -221,7 +222,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
               {gapCards.ranked.slice(0, 3).map(({ card, contribution }) => (
                 <li
                   key={card.id}
-                  className="flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className={`flex flex-wrap items-center gap-4 ${rowCardClass}`}
                 >
                   <CardArt issuer={card.issuer} name={card.name} />
                   <div className="min-w-0 flex-1">

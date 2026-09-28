@@ -27,6 +27,22 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* One keyboard-focus ring for every interactive element, so variants that carry
+   no background of their own (icon/link/danger buttons, nav pills) can't end up
+   invisible to keyboard users. Fields opt out below — they signal focus with an
+   emerald border and ring instead. Don't set border-radius here: an outline
+   already follows the element's own corners. */
+:focus-visible {
+  outline: 2px solid #10b981; /* emerald-500 */
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: #a7f3d0; /* emerald-200 */
   color: #064e3b; /* emerald-900 */
