@@ -1,16 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatCents } from "@/lib/format";
 
 /**
- * Counts from zero up to `value` on mount. `format` keeps the caller in charge
- * of how the number reads (thousands separators, currency), so this stays
- * agnostic about what it's counting.
+ * Counts from zero up to `value` on mount.
+ *
+ * `format` is a name rather than a function on purpose: every caller is a
+ * Server Component, and a function prop can't cross that boundary — passing
+ * one throws "Functions cannot be passed directly to Client Components" at
+ * request time, which a build won't catch on a force-dynamic page.
  *
  * Renders the final value on the server and for anyone who prefers reduced
  * motion, so the number is never wrong or missing — only the approach to it
  * is animated.
  */
+const FORMATTERS = {
+  number: (n: number) => n.toLocaleString(),
+  cents: formatCents,
+} as const;
+
 export function CountUp({
   value,
   format,
@@ -18,7 +27,7 @@ export function CountUp({
   className = "",
 }: {
   value: number;
-  format: (n: number) => string;
+  format: keyof typeof FORMATTERS;
   durationMs?: number;
   className?: string;
 }) {
@@ -47,7 +56,7 @@ export function CountUp({
 
   return (
     <span className={`tabular-nums ${className}`} suppressHydrationWarning>
-      {format(shown)}
+      {FORMATTERS[format](shown)}
     </span>
   );
 }

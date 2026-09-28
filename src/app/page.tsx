@@ -88,13 +88,13 @@ export default async function Home() {
           <div className="px-4 py-3">
             <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points held</dt>
             <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-              <CountUp value={totalPoints} format={(n) => n.toLocaleString()} />
+              <CountUp value={totalPoints} format="number" />
             </dd>
           </div>
           <div className="px-4 py-3">
             <dt className="text-xs text-zinc-500 dark:text-zinc-400">Best-case value</dt>
             <dd className="font-display text-xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl">
-              <CountUp value={totalValueCents} format={formatCents} />
+              <CountUp value={totalValueCents} format="cents" />
             </dd>
           </div>
           <div className="px-4 py-3">
