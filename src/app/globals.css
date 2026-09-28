@@ -63,6 +63,21 @@ textarea:focus-visible {
   display: none;
 }
 
+/* Fades the trailing edge of a horizontal scroller, so a link cut off mid-word
+   reads as "there's more, scroll" instead of as text colliding with whatever
+   sits next to it. Above lg the nav strip fits outright, so the fade would only
+   dim the last link for no reason. */
+.fade-scroll-x {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+@media (min-width: 1024px) {
+  .fade-scroll-x {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
 /* Cards and sections ease in on load instead of popping. */
 @keyframes rise-in {
   from {

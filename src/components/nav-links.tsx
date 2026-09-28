@@ -10,7 +10,7 @@ export function NavLinks({ links }: { links: NavLink[] }) {
   const pathname = usePathname();
 
   return (
-    <div className="scrollbar-none flex items-center gap-1 overflow-x-auto">
+    <div className="fade-scroll-x scrollbar-none flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
       {links.map((link) => {
         const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
         return (

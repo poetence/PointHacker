@@ -113,6 +113,15 @@ export function TargetIcon(props: IconProps) {
   );
 }
 
+export function SignOutIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M15 17l5-5-5-5M20 12H9" />
+      <path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h7" />
+    </svg>
+  );
+}
+
 export function TicketIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
