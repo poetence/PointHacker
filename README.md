@@ -28,7 +28,8 @@ account only sees and manages its own cards and balances.
   there (from rough flight and per-night award-cost tables, nudged by which US state you fly
   from), shows how close each of your
   balances gets you — including the exact transfers (with active promos) that would close the gap
-  — and which catalog card's welcome bonus would finish the job
+  — and which catalog card's welcome bonus would finish the job. Each goal leads with generated
+  artwork for its region, and its progress bar fills as you get closer
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
 - **Transfer bonuses** — record time-limited promos (e.g. +30% Chase → Hyatt); active ones are
   folded into every ranking and tagged wherever they drive a recommendation
@@ -47,6 +48,10 @@ best-effort estimates maintained as reference data in `src/lib/data/` — flight
 from a generic US origin and adjusted by coast when you set a departure state, hotel awards
 assume a standard room — verify with the issuer/program before acting.
 
+Every visual is generated in code: airline, hotel, and issuer logos are trademarked, so the app
+draws its own card art, program badges, icons, and per-region destination scenes rather than
+shipping real logos or photography.
+
 ## Stack
 
 - Next.js (App Router) + TypeScript
@@ -54,7 +59,8 @@ assume a standard room — verify with the issuer/program before acting.
 - Postgres (Supabase) via Prisma ORM
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
-  expiration, card scoring, goal progress, gap-closing cards)
+  expiration, card scoring, goal progress, gap-closing cards, origin adjustment, target months,
+  the sign-in allowlist)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR
 
 ## Getting started
