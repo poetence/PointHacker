@@ -23,14 +23,14 @@ export function GoalProgressBar({
       className={`relative h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800 ${className}`}
     >
       <div
-        className={`absolute inset-y-0 left-0 rounded-full ${
+        className={`bar-fill absolute inset-y-0 left-0 rounded-full ${
           complete ? "bg-emerald-500 dark:bg-emerald-400" : "bg-sky-300 dark:bg-sky-700"
         }`}
         style={{ width: `${coveredPct}%` }}
       />
       <div
-        className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 dark:bg-emerald-400"
-        style={{ width: `${heldPct}%` }}
+        className="bar-fill absolute inset-y-0 left-0 rounded-full bg-emerald-500 dark:bg-emerald-400"
+        style={{ width: `${heldPct}%`, animationDelay: "120ms" }}
       />
     </div>
   );

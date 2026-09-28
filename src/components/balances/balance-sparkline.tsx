@@ -31,11 +31,13 @@ export function BalanceSparkline({ values }: { values: number[] }) {
     >
       <polyline
         points={points}
+        pathLength={1}
         fill="none"
         stroke="currentColor"
         strokeWidth={1.75}
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="draw-in"
       />
     </svg>
   );

@@ -12,6 +12,7 @@ import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { rowCardClass } from "@/components/ui/card";
+import { RegionScene } from "@/components/regions/region-scene";
 
 // Balances mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -101,9 +102,12 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
   return (
     <>
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Best for {REGION_LABELS[region]}
-        </h2>
+        <div className="overflow-hidden rounded-xl border border-zinc-200 shadow-sm dark:border-zinc-800">
+          <RegionScene region={region} className="h-24" />
+          <h2 className="bg-white px-5 py-3 font-display text-xl font-semibold tracking-tight text-black dark:bg-zinc-900/50 dark:text-zinc-50">
+            Best for {REGION_LABELS[region]}
+          </h2>
+        </div>
 
         {ranked.length === 0 ? (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

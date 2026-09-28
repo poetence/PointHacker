@@ -8,7 +8,8 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { GoalDeleteButton } from "@/components/goals/goal-actions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
-import { rowCardClass } from "@/components/ui/card";
+import { rowCardFrameClass } from "@/components/ui/card";
+import { RegionScene } from "@/components/regions/region-scene";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
@@ -65,8 +66,11 @@ export default async function GoalsPage() {
               return (
                 <li
                   key={goal.id}
-                  className={`flex flex-col gap-3 ${rowCardClass}`}
+                  className={`rise-in-item ${rowCardFrameClass}`}
+                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
                 >
+                  <RegionScene region={goal.region} className="h-20" />
+                  <div className="flex flex-col gap-3 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <Link
@@ -114,6 +118,7 @@ export default async function GoalsPage() {
                       {REGION_LABELS[goal.region]} yet.
                     </p>
                   )}
+                  </div>
                 </li>
               );
             })}

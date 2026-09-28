@@ -77,8 +77,48 @@ textarea:focus-visible {
 .rise-in {
   animation: rise-in 0.35s ease-out both;
 }
+
+/* List rows arrive in sequence rather than all at once. Set the delay inline
+   per row (and cap it — a long list shouldn't keep the reader waiting). */
+.rise-in-item {
+  animation: rise-in 0.4s ease-out both;
+}
+
+/* Progress bars grow from empty to their value, so "how close am I?" reads as
+   movement. The target width is passed inline as --bar-w; an absent `to` frame
+   means the animation lands on exactly that width. */
+@keyframes bar-fill {
+  from {
+    width: 0;
+  }
+}
+.bar-fill {
+  animation: bar-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Sparklines draw themselves left to right. Relies on pathLength="1" so the
+   dash maths is independent of the line's real length. */
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-in {
+  stroke-dasharray: 1;
+  animation: draw-in 0.9s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise-in {
+  .rise-in,
+  .rise-in-item,
+  .bar-fill,
+  .draw-in {
     animation: none;
+  }
+  .draw-in {
+    stroke-dasharray: none;
   }
 }
