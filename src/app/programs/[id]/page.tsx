@@ -36,7 +36,7 @@ export default async function ProgramDetailPage({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <div>
         <Link href="/" className="text-sm text-zinc-500 underline dark:text-zinc-400">
           &larr; Back to dashboard
@@ -74,8 +74,8 @@ export default async function ProgramDetailPage({
         </div>
       </header>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Redemption options, ranked
         </h2>
 
@@ -129,8 +129,8 @@ export default async function ProgramDetailPage({
       </section>
 
       {pointsBalance && pointsBalance.snapshots.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Balance history
           </h2>
           <ul className="flex flex-col gap-2">
@@ -172,8 +172,8 @@ export default async function ProgramDetailPage({
         </section>
       )}
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Cards earning this program
         </h2>
 

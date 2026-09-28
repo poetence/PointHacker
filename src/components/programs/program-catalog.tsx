@@ -53,8 +53,8 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
         if (group.length === 0) return null;
 
         return (
-          <section key={type} className="flex flex-col gap-4">
-            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+          <section key={type} className="flex flex-col gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
               {label}
             </h2>
             <ul className="flex flex-col gap-3">

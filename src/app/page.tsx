@@ -66,13 +66,13 @@ export default async function Home() {
   ).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <header className="flex items-center gap-4">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
           <CoinsIcon className="h-7 w-7" />
         </span>
         <div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Dashboard
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -111,9 +111,9 @@ export default async function Home() {
       )}
 
       {goals.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
               Your goals
             </h2>
             <Link
@@ -178,8 +178,8 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Your balances
         </h2>
 
@@ -291,7 +291,7 @@ export default async function Home() {
 
       <section className="flex flex-col gap-4 rounded-xl border border-dashed border-zinc-300 p-5 dark:border-zinc-700">
         <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
             Add a balance
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
