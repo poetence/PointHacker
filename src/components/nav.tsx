@@ -9,6 +9,7 @@ const links: NavLink[] = [
   { href: "/cards", label: "Cards" },
   { href: "/programs", label: "Catalog" },
   { href: "/goals", label: "Goals" },
+  { href: "/redemptions", label: "Redemptions" },
   { href: "/plan", label: "Plan a Trip" },
   { href: "/promos", label: "Promos" },
   { href: "/recommend", label: "Recommend" },

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemption-options";
-import { formatCents } from "@/lib/format";
+import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
@@ -13,6 +13,7 @@ import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
+import { getRedemptionSummary } from "@/lib/redemptions/get-redemptions";
 import { rowCardClass, rowCardFrameClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { RegionScene } from "@/components/regions/region-scene";
@@ -50,6 +51,8 @@ export default async function Home() {
   });
   const goalProgress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
 
+  const redemptions = await getRedemptionSummary(userId);
+
   const programIdsWithBalance = new Set(balances.map((b) => b.rewardsProgramId));
   const addablePrograms = allPrograms.filter((p) => !programIdsWithBalance.has(p.id));
 
@@ -84,7 +87,13 @@ export default async function Home() {
       </header>
 
       {balances.length > 0 && (
-        <dl className="grid grid-cols-3 divide-x divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <dl
+          className={`grid divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50 ${
+            redemptions.count > 0
+              ? "grid-cols-2 divide-x divide-y sm:grid-cols-4 sm:divide-y-0"
+              : "grid-cols-3 divide-x"
+          }`}
+        >
           <div className="px-4 py-3">
             <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points held</dt>
             <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
@@ -109,6 +118,14 @@ export default async function Home() {
               {expiringCount === 0 ? "None" : `${expiringCount} of ${balances.length}`}
             </dd>
           </div>
+          {redemptions.count > 0 && (
+            <div className="px-4 py-3">
+              <dt className="text-xs text-zinc-500 dark:text-zinc-400">Realized</dt>
+              <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
+                {formatCentsPerPoint(redemptions.blendedCentsPerPoint)}
+              </dd>
+            </div>
+          )}
         </dl>
       )}
 
