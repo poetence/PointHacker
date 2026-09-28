@@ -8,12 +8,14 @@ import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { BalanceSparkline } from "@/components/balances/balance-sparkline";
-import { CoinsIcon, TargetIcon } from "@/components/icons";
+import { CoinsIcon } from "@/components/icons";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
-import { rowCardClass } from "@/components/ui/card";
+import { rowCardClass, rowCardFrameClass } from "@/components/ui/card";
+import { CountUp } from "@/components/ui/count-up";
+import { RegionScene } from "@/components/regions/region-scene";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -86,13 +88,13 @@ export default async function Home() {
           <div className="px-4 py-3">
             <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points held</dt>
             <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-              {totalPoints.toLocaleString()}
+              <CountUp value={totalPoints} format={(n) => n.toLocaleString()} />
             </dd>
           </div>
           <div className="px-4 py-3">
             <dt className="text-xs text-zinc-500 dark:text-zinc-400">Best-case value</dt>
             <dd className="font-display text-xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl">
-              {formatCents(totalValueCents)}
+              <CountUp value={totalValueCents} format={formatCents} />
             </dd>
           </div>
           <div className="px-4 py-3">
@@ -129,12 +131,11 @@ export default async function Home() {
               return (
                 <li
                   key={goal.id}
-                  className={`flex flex-col gap-2 ${rowCardClass}`}
+                  className={`rise-in-item ${rowCardFrameClass}`}
+                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
-                      <TargetIcon className="h-5 w-5" />
-                    </span>
+                  <RegionScene region={goal.region} className="h-20" />
+                  <div className="flex flex-col gap-2 p-4">
                     <div className="min-w-0">
                       <Link
                         href={`/goals/${goal.id}`}
@@ -146,31 +147,31 @@ export default async function Home() {
                         {describeGoal(goal)}
                       </p>
                     </div>
+                    {best ? (
+                      <>
+                        <GoalProgressBar
+                          heldPoints={best.heldPoints}
+                          pointsCovered={best.pointsCovered}
+                          pointsNeeded={best.pointsNeeded}
+                        />
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                          {best.isReachable ? (
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                              Bookable via {best.program.shortName ?? best.program.name}
+                            </span>
+                          ) : (
+                            <>
+                              {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
+                              {best.program.shortName ?? best.program.name} ·{" "}
+                              {best.shortfall.toLocaleString()} short
+                            </>
+                          )}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">No pricing yet</p>
+                    )}
                   </div>
-                  {best ? (
-                    <>
-                      <GoalProgressBar
-                        heldPoints={best.heldPoints}
-                        pointsCovered={best.pointsCovered}
-                        pointsNeeded={best.pointsNeeded}
-                      />
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                        {best.isReachable ? (
-                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                            Bookable via {best.program.shortName ?? best.program.name}
-                          </span>
-                        ) : (
-                          <>
-                            {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
-                            {best.program.shortName ?? best.program.name} ·{" "}
-                            {best.shortfall.toLocaleString()} short
-                          </>
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">No pricing yet</p>
-                  )}
                 </li>
               );
             })}
@@ -192,7 +193,7 @@ export default async function Home() {
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
-            {balances.map((balance) => {
+            {balances.map((balance, index) => {
               const top = topOptions.get(balance.rewardsProgramId);
               const history = balance.snapshots.map((s) => s.balance).reverse();
               const previous = history.length >= 2 ? history[history.length - 2] : null;
@@ -200,7 +201,8 @@ export default async function Home() {
               return (
                 <li
                   key={balance.id}
-                  className={`flex flex-col gap-3 ${rowCardClass}`}
+                  className={`rise-in-item flex flex-col gap-3 ${rowCardClass}`}
+                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3">

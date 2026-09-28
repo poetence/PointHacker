@@ -14,6 +14,7 @@ import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { GapCardPill } from "@/components/goals/gap-card-pill";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { CardArt } from "@/components/recommendations/card-art";
+import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 
@@ -55,11 +56,9 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 shadow-sm dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
-          <TargetIcon className="h-7 w-7" />
-        </span>
-        <div>
+      <header className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
+        <RegionScene region={goal.region} className="h-36" />
+        <div className="bg-white px-5 py-4 dark:bg-zinc-900/50">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             {goal.label}
           </h1>
