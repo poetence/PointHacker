@@ -63,13 +63,14 @@ model RewardsProgram {
   createdAt                   DateTime    @default(now())
   updatedAt                   DateTime    @updatedAt
 
-  creditCards    CreditCard[]
-  pointsBalances PointsBalance[]
-  cardProducts   CardProduct[]
-  awardCosts     AwardCost[]
+  creditCards     CreditCard[]
+  pointsBalances  PointsBalance[]
+  cardProducts    CardProduct[]
+  awardCosts      AwardCost[]
   hotelAwardCosts HotelAwardCost[]
-  transfersFrom  TransferPartner[] @relation("TransferFrom")
-  transfersTo    TransferPartner[] @relation("TransferTo")
+  redemptions     Redemption[]
+  transfersFrom   TransferPartner[] @relation("TransferFrom")
+  transfersTo     TransferPartner[] @relation("TransferTo")
 }
 
 /// Reference/seed data — a ballpark one-way, per-person award price for flying
@@ -105,27 +106,54 @@ model HotelAwardCost {
 /// User data — a trip the user is saving points toward. FLIGHT goals use
 /// cabin/travelers/roundTrip; HOTEL goals use hotelTier/nights/rooms.
 model AwardGoal {
-  id         String        @id @default(cuid())
-  userId     String
+  id          String        @id @default(cuid())
+  userId      String
   /// Free-text destination ("Tokyo"); region is what the estimate actually keys on
-  label      String
-  kind       AwardGoalKind @default(FLIGHT)
-  region     Region
-  cabin      AwardCabin    @default(ECONOMY)
-  travelers  Int           @default(1)
-  roundTrip  Boolean       @default(true)
-  hotelTier  HotelTier     @default(UPSCALE)
-  nights     Int           @default(1)
-  rooms      Int           @default(1)
+  label       String
+  kind        AwardGoalKind @default(FLIGHT)
+  region      Region
+  cabin       AwardCabin    @default(ECONOMY)
+  travelers   Int           @default(1)
+  roundTrip   Boolean       @default(true)
+  hotelTier   HotelTier     @default(UPSCALE)
+  nights      Int           @default(1)
+  rooms       Int           @default(1)
   /// Two-letter US state the flight departs from; null means "somewhere in the US" (no adjustment)
   originState String?
   /// First of the month the user wants to travel, if known
   targetMonth DateTime?
-  notes      String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  redemptions Redemption[]
 
   @@index([userId])
+}
+
+/// User data — a booking the user actually made, and what it turned out to be
+/// worth. The counterpart to the estimates: every other model here predicts
+/// what points could be worth, this one records what they did buy.
+model Redemption {
+  id               String         @id @default(cuid())
+  userId           String
+  rewardsProgramId String
+  rewardsProgram   RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
+  /// What was booked, e.g. "ANA business class, SFO → HND"
+  description      String
+  pointsSpent      Int
+  /// What the same booking would have cost in cash
+  cashValueCents   Int
+  /// Taxes and surcharges still paid in cash on the award
+  feesPaidCents    Int            @default(0)
+  bookedOn         DateTime
+  /// The goal this fulfilled, if it came from one; kept if that goal is deleted
+  awardGoalId      String?
+  awardGoal        AwardGoal?     @relation(fields: [awardGoalId], references: [id], onDelete: SetNull)
+  notes            String?
+  createdAt        DateTime       @default(now())
+
+  @@index([userId, bookedOn])
 }
 
 /// Reference/seed data — a transfer relationship between two programs
