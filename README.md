@@ -2,7 +2,8 @@
 
 A full-stack web app for maximizing the value of your credit-card reward points — compare
 direct portal redemptions against every transfer-partner option and see which one is actually
-worth the most. Around that it lets you set an award goal ("Tokyo, business class, 2 people") and
+worth the most, then log what you booked to find out what your points were really worth. Around
+that it lets you set an award goal ("Tokyo, business class, 2 people") and
 see how close your points get you, ranks your points by travel region, tracks which cards feed
 which program, keeps a history of every balance, warns before points expire, factors in
 transfer-bonus promos, and recommends which card's welcome bonus closes the gap.
@@ -30,6 +31,10 @@ account only sees and manages its own cards and balances.
   balances gets you — including the exact transfers (with active promos) that would close the gap
   — and which catalog card's welcome bonus would finish the job. Each goal leads with generated
   artwork for its region, and its progress bar fills as you get closer
+- **Redemptions** — log what you actually booked (points spent, the cash price it replaced, any
+  taxes and fees) and see the rate you really got, how it compares to what the app estimated
+  those points were worth, and a blended rate across everything you've redeemed. Logging can
+  draw the points down from the tracked balance
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
 - **Transfer bonuses** — record time-limited promos (e.g. +30% Chase → Hyatt); active ones are
   folded into every ranking and tagged wherever they drive a recommendation
@@ -60,7 +65,7 @@ shipping real logos or photography.
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
   expiration, card scoring, goal progress, gap-closing cards, origin adjustment, target months,
-  the sign-in allowlist)
+  realized redemption value, the sign-in allowlist)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR
 
 ## Getting started
