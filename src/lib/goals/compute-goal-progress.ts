@@ -188,7 +188,8 @@ function pointsToCover(gap: number, route: GoalTransferRoute): number {
   return Math.max(blocksNeeded * route.ratioFrom, route.minimumTransfer ?? 0);
 }
 
-function receivedFor(pointsSent: number, route: GoalTransferRoute): number {
+/** Points that arrive in the target for `pointsSent` along a route (promo already in the ratio). */
+export function receivedFor(pointsSent: number, route: GoalTransferRoute): number {
   return (pointsSent / route.ratioFrom) * route.ratioTo;
 }
 

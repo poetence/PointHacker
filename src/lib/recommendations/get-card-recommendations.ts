@@ -2,7 +2,7 @@ import type { SpendingProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { EarnRates } from "@/lib/spend-categories";
 import {
-  cardKey,
+  indexHeldCards,
   scoreCards,
   type RewardsPreference,
   type ScoreCardsResult,
@@ -25,6 +25,14 @@ export function toScoringProfile(profile: SpendingProfile): ScoringProfile {
   };
 }
 
+/** The wallet cards that `isHeldCard` matches catalog cards against. */
+export function findHeldCards(userId: string) {
+  return prisma.creditCard.findMany({
+    where: { userId },
+    select: { issuer: true, productName: true, cardProductId: true },
+  });
+}
+
 export async function getCardRecommendations(
   userId: string,
   profile: SpendingProfile
@@ -34,10 +42,7 @@ export async function getCardRecommendations(
       where: { isActive: true },
       include: { rewardsProgram: true },
     }),
-    prisma.creditCard.findMany({
-      where: { userId },
-      select: { issuer: true, productName: true, cardProductId: true },
-    }),
+    findHeldCards(userId),
   ]);
 
   return scoreCards({
@@ -61,9 +66,6 @@ export async function getCardRecommendations(
       baseEarnRate: card.baseEarnRate.toNumber(),
       earnRates: (card.earnRates ?? {}) as EarnRates,
     })),
-    heldCardKeys: new Set(heldCards.map((c) => cardKey(c.issuer, c.productName))),
-    heldCardProductIds: new Set(
-      heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : []))
-    ),
+    ...indexHeldCards(heldCards),
   });
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { cardKey } from "@/lib/recommendations/score-cards";
+import { findHeldCards } from "@/lib/recommendations/get-card-recommendations";
+import { indexHeldCards, isHeldCard } from "@/lib/recommendations/score-cards";
 import { closeGapWithCards, type CardGapContribution } from "./close-gap-with-cards";
 import type { GoalProgressResult } from "./get-goal-progress";
 
@@ -32,17 +33,11 @@ export async function getGoalGapCards(
       where: { isActive: true },
       include: { rewardsProgram: { select: { name: true, shortName: true, pointsUnit: true } } },
     }),
-    prisma.creditCard.findMany({
-      where: { userId },
-      select: { issuer: true, productName: true, cardProductId: true },
-    }),
+    findHeldCards(userId),
   ]);
 
-  const heldKeys = new Set(heldCards.map((c) => cardKey(c.issuer, c.productName)));
-  const heldIds = new Set(heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : [])));
-  const candidates = cards.filter(
-    (card) => !heldIds.has(card.id) && !heldKeys.has(cardKey(card.issuer, card.name))
-  );
+  const held = indexHeldCards(heldCards);
+  const candidates = cards.filter((card) => !isHeldCard(card, held));
 
   const byCardId = closeGapWithCards({
     plans: progress.plans,

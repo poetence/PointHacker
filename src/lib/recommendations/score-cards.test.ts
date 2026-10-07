@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { cardKey, scoreCards, type ScoringCard, type ScoringProfile } from "./score-cards";
+import {
+  cardKey,
+  indexHeldCards,
+  isHeldCard,
+  scoreCards,
+  type ScoringCard,
+  type ScoringProfile,
+} from "./score-cards";
 
 const ur = {
   id: "ur",
@@ -133,5 +140,24 @@ describe("scoreCards", () => {
     expect(bestByCategory.DINING?.card.id).toBe("dining");
     expect(bestByCategory.OTHER?.card.id).toBe("flat");
     expect(bestByCategory.GAS).toBeUndefined();
+  });
+});
+
+describe("indexHeldCards / isHeldCard", () => {
+  const held = indexHeldCards([
+    { issuer: " Chase ", productName: "Sapphire Preferred", cardProductId: null },
+    { issuer: "Amex", productName: "My gold card", cardProductId: "amex-gold" },
+  ]);
+
+  it("matches a hand-typed wallet card by issuer + name, ignoring case and spacing", () => {
+    expect(isHeldCard({ id: "csp", issuer: "chase", name: "sapphire preferred" }, held)).toBe(true);
+  });
+
+  it("matches a catalog-picked wallet card by id even when the names differ", () => {
+    expect(isHeldCard({ id: "amex-gold", issuer: "American Express", name: "Gold" }, held)).toBe(true);
+  });
+
+  it("leaves other cards alone", () => {
+    expect(isHeldCard({ id: "venture", issuer: "Capital One", name: "Venture X" }, held)).toBe(false);
   });
 });
