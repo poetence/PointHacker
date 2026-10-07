@@ -1,11 +1,14 @@
 import Link from "next/link";
+import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
-import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
+import { getGoalGapCards, type GapCardRow, type GoalGapCardsResult } from "@/lib/goals/get-goal-gap-cards";
+import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
+import type { CardGapContribution } from "@/lib/goals/close-gap-with-cards";
 import { GapCardPill } from "@/components/goals/gap-card-pill";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -14,7 +17,7 @@ import {
   getCardRecommendations,
   toScoringProfile,
 } from "@/lib/recommendations/get-card-recommendations";
-import { effectiveRate } from "@/lib/recommendations/score-cards";
+import { effectiveRate, type CardRecommendation } from "@/lib/recommendations/score-cards";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
@@ -26,7 +29,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
 export const dynamic = "force-dynamic";
-
 
 export default async function RecommendPage({
   searchParams,
@@ -77,72 +79,7 @@ export default async function RecommendPage({
           )}
         </div>
 
-        {!activeGoal ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Link href="/goals" className="underline-offset-2 hover:underline">
-              Set an award goal
-            </Link>{" "}
-            and this page will tell you which card&apos;s welcome bonus gets you there.
-          </p>
-        ) : !bestPlan ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No program in the catalog prices this trip yet, so there&apos;s no gap to close.{" "}
-            <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
-              View goal &rarr;
-            </Link>
-          </p>
-        ) : bestPlan.isReachable ? (
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            <span className="font-medium text-emerald-600 dark:text-emerald-400">Already bookable</span>{" "}
-            via {programLabel(bestPlan.program)} — the ranking below is pure
-            spending value.{" "}
-            <Link href={`/goals/${activeGoal.id}`} className="text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400">
-              View goal &rarr;
-            </Link>
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              {REGION_LABELS[activeGoal.region]} · {describeGoal(activeGoal)} · closest route is{" "}
-              {programLabel(bestPlan.program)},{" "}
-              {bestPlan.shortfall.toLocaleString("en-US")} {bestPlan.program.pointsUnit} short.{" "}
-              <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
-                View goal &rarr;
-              </Link>
-            </p>
-
-            {gapCards && gapCards.ranked.length === 0 ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                No catalog card&apos;s welcome bonus lands in a program that prices this trip.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {gapCards?.ranked.slice(0, 3).map(({ card, contribution }) => (
-                  <li
-                    key={card.id}
-                    className={`flex flex-wrap items-center gap-4 ${rowCardClass} ${
-                      contribution.closesGap ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
-                    }`}
-                  >
-                    <CardArt issuer={card.issuer} name={card.name} />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-black dark:text-zinc-50">
-                        {card.issuer} {card.name}
-                      </p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {card.welcomeBonusPoints?.toLocaleString("en-US")}{" "}
-                        {programLabel(card.program)} {card.program.pointsUnit} after{" "}
-                        {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
-                        {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
-                      </p>
-                    </div>
-                    <GapCardPill contribution={contribution} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
+        <GoalGap activeGoal={activeGoal} bestPlan={bestPlan} gapCards={gapCards} />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -168,82 +105,14 @@ export default async function RecommendPage({
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {top.map((rec, index) => {
-                  const contribution = gapCards?.byCardId.get(rec.card.id);
-                  return (
-                  <li
+                {top.map((rec, index) => (
+                  <RecommendationRow
                     key={rec.card.id}
-                    className={`flex flex-col gap-3 ${rowCardClass} ${
-                      index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center gap-4">
-                      <CardArt issuer={rec.card.issuer} name={rec.card.name} />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-black dark:text-zinc-50">
-                          #{index + 1} {rec.card.issuer} {rec.card.name}
-                        </p>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                          {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
-                          {programLabel(rec.card.program)}{" "}
-                          {rec.card.program.pointsUnit}/yr
-                        </p>
-                      </div>
-                      <div className="w-full sm:w-auto sm:text-right">
-                        <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
-                          {formatCents(rec.firstYearValueCents)}
-                        </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          net first year &middot; {formatCents(rec.ongoingValueCents)}/yr after
-                        </p>
-                      </div>
-                    </div>
-
-                    {contribution && (
-                      <div className="flex">
-                        <GapCardPill contribution={contribution} />
-                      </div>
-                    )}
-
-                    <dl className={rowBreakdownClass}>
-                      <div className="flex gap-1.5">
-                        <dt className="text-zinc-500 dark:text-zinc-400">Earns</dt>
-                        <dd className="font-medium text-emerald-600 dark:text-emerald-400">
-                          +{formatCents(rec.earnValueCents)}
-                        </dd>
-                      </div>
-                      <div className="flex gap-1.5">
-                        <dt className="text-zinc-500 dark:text-zinc-400">Welcome bonus</dt>
-                        <dd
-                          className={
-                            rec.bonusEarned
-                              ? "font-medium text-emerald-600 dark:text-emerald-400"
-                              : "text-zinc-400 dark:text-zinc-500"
-                          }
-                        >
-                          {rec.card.welcomeBonusPoints === null
-                            ? "none"
-                            : rec.bonusEarned
-                              ? `+${formatCents(rec.welcomeBonusValueCents)}`
-                              : `needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`}
-                        </dd>
-                      </div>
-                      <div className="flex gap-1.5">
-                        <dt className="text-zinc-500 dark:text-zinc-400">Annual fee</dt>
-                        <dd
-                          className={
-                            rec.card.annualFeeCents > 0
-                              ? "font-medium text-red-600 dark:text-red-400"
-                              : "text-zinc-400 dark:text-zinc-500"
-                          }
-                        >
-                          {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </li>
-                  );
-                })}
+                    rec={rec}
+                    index={index}
+                    contribution={gapCards?.byCardId.get(rec.card.id)}
+                  />
+                ))}
               </ul>
             )}
           </section>
@@ -295,4 +164,183 @@ export default async function RecommendPage({
       )}
     </div>
   );
+}
+
+/** What the goal section says, from "no goal yet" down to the cards whose bonus closes the gap. */
+function GoalGap({
+  activeGoal,
+  bestPlan,
+  gapCards,
+}: {
+  activeGoal: AwardGoal | null;
+  bestPlan: GoalTargetPlan | null;
+  gapCards: GoalGapCardsResult | null;
+}) {
+  if (!activeGoal) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <Link href="/goals" className="underline-offset-2 hover:underline">
+          Set an award goal
+        </Link>{" "}
+        and this page will tell you which card&apos;s welcome bonus gets you there.
+      </p>
+    );
+  }
+  if (!bestPlan) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        No program in the catalog prices this trip yet, so there&apos;s no gap to close.{" "}
+        <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
+          View goal &rarr;
+        </Link>
+      </p>
+    );
+  }
+  if (bestPlan.isReachable) {
+    return (
+      <p className="text-sm text-zinc-700 dark:text-zinc-300">
+        <span className="font-medium text-emerald-600 dark:text-emerald-400">Already bookable</span>{" "}
+        via {programLabel(bestPlan.program)} — the ranking below is pure
+        spending value.{" "}
+        <Link href={`/goals/${activeGoal.id}`} className="text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400">
+          View goal &rarr;
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        {REGION_LABELS[activeGoal.region]} · {describeGoal(activeGoal)} · closest route is{" "}
+        {programLabel(bestPlan.program)},{" "}
+        {bestPlan.shortfall.toLocaleString("en-US")} {bestPlan.program.pointsUnit} short.{" "}
+        <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
+          View goal &rarr;
+        </Link>
+      </p>
+
+      {gapCards && gapCards.ranked.length === 0 ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          No catalog card&apos;s welcome bonus lands in a program that prices this trip.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {gapCards?.ranked.slice(0, 3).map(({ card, contribution }) => (
+            <GapCardItem key={card.id} card={card} contribution={contribution} />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function GapCardItem({ card, contribution }: GapCardRow) {
+  return (
+    <li
+      className={`flex flex-wrap items-center gap-4 ${rowCardClass} ${
+        contribution.closesGap ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
+      }`}
+    >
+      <CardArt issuer={card.issuer} name={card.name} />
+      <div className="min-w-0 flex-1">
+        <p className="font-medium text-black dark:text-zinc-50">
+          {card.issuer} {card.name}
+        </p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          {card.welcomeBonusPoints?.toLocaleString("en-US")}{" "}
+          {programLabel(card.program)} {card.program.pointsUnit} after{" "}
+          {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
+          {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
+        </p>
+      </div>
+      <GapCardPill contribution={contribution} />
+    </li>
+  );
+}
+
+function RecommendationRow({
+  rec,
+  index,
+  contribution,
+}: {
+  rec: CardRecommendation;
+  index: number;
+  contribution: CardGapContribution | undefined;
+}) {
+  return (
+    <li
+      className={`flex flex-col gap-3 ${rowCardClass} ${
+        index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
+      }`}
+    >
+      <div className="flex flex-wrap items-center gap-4">
+        <CardArt issuer={rec.card.issuer} name={rec.card.name} />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-black dark:text-zinc-50">
+            #{index + 1} {rec.card.issuer} {rec.card.name}
+          </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
+            {programLabel(rec.card.program)}{" "}
+            {rec.card.program.pointsUnit}/yr
+          </p>
+        </div>
+        <div className="w-full sm:w-auto sm:text-right">
+          <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
+            {formatCents(rec.firstYearValueCents)}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            net first year &middot; {formatCents(rec.ongoingValueCents)}/yr after
+          </p>
+        </div>
+      </div>
+
+      {contribution && (
+        <div className="flex">
+          <GapCardPill contribution={contribution} />
+        </div>
+      )}
+
+      <dl className={rowBreakdownClass}>
+        <div className="flex gap-1.5">
+          <dt className="text-zinc-500 dark:text-zinc-400">Earns</dt>
+          <dd className="font-medium text-emerald-600 dark:text-emerald-400">
+            +{formatCents(rec.earnValueCents)}
+          </dd>
+        </div>
+        <div className="flex gap-1.5">
+          <dt className="text-zinc-500 dark:text-zinc-400">Welcome bonus</dt>
+          <dd
+            className={
+              rec.bonusEarned
+                ? "font-medium text-emerald-600 dark:text-emerald-400"
+                : "text-zinc-400 dark:text-zinc-500"
+            }
+          >
+            {welcomeBonusLabel(rec)}
+          </dd>
+        </div>
+        <div className="flex gap-1.5">
+          <dt className="text-zinc-500 dark:text-zinc-400">Annual fee</dt>
+          <dd
+            className={
+              rec.card.annualFeeCents > 0
+                ? "font-medium text-red-600 dark:text-red-400"
+                : "text-zinc-400 dark:text-zinc-500"
+            }
+          >
+            {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
+          </dd>
+        </div>
+      </dl>
+    </li>
+  );
+}
+
+/** The welcome-bonus cell: its value when the spending earns it, else what it would take. */
+function welcomeBonusLabel(rec: CardRecommendation): string {
+  if (rec.card.welcomeBonusPoints === null) return "none";
+  if (rec.bonusEarned) return `+${formatCents(rec.welcomeBonusValueCents)}`;
+  return `needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`;
 }
