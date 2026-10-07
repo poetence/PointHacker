@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { controlClass } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useDialogFocus } from "@/components/ui/use-dialog-focus";
 
 export type PickableProgram = {
   id: string;
@@ -25,6 +26,9 @@ export function ProgramPickerModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const ordered = sortProgramsByPriority(programs);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(isOpen, panelRef, triggerRef);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -40,7 +44,9 @@ export function ProgramPickerModal({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
+        aria-haspopup="dialog"
         onClick={() => setIsOpen(true)}
         className={`${controlClass} flex items-center gap-2 p-1.5`}
       >
@@ -65,7 +71,9 @@ export function ProgramPickerModal({
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="flex max-h-[80vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-lg bg-white p-6 dark:bg-zinc-900"
+            ref={panelRef}
+            tabIndex={-1}
+            className="flex max-h-[80vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg bg-white p-6 dark:bg-zinc-900"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -82,6 +90,9 @@ export function ProgramPickerModal({
                 <button
                   key={program.id}
                   type="button"
+                  // Opening lands on the current choice rather than on Close.
+                  data-autofocus={program.id === selectedProgram?.id ? true : undefined}
+                  aria-pressed={program.id === selectedProgram?.id}
                   onClick={() => {
                     onSelect(program);
                     setIsOpen(false);

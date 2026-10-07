@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CardArt } from "@/components/recommendations/card-art";
 import { controlClass, Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useDialogFocus } from "@/components/ui/use-dialog-focus";
 
 export type PickableCard = {
   id: string;
@@ -24,6 +25,9 @@ export function CatalogCardPicker({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(isOpen, panelRef, triggerRef);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -42,7 +46,9 @@ export function CatalogCardPicker({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
+        aria-haspopup="dialog"
         onClick={() => setIsOpen(true)}
         className={`${controlClass} flex items-center gap-3 p-1.5 pr-3`}
       >
@@ -72,7 +78,9 @@ export function CatalogCardPicker({
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="flex max-h-[80vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-lg bg-white p-6 dark:bg-zinc-900"
+            ref={panelRef}
+            tabIndex={-1}
+            className="flex max-h-[80vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg bg-white p-6 dark:bg-zinc-900"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4">
@@ -86,7 +94,8 @@ export function CatalogCardPicker({
 
             <Input
               type="search"
-              autoFocus
+              data-autofocus
+              aria-label="Filter cards"
               placeholder="Filter by issuer or name…"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -97,6 +106,9 @@ export function CatalogCardPicker({
                 <button
                   key={card.id}
                   type="button"
+                  // CardArt (which shows the name) is hidden from screen readers, so
+                  // without this every button read as just its issuer: "Chase, Chase…".
+                  aria-label={`${card.issuer} ${card.name}, earns ${card.programLabel}`}
                   onClick={() => {
                     onSelect(card);
                     setIsOpen(false);
@@ -110,7 +122,7 @@ export function CatalogCardPicker({
               ))}
               {visible.length === 0 && (
                 <p className="col-span-full text-sm text-zinc-500 dark:text-zinc-400">
-                  No catalog cards match &quot;{filter}&quot; — add it as a custom card instead.
+                  No catalog cards match “{filter}” — add it as a custom card instead.
                 </p>
               )}
             </div>
