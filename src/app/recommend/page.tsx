@@ -6,10 +6,11 @@ import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
-import { getGoalGapCards, type GapCardRow, type GoalGapCardsResult } from "@/lib/goals/get-goal-gap-cards";
+import { getGoalGapCards, type GoalGapCardsResult } from "@/lib/goals/get-goal-gap-cards";
 import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import type { CardGapContribution } from "@/lib/goals/close-gap-with-cards";
 import { GapCardPill } from "@/components/goals/gap-card-pill";
+import { GapCardItem } from "@/components/goals/gap-card-item";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SPEND_CATEGORIES, SPEND_CATEGORY_LABELS } from "@/lib/spend-categories";
@@ -227,35 +228,11 @@ function GoalGap({
       ) : (
         <ul className="flex flex-col gap-3">
           {gapCards?.ranked.slice(0, 3).map(({ card, contribution }) => (
-            <GapCardItem key={card.id} card={card} contribution={contribution} />
+            <GapCardItem key={card.id} card={card} contribution={contribution} highlightClosers />
           ))}
         </ul>
       )}
     </>
-  );
-}
-
-function GapCardItem({ card, contribution }: GapCardRow) {
-  return (
-    <li
-      className={`flex flex-wrap items-center gap-4 ${rowCardClass} ${
-        contribution.closesGap ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
-      }`}
-    >
-      <CardArt issuer={card.issuer} name={card.name} />
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-black dark:text-zinc-50">
-          {card.issuer} {card.name}
-        </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {card.welcomeBonusPoints?.toLocaleString("en-US")}{" "}
-          {programLabel(card.program)} {card.program.pointsUnit} after{" "}
-          {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
-          {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
-        </p>
-      </div>
-      <GapCardPill contribution={contribution} />
-    </li>
   );
 }
 
