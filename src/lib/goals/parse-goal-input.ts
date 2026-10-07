@@ -1,4 +1,5 @@
 import { isRegion, type Region } from "@/lib/regions";
+import { isIntInRange, toValidDate } from "@/lib/validation";
 import { isCabin, isGoalKind, isHotelTier, type Cabin, type GoalKind, type HotelTier } from "./cabins";
 import { isUsState, type UsState } from "./origin-adjustment";
 import { findDestination } from "./destinations";
@@ -21,10 +22,6 @@ export type GoalInput = {
 export const MAX_TRAVELERS = 9;
 export const MAX_NIGHTS = 30;
 export const MAX_ROOMS = 5;
-
-function isIntInRange(value: unknown, min: number, max: number): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
-}
 
 /**
  * Validates a JSON body for the goals API. Returns a full input or an error message.
@@ -99,8 +96,8 @@ export function parseGoalInput(body: unknown): { input: GoalInput } | { error: s
     if (typeof targetMonth !== "string") {
       return { error: "targetMonth must be a YYYY-MM string or null." };
     }
-    const parsed = new Date(/^\d{4}-\d{2}$/.test(targetMonth) ? `${targetMonth}-01` : targetMonth);
-    if (Number.isNaN(parsed.getTime())) {
+    const parsed = toValidDate(/^\d{4}-\d{2}$/.test(targetMonth) ? `${targetMonth}-01` : targetMonth);
+    if (!parsed) {
       return { error: "targetMonth must be a valid date." };
     }
     targetMonthDate = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), 1));
