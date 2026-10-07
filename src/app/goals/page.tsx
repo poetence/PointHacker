@@ -10,6 +10,7 @@ import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
 import { rowCardFrameClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
+import { programLabel } from "@/lib/format";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
@@ -96,7 +97,7 @@ export default async function GoalsPage() {
                         heldPoints={best.heldPoints}
                         pointsCovered={best.pointsCovered}
                         pointsNeeded={best.pointsNeeded}
-                        label={`${goal.label} via ${best.program.shortName ?? best.program.name}`}
+                        label={`${goal.label} via ${programLabel(best.program)}`}
                       />
                       <p className="text-sm text-zinc-700 dark:text-zinc-300">
                         {best.isReachable ? (
@@ -104,12 +105,12 @@ export default async function GoalsPage() {
                             <span className="font-medium text-emerald-600 dark:text-emerald-400">
                               Bookable now
                             </span>{" "}
-                            via {best.program.shortName ?? best.program.name} —{" "}
+                            via {programLabel(best.program)} —{" "}
                             {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit}
                           </>
                         ) : (
                           <>
-                            Closest: {best.program.shortName ?? best.program.name} —{" "}
+                            Closest: {programLabel(best.program)} —{" "}
                             {best.pointsCovered.toLocaleString("en-US")} of{" "}
                             {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} (
                             {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}%)

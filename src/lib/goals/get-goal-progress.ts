@@ -9,6 +9,7 @@ import {
   type GoalTargetPlan,
   type GoalTransferRoute,
 } from "./compute-goal-progress";
+import { programLabel } from "@/lib/format";
 
 export type GoalProgressResult = {
   plans: GoalTargetPlan[];
@@ -75,7 +76,7 @@ export async function getGoalProgress(userId: string, goal: AwardGoal): Promise<
     const option = toTransferPartnerOption(partner);
     return {
       fromProgramId: partner.fromProgram.id,
-      fromProgramName: partner.fromProgram.shortName ?? partner.fromProgram.name,
+      fromProgramName: programLabel(partner.fromProgram),
       toProgramId: partner.toProgramId,
       ratioFrom: option.ratioFrom,
       ratioTo: option.ratioTo,

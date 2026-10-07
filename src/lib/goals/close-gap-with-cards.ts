@@ -4,6 +4,7 @@
 // by the caller)? Pure and DB-agnostic.
 
 import { transferablePoints, type GoalTargetPlan, type GoalTransferRoute } from "./compute-goal-progress";
+import { programLabel } from "@/lib/format";
 
 export type GapCard = {
   id: string;
@@ -79,7 +80,7 @@ function contributionFor(
   return {
     cardId: card.id,
     targetProgramId: plan.program.id,
-    targetProgramName: plan.program.shortName ?? plan.program.name,
+    targetProgramName: programLabel(plan.program),
     pointsContributed,
     shortfallBefore: plan.shortfall,
     shortfallAfter,

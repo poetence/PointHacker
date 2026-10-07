@@ -6,6 +6,7 @@ import { AddPromoForm } from "@/components/promos/add-promo-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { SparkleIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
+import { programLabel } from "@/lib/format";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -42,7 +43,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
             >
               <div>
                 <p className="font-medium text-black dark:text-zinc-50">
-                  {from.shortName ?? from.name} → {to.shortName ?? to.name}
+                  {programLabel(from)} → {programLabel(to)}
                   <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                     +{promo.bonusPercent}%
                   </span>
@@ -53,7 +54,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
               </div>
               <DeleteButton
                 url={`/api/promos/${promo.id}`}
-                itemLabel={`promo: ${from.shortName ?? from.name} to ${to.shortName ?? to.name}, +${promo.bonusPercent}%`}
+                itemLabel={`promo: ${programLabel(from)} to ${programLabel(to)}, +${promo.bonusPercent}%`}
                 confirmMessage="Remove this promo for everyone?"
               />
             </li>
@@ -86,8 +87,8 @@ export default async function PromosPage() {
 
   const partnerOptions = partners.map((p) => ({
     id: p.id,
-    fromProgramName: p.fromProgram.shortName ?? p.fromProgram.name,
-    toProgramName: p.toProgram.shortName ?? p.toProgram.name,
+    fromProgramName: programLabel(p.fromProgram),
+    toProgramName: programLabel(p.toProgram),
   }));
 
   return (

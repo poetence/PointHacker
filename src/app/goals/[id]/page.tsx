@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents } from "@/lib/format";
+import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
@@ -80,8 +80,8 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         >
           <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
             {best.isReachable
-              ? `You can book this today via ${best.program.shortName ?? best.program.name}.`
-              : `Closest route: ${best.program.shortName ?? best.program.name}, ${best.shortfall.toLocaleString("en-US")} ${best.program.pointsUnit} short.`}
+              ? `You can book this today via ${programLabel(best.program)}.`
+              : `Closest route: ${programLabel(best.program)}, ${best.shortfall.toLocaleString("en-US")} ${best.program.pointsUnit} short.`}
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} for{" "}
@@ -132,7 +132,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                         href={`/programs/${plan.program.id}`}
                         className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                       >
-                        {plan.program.shortName ?? plan.program.name}
+                        {programLabel(plan.program)}
                       </Link>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
                         {plan.pointsNeeded.toLocaleString("en-US")} {plan.program.pointsUnit} needed
@@ -156,7 +156,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                   heldPoints={plan.heldPoints}
                   pointsCovered={plan.pointsCovered}
                   pointsNeeded={plan.pointsNeeded}
-                  label={`Progress via ${plan.program.shortName ?? plan.program.name}`}
+                  label={`Progress via ${programLabel(plan.program)}`}
                 />
 
                 <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
@@ -230,7 +230,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                       {card.issuer} {card.name}
                     </p>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {card.welcomeBonusPoints?.toLocaleString("en-US")} {card.program.shortName ?? card.program.name}{" "}
+                      {card.welcomeBonusPoints?.toLocaleString("en-US")} {programLabel(card.program)}{" "}
                       {card.program.pointsUnit} after {formatCents(card.welcomeBonusSpendCents ?? 0)} in{" "}
                       {card.welcomeBonusMonths} mo ·{" "}
                       {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}

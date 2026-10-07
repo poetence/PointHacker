@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents } from "@/lib/format";
+import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
@@ -103,7 +103,7 @@ export default async function RecommendPage({
         ) : bestPlan.isReachable ? (
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
             <span className="font-medium text-emerald-600 dark:text-emerald-400">Already bookable</span>{" "}
-            via {bestPlan.program.shortName ?? bestPlan.program.name} — the ranking below is pure
+            via {programLabel(bestPlan.program)} — the ranking below is pure
             spending value.{" "}
             <Link href={`/goals/${activeGoal.id}`} className="text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400">
               View goal &rarr;
@@ -113,7 +113,7 @@ export default async function RecommendPage({
           <>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {REGION_LABELS[activeGoal.region]} · {describeGoal(activeGoal)} · closest route is{" "}
-              {bestPlan.program.shortName ?? bestPlan.program.name},{" "}
+              {programLabel(bestPlan.program)},{" "}
               {bestPlan.shortfall.toLocaleString("en-US")} {bestPlan.program.pointsUnit} short.{" "}
               <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
                 View goal &rarr;
@@ -140,7 +140,7 @@ export default async function RecommendPage({
                       </p>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
                         {card.welcomeBonusPoints?.toLocaleString("en-US")}{" "}
-                        {card.program.shortName ?? card.program.name} {card.program.pointsUnit} after{" "}
+                        {programLabel(card.program)} {card.program.pointsUnit} after{" "}
                         {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
                         {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
                       </p>
@@ -197,7 +197,7 @@ export default async function RecommendPage({
                         </p>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
                           {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
-                          {rec.card.program.shortName ?? rec.card.program.name}{" "}
+                          {programLabel(rec.card.program)}{" "}
                           {rec.card.program.pointsUnit}/yr
                         </p>
                       </div>

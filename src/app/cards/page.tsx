@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents } from "@/lib/format";
+import { formatCents, programLabel } from "@/lib/format";
 import { AddCardForm } from "@/components/cards/add-card-form";
 import { CardRowActions } from "@/components/cards/card-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
@@ -42,7 +42,7 @@ export default async function CardsPage() {
       id: c.id,
       issuer: c.issuer,
       name: c.name,
-      programLabel: c.rewardsProgram.shortName ?? c.rewardsProgram.name,
+      programLabel: programLabel(c.rewardsProgram),
       annualFeeCents: c.annualFeeCents,
     }));
 
@@ -110,7 +110,7 @@ export default async function CardsPage() {
                         href={`/programs/${card.rewardsProgramId}`}
                         className="underline-offset-2 hover:underline"
                       >
-                        {card.rewardsProgram.shortName ?? card.rewardsProgram.name}
+                        {programLabel(card.rewardsProgram)}
                       </Link>
                       {card.openedOn &&
                         ` · opened ${card.openedOn.toLocaleDateString("en-US", { timeZone: "UTC" })}`}

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents, formatCentsPerPoint } from "@/lib/format";
+import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { getRedemptions } from "@/lib/redemptions/get-redemptions";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form";
@@ -48,7 +48,7 @@ export default async function RedemptionsPage() {
     ...prioritized.filter((p) => !balanceByProgram.has(p.id)),
   ].map((p) => ({
       id: p.id,
-      name: p.shortName ?? p.name,
+      name: programLabel(p),
       pointsUnit: p.pointsUnit,
       balance: balanceByProgram.get(p.id) ?? null,
     }));
@@ -123,7 +123,7 @@ export default async function RedemptionsPage() {
                     <div className="min-w-0">
                       <p className="break-words font-medium text-black dark:text-zinc-50">{row.description}</p>
                       <p className="break-words text-sm text-zinc-500 dark:text-zinc-400">
-                        {row.program.shortName ?? row.program.name} ·{" "}
+                        {programLabel(row.program)} ·{" "}
                         {dateFormat.format(row.bookedOn)}
                         {row.goal && ` · for ${row.goal.label}`}
                       </p>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemption-options";
-import { formatCents, formatCentsPerPoint } from "@/lib/format";
+import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
@@ -170,17 +170,17 @@ export default async function Home() {
                           heldPoints={best.heldPoints}
                           pointsCovered={best.pointsCovered}
                           pointsNeeded={best.pointsNeeded}
-                          label={`${goal.label} via ${best.program.shortName ?? best.program.name}`}
+                          label={`${goal.label} via ${programLabel(best.program)}`}
                         />
                         <p className="text-xs text-zinc-600 dark:text-zinc-400">
                           {best.isReachable ? (
                             <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                              Bookable via {best.program.shortName ?? best.program.name}
+                              Bookable via {programLabel(best.program)}
                             </span>
                           ) : (
                             <>
                               {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
-                              {best.program.shortName ?? best.program.name} ·{" "}
+                              {programLabel(best.program)} ·{" "}
                               {best.shortfall.toLocaleString("en-US")} short
                             </>
                           )}
@@ -235,7 +235,7 @@ export default async function Home() {
                           href={`/programs/${balance.rewardsProgramId}`}
                           className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                         >
-                          {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                          {programLabel(balance.rewardsProgram)}
                         </Link>
                         <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                           <span className="font-display text-base font-semibold tabular-nums text-black dark:text-zinc-50">
@@ -265,7 +265,7 @@ export default async function Home() {
 
                     <BalanceRowActions
                       id={balance.id}
-                      programName={balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                      programName={programLabel(balance.rewardsProgram)}
                       currentBalance={balance.balance}
                       currentExpiresOverrideAt={balance.expiresOverrideAt}
                       pointsUnit={balance.rewardsProgram.pointsUnit}

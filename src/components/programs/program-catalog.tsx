@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { Input } from "@/components/ui/input";
 import { rowCardClass } from "@/components/ui/card";
+import { programLabel } from "@/lib/format";
 
 type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
@@ -90,7 +91,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
                       href={`/programs/${program.id}`}
                       className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                     >
-                      {program.shortName ?? program.name}
+                      {programLabel(program)}
                     </Link>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
                       {program.valuePerPoint}/point &middot; {program.transferPartnerCount} transfer

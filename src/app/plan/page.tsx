@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redemption-options";
-import { formatCents } from "@/lib/format";
+import { formatCents, programLabel } from "@/lib/format";
 import { ALL_REGIONS, REGION_LABELS, isRegion } from "@/lib/regions";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { ProgramBadge } from "@/components/programs/program-badge";
@@ -132,7 +132,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
                       href={`/programs/${balance.rewardsProgramId}`}
                       className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                     >
-                      {balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
+                      {programLabel(balance.rewardsProgram)}
                     </Link>
                     <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                       {balance.balance.toLocaleString("en-US")} {balance.rewardsProgram.pointsUnit}
@@ -164,7 +164,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {excluded
-              .map((b) => b.rewardsProgram.shortName ?? b.rewardsProgram.name)
+              .map((b) => programLabel(b.rewardsProgram))
               .join(", ")}{" "}
             {excluded.length === 1 ? "doesn't" : "don't"} have a good redemption for this region
             right now.

@@ -11,6 +11,7 @@ import {
   CatalogCardPicker,
   type PickableCard,
 } from "@/components/cards/catalog-card-picker";
+import { programLabel } from "@/lib/format";
 
 type Program = { id: string; name: string; shortName: string | null };
 
@@ -167,7 +168,7 @@ export function AddCardForm({
               >
                 {programs.map((program) => (
                   <option key={program.id} value={program.id}>
-                    {program.shortName ?? program.name}
+                    {programLabel(program)}
                   </option>
                 ))}
               </Select>
