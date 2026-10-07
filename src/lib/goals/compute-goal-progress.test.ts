@@ -161,6 +161,34 @@ describe("computeGoalProgress", () => {
     expect(plan.shortfall).toBe(10_000);
   });
 
+  it("breaks a ratio tie by drawing from the deepest balance first", () => {
+    const [plan] = computeGoalProgress({
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 30_000 }],
+      balances: [
+        { programId: "amex", programName: "Amex MR", balance: 20_000 },
+        { programId: "chase", programName: "Chase UR", balance: 50_000 },
+      ],
+      transferRoutes: [amexToVirgin, chaseToVirgin],
+    });
+
+    expect(plan.transfers.map((t) => t.fromProgramId)).toEqual(["chase"]);
+  });
+
+  it("sends at least the route's minimum even when the gap is smaller", () => {
+    const [plan] = computeGoalProgress({
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 10_500 }],
+      balances: [
+        { programId: "virgin", programName: "Virgin", balance: 10_000 },
+        { programId: "amex", programName: "Amex MR", balance: 5_000 },
+      ],
+      transferRoutes: [{ ...amexToVirgin, minimumTransfer: 1_000 }],
+    });
+
+    expect(plan.transfers[0]).toMatchObject({ pointsToTransfer: 1_000, pointsReceived: 1_000 });
+  });
+
   it("ranks reachable programs first, then by smallest shortfall, then cheapest", () => {
     const plans = computeGoalProgress({
       goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },

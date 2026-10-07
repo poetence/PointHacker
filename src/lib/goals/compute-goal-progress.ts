@@ -89,61 +89,94 @@ export function computeGoalProgress({
   balances,
   transferRoutes,
 }: ComputeGoalProgressInput): GoalTargetPlan[] {
-  const balanceByProgramId = new Map(balances.map((b) => [b.programId, b]));
-  const routesByTargetId = new Map<string, GoalTransferRoute[]>();
-  for (const route of transferRoutes) {
-    const existing = routesByTargetId.get(route.toProgramId) ?? [];
-    existing.push(route);
-    routesByTargetId.set(route.toProgramId, existing);
-  }
+  const balanceByProgramId = new Map(balances.map((b) => [b.programId, b.balance]));
+  const routesByTargetId = groupRoutesByTarget(transferRoutes);
 
-  const plans = awardCosts.map((cost) =>
-    planTarget(goal, cost, balanceByProgramId, routesByTargetId.get(cost.program.id) ?? [])
-  );
-
-  return plans.sort(
-    (a, b) =>
-      Number(b.isReachable) - Number(a.isReachable) ||
-      a.shortfall - b.shortfall ||
-      a.pointsNeeded - b.pointsNeeded
-  );
+  return awardCosts
+    .map((awardCost) =>
+      planTarget(goal, awardCost, balanceByProgramId, routesByTargetId.get(awardCost.program.id) ?? [])
+    )
+    .sort(compareGoalPlans);
 }
 
 function planTarget(
   goal: GoalSpec,
-  cost: GoalAwardCost,
-  balanceByProgramId: Map<string, GoalBalance>,
+  awardCost: GoalAwardCost,
+  balanceByProgramId: Map<string, number>,
   routes: GoalTransferRoute[]
 ): GoalTargetPlan {
-  const pointsNeeded = pointsNeededForGoal(goal, cost.pointsPerUnit);
-  const heldPoints = balanceByProgramId.get(cost.program.id)?.balance ?? 0;
+  const pointsNeeded = pointsNeededForGoal(goal, awardCost.pointsPerUnit);
+  const heldPoints = balanceByProgramId.get(awardCost.program.id) ?? 0;
+  const sources = rankTransferSources(routes, balanceByProgramId);
 
-  // Best ratio first (a bonus route beats a plain 1:1), then the deepest balance
-  // so the plan is as few transfers as possible.
-  const sources = routes
-    .map((route) => ({ route, balance: balanceByProgramId.get(route.fromProgramId)?.balance ?? 0 }))
-    .filter(({ route, balance }) => transferablePoints(balance, route) > 0)
-    .sort(
-      (a, b) =>
-        b.route.ratioTo / b.route.ratioFrom - a.route.ratioTo / a.route.ratioFrom ||
-        b.balance - a.balance
-    );
+  const potentialPoints = sources.reduce(
+    (total, { route, maxTransferable }) => total + receivedFor(maxTransferable, route),
+    heldPoints
+  );
+  const pointsCovered = Math.min(pointsNeeded, potentialPoints);
+  const shortfall = pointsNeeded - pointsCovered;
 
-  let potentialPoints = heldPoints;
-  let remaining = Math.max(0, pointsNeeded - heldPoints);
+  return {
+    program: awardCost.program,
+    pointsNeeded,
+    heldPoints,
+    transfers: planTransfers(sources, Math.max(0, pointsNeeded - heldPoints)),
+    potentialPoints,
+    pointsCovered,
+    shortfall,
+    isReachable: shortfall === 0,
+  };
+}
+
+/** Reachable programs first, then the smallest shortfall, then the cheapest award. */
+function compareGoalPlans(a: GoalTargetPlan, b: GoalTargetPlan): number {
+  return (
+    Number(b.isReachable) - Number(a.isReachable) ||
+    a.shortfall - b.shortfall ||
+    a.pointsNeeded - b.pointsNeeded
+  );
+}
+
+function groupRoutesByTarget(routes: GoalTransferRoute[]): Map<string, GoalTransferRoute[]> {
+  const routesByTargetId = new Map<string, GoalTransferRoute[]>();
+  for (const route of routes) {
+    const group = routesByTargetId.get(route.toProgramId);
+    if (group) group.push(route);
+    else routesByTargetId.set(route.toProgramId, [route]);
+  }
+  return routesByTargetId;
+}
+
+type TransferSource = { route: GoalTransferRoute; balance: number; maxTransferable: number };
+
+/**
+ * Sources that can send anything, best ratio first (a bonus route beats a plain
+ * 1:1), then the deepest balance so the plan is as few transfers as possible.
+ * Ties break on the raw balance, not `maxTransferable`, which rounds to blocks.
+ */
+function rankTransferSources(
+  routes: GoalTransferRoute[],
+  balanceByProgramId: Map<string, number>
+): TransferSource[] {
+  return routes
+    .map((route) => {
+      const balance = balanceByProgramId.get(route.fromProgramId) ?? 0;
+      return { route, balance, maxTransferable: transferablePoints(balance, route) };
+    })
+    .filter((source) => source.maxTransferable > 0)
+    .sort((a, b) => transferRatio(b.route) - transferRatio(a.route) || b.balance - a.balance);
+}
+
+/** Walks the ranked sources, moving only as much as it takes to close the gap. */
+function planTransfers(sources: TransferSource[], gap: number): GoalTransferStep[] {
   const transfers: GoalTransferStep[] = [];
+  let gapLeft = gap;
 
-  for (const { route, balance } of sources) {
-    const maxTransferable = transferablePoints(balance, route);
-    potentialPoints += (maxTransferable / route.ratioFrom) * route.ratioTo;
-    if (remaining <= 0) continue;
+  for (const { route, maxTransferable } of sources) {
+    if (gapLeft <= 0) break;
 
-    // Round the needed amount up to a whole ratio block and at least the minimum.
-    const blocksNeeded = Math.ceil(remaining / route.ratioTo);
-    const wanted = Math.max(blocksNeeded * route.ratioFrom, route.minimumTransfer ?? 0);
-    const pointsToTransfer = Math.min(wanted, maxTransferable);
-    const pointsReceived = (pointsToTransfer / route.ratioFrom) * route.ratioTo;
-
+    const pointsToTransfer = Math.min(pointsToCover(gapLeft, route), maxTransferable);
+    const pointsReceived = receivedFor(pointsToTransfer, route);
     transfers.push({
       fromProgramId: route.fromProgramId,
       fromProgramName: route.fromProgramName,
@@ -151,20 +184,22 @@ function planTarget(
       pointsReceived,
       activeBonusPercent: route.activeBonusPercent ?? null,
     });
-    remaining -= pointsReceived;
+    gapLeft -= pointsReceived;
   }
 
-  const pointsCovered = Math.min(pointsNeeded, potentialPoints);
-  const shortfall = pointsNeeded - pointsCovered;
+  return transfers;
+}
 
-  return {
-    program: cost.program,
-    pointsNeeded,
-    heldPoints,
-    transfers,
-    potentialPoints,
-    pointsCovered,
-    shortfall,
-    isReachable: shortfall === 0,
-  };
+/** Points to send so at least `gap` arrives: whole ratio blocks, never under the route's minimum. */
+function pointsToCover(gap: number, route: GoalTransferRoute): number {
+  const blocksNeeded = Math.ceil(gap / route.ratioTo);
+  return Math.max(blocksNeeded * route.ratioFrom, route.minimumTransfer ?? 0);
+}
+
+function receivedFor(pointsSent: number, route: GoalTransferRoute): number {
+  return (pointsSent / route.ratioFrom) * route.ratioTo;
+}
+
+function transferRatio(route: GoalTransferRoute): number {
+  return route.ratioTo / route.ratioFrom;
 }
