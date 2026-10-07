@@ -17,10 +17,11 @@ import { GapCardItem } from "@/components/goals/gap-card-item";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
-import { rowBreakdownClass, rowCardClass } from "@/components/ui/card";
+import { rowCardClass } from "@/components/ui/card";
 import { pageContainerClass } from "@/components/ui/page-header";
 import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
 export default async function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -220,42 +221,38 @@ function PlanRow({
         label={`Progress via ${programLabel(plan.program)}`}
       />
 
-      <dl className={rowBreakdownClass}>
-        <div className="flex gap-1.5">
-          <dt className="text-zinc-500 dark:text-zinc-400">Held</dt>
-          <dd
-            className={
-              plan.heldPoints > 0
-                ? "font-medium text-emerald-600 dark:text-emerald-400"
-                : "text-zinc-400 dark:text-zinc-500"
-            }
-          >
-            {plan.heldPoints.toLocaleString("en-US")}
-          </dd>
-        </div>
+      <Breakdown>
+        <BreakdownItem
+          label="Held"
+          valueClassName={
+            plan.heldPoints > 0
+              ? "font-medium text-emerald-600 dark:text-emerald-400"
+              : "text-zinc-400 dark:text-zinc-500"
+          }
+        >
+          {plan.heldPoints.toLocaleString("en-US")}
+        </BreakdownItem>
         {plan.transfers.map((step) => (
-          <div key={step.fromProgramId} className="flex gap-1.5">
-            <dt className="text-zinc-500 dark:text-zinc-400">Transfer</dt>
-            <dd className="font-medium text-sky-600 dark:text-sky-400">
-              {step.pointsToTransfer.toLocaleString("en-US")} {step.fromProgramName} →{" "}
-              {step.pointsReceived.toLocaleString("en-US")}
-              {step.activeBonusPercent ? ` (+${step.activeBonusPercent}% bonus)` : ""}
-            </dd>
-          </div>
-        ))}
-        <div className="flex gap-1.5">
-          <dt className="text-zinc-500 dark:text-zinc-400">Short by</dt>
-          <dd
-            className={
-              plan.shortfall > 0
-                ? "font-medium text-red-600 dark:text-red-400"
-                : "text-zinc-400 dark:text-zinc-500"
-            }
+          <BreakdownItem key={step.fromProgramId}
+            label="Transfer"
+            valueClassName="font-medium text-sky-600 dark:text-sky-400"
           >
-            {plan.shortfall > 0 ? plan.shortfall.toLocaleString("en-US") : "nothing"}
-          </dd>
-        </div>
-      </dl>
+            {step.pointsToTransfer.toLocaleString("en-US")} {step.fromProgramName} →{" "}
+            {step.pointsReceived.toLocaleString("en-US")}
+            {step.activeBonusPercent ? ` (+${step.activeBonusPercent}% bonus)` : ""}
+          </BreakdownItem>
+        ))}
+        <BreakdownItem
+          label="Short by"
+          valueClassName={
+            plan.shortfall > 0
+              ? "font-medium text-red-600 dark:text-red-400"
+              : "text-zinc-400 dark:text-zinc-500"
+          }
+        >
+          {plan.shortfall > 0 ? plan.shortfall.toLocaleString("en-US") : "nothing"}
+        </BreakdownItem>
+      </Breakdown>
     </li>
   );
 }

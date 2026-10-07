@@ -7,12 +7,13 @@ import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form"
 import { DeleteButton } from "@/components/ui/delete-button";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { TicketIcon } from "@/components/icons";
-import { riseInDelay, rowBreakdownClass, rowCardClass } from "@/components/ui/card";
+import { riseInDelay, rowCardClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatsStrip } from "@/components/ui/stats-strip";
+import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
 // Redemptions mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -127,42 +128,37 @@ export default async function RedemptionsPage() {
                   </div>
                 </div>
 
-                <dl className={rowBreakdownClass}>
-                  <div className="flex gap-1.5">
-                    <dt className="text-zinc-500 dark:text-zinc-400">Spent</dt>
-                    <dd className="text-zinc-700 tabular-nums dark:text-zinc-300">
-                      {row.pointsSpent.toLocaleString("en-US")} {row.program.pointsUnit}
-                    </dd>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <dt className="text-zinc-500 dark:text-zinc-400">Worth</dt>
-                    <dd className="font-medium text-emerald-600 dark:text-emerald-400">
-                      {formatCents(row.cashValueCents)}
-                    </dd>
-                  </div>
+                <Breakdown>
+                  <BreakdownItem
+                    label="Spent"
+                    valueClassName="text-zinc-700 tabular-nums dark:text-zinc-300"
+                  >
+                    {row.pointsSpent.toLocaleString("en-US")} {row.program.pointsUnit}
+                  </BreakdownItem>
+                  <BreakdownItem
+                    label="Worth"
+                    valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+                  >
+                    {formatCents(row.cashValueCents)}
+                  </BreakdownItem>
                   {row.feesPaidCents > 0 && (
-                    <div className="flex gap-1.5">
-                      <dt className="text-zinc-500 dark:text-zinc-400">Fees</dt>
-                      <dd className="text-zinc-700 dark:text-zinc-300">
-                        {formatCents(row.feesPaidCents)}
-                      </dd>
-                    </div>
+                    <BreakdownItem label="Fees" valueClassName="text-zinc-700 dark:text-zinc-300">
+                      {formatCents(row.feesPaidCents)}
+                    </BreakdownItem>
                   )}
-                  <div className="flex gap-1.5">
-                    <dt className="text-zinc-500 dark:text-zinc-400">vs. estimate</dt>
-                    <dd
-                      className={
-                        row.vsBaseline.beatBaseline
-                          ? "font-medium text-emerald-600 dark:text-emerald-400"
-                          : "text-zinc-500 dark:text-zinc-400"
-                      }
-                    >
-                      {row.vsBaseline.deltaPercent >= 0 ? "+" : "−"}
-                      {Math.abs(Math.round(row.vsBaseline.deltaPercent))}% vs{" "}
-                      {formatCentsPerPoint(row.vsBaseline.baselineCentsPerPoint)}
-                    </dd>
-                  </div>
-                </dl>
+                  <BreakdownItem
+                    label="vs. estimate"
+                    valueClassName={
+                      row.vsBaseline.beatBaseline
+                        ? "font-medium text-emerald-600 dark:text-emerald-400"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }
+                  >
+                    {row.vsBaseline.deltaPercent >= 0 ? "+" : "−"}
+                    {Math.abs(Math.round(row.vsBaseline.deltaPercent))}% vs{" "}
+                    {formatCentsPerPoint(row.vsBaseline.baselineCentsPerPoint)}
+                  </BreakdownItem>
+                </Breakdown>
               </li>
             ))}
           </ul>

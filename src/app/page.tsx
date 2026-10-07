@@ -17,13 +17,14 @@ import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemption
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
 import { getRedemptionSummary } from "@/lib/redemptions/get-redemptions";
-import { riseInDelay, rowBreakdownClass, rowCardClass, rowCardFrameClass } from "@/components/ui/card";
+import { riseInDelay, rowCardClass, rowCardFrameClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { RegionScene } from "@/components/regions/region-scene";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatsStrip } from "@/components/ui/stats-strip";
+import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -284,37 +285,34 @@ function BalanceRow({
         />
       </div>
 
-      <dl className={rowBreakdownClass}>
+      <Breakdown>
         {top ? (
           <>
-            <div className="flex gap-1.5">
-              <dt className="text-zinc-500 dark:text-zinc-400">Worth up to</dt>
-              <dd className="font-medium text-emerald-600 dark:text-emerald-400">
-                {formatCents(top.totalValueCents)}
-              </dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt className="text-zinc-500 dark:text-zinc-400">Best use</dt>
-              <dd className="text-zinc-700 dark:text-zinc-300">
-                {top.kind === "direct" ? (
-                  "direct redemption"
-                ) : (
-                  <>
-                    transfer to {top.partnerProgramName}
-                    {top.activeBonusPercent ? (
-                      <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                        +{top.activeBonusPercent}% bonus
-                      </span>
-                    ) : null}
-                  </>
-                )}
-              </dd>
-            </div>
+            <BreakdownItem
+              label="Worth up to"
+              valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+            >
+              {formatCents(top.totalValueCents)}
+            </BreakdownItem>
+            <BreakdownItem label="Best use" valueClassName="text-zinc-700 dark:text-zinc-300">
+              {top.kind === "direct" ? (
+              "direct redemption"
+              ) : (
+              <>
+              transfer to {top.partnerProgramName}
+              {top.activeBonusPercent ? (
+              <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              +{top.activeBonusPercent}% bonus
+              </span>
+              ) : null}
+              </>
+              )}
+            </BreakdownItem>
           </>
         ) : (
           <div className="text-zinc-500 dark:text-zinc-400">No options available</div>
         )}
-      </dl>
+      </Breakdown>
     </li>
   );
 }

@@ -22,10 +22,11 @@ import { effectiveRate, type CardRecommendation } from "@/lib/recommendations/sc
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
-import { rowBreakdownClass, rowCardClass } from "@/components/ui/card";
+import { rowCardClass } from "@/components/ui/card";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -279,38 +280,34 @@ function RecommendationRow({
         </div>
       )}
 
-      <dl className={rowBreakdownClass}>
-        <div className="flex gap-1.5">
-          <dt className="text-zinc-500 dark:text-zinc-400">Earns</dt>
-          <dd className="font-medium text-emerald-600 dark:text-emerald-400">
-            +{formatCents(rec.earnValueCents)}
-          </dd>
-        </div>
-        <div className="flex gap-1.5">
-          <dt className="text-zinc-500 dark:text-zinc-400">Welcome bonus</dt>
-          <dd
-            className={
-              rec.bonusEarned
-                ? "font-medium text-emerald-600 dark:text-emerald-400"
-                : "text-zinc-400 dark:text-zinc-500"
-            }
-          >
-            {welcomeBonusLabel(rec)}
-          </dd>
-        </div>
-        <div className="flex gap-1.5">
-          <dt className="text-zinc-500 dark:text-zinc-400">Annual fee</dt>
-          <dd
-            className={
-              rec.card.annualFeeCents > 0
-                ? "font-medium text-red-600 dark:text-red-400"
-                : "text-zinc-400 dark:text-zinc-500"
-            }
-          >
-            {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
-          </dd>
-        </div>
-      </dl>
+      <Breakdown>
+        <BreakdownItem
+          label="Earns"
+          valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+        >
+          +{formatCents(rec.earnValueCents)}
+        </BreakdownItem>
+        <BreakdownItem
+          label="Welcome bonus"
+          valueClassName={
+            rec.bonusEarned
+              ? "font-medium text-emerald-600 dark:text-emerald-400"
+              : "text-zinc-400 dark:text-zinc-500"
+          }
+        >
+          {welcomeBonusLabel(rec)}
+        </BreakdownItem>
+        <BreakdownItem
+          label="Annual fee"
+          valueClassName={
+            rec.card.annualFeeCents > 0
+              ? "font-medium text-red-600 dark:text-red-400"
+              : "text-zinc-400 dark:text-zinc-500"
+          }
+        >
+          {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
+        </BreakdownItem>
+      </Breakdown>
     </li>
   );
 }
