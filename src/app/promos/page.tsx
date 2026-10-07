@@ -9,6 +9,7 @@ import { rowCardClass } from "@/components/ui/card";
 import { programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -106,12 +107,9 @@ export default async function PromosPage() {
       </section>
 
       {promos.length === 0 && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-          <SparkleIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No promos recorded yet — add one above when you spot a transfer bonus.
-          </p>
-        </div>
+        <EmptyState icon={SparkleIcon}>
+          No promos recorded yet — add one above when you spot a transfer bonus.
+        </EmptyState>
       )}
 
       <PromoList title="Active now" items={active} />

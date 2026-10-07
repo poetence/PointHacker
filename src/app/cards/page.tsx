@@ -10,6 +10,7 @@ import { CardArt } from "@/components/recommendations/card-art";
 import { rowCardClass } from "@/components/ui/card";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Cards mutate via the API after build, so this page must be re-rendered per
 // request rather than statically prerendered at build time.
@@ -63,10 +64,7 @@ export default async function CardsPage() {
         <h2 className={sectionTitleClass}>Your wallet</h2>
 
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-            <WalletIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">No cards tracked yet.</p>
-          </div>
+          <EmptyState icon={WalletIcon}>No cards tracked yet.</EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
             {cards.map((card) => (

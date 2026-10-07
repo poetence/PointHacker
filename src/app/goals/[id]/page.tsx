@@ -19,6 +19,7 @@ import { TargetIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 import { pageContainerClass } from "@/components/ui/page-header";
 import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 
 export default async function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -98,14 +99,11 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
           </p>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-          <TargetIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No program in the catalog prices {describeGoalUnit(goal)} in{" "}
-            {REGION_LABELS[goal.region]} yet — try another{" "}
-            {goal.kind === "FLIGHT" ? "cabin" : "tier"}.
-          </p>
-        </div>
+        <EmptyState icon={TargetIcon}>
+          No program in the catalog prices {describeGoalUnit(goal)} in{" "}
+          {REGION_LABELS[goal.region]} yet — try another{" "}
+          {goal.kind === "FLIGHT" ? "cabin" : "tier"}.
+        </EmptyState>
       )}
 
       {plans.length > 0 && (

@@ -21,6 +21,7 @@ import { CashIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -150,12 +151,9 @@ export default async function RecommendPage({
       </section>
 
       {!result && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-          <CashIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Fill in your monthly spending above to see which cards earn you the most.
-          </p>
-        </div>
+        <EmptyState icon={CashIcon}>
+          Fill in your monthly spending above to see which cards earn you the most.
+        </EmptyState>
       )}
 
       {result && (

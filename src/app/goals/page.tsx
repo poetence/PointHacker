@@ -13,6 +13,7 @@ import { RegionScene } from "@/components/regions/region-scene";
 import { programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
@@ -44,12 +45,9 @@ export default async function GoalsPage() {
         <h2 className={sectionTitleClass}>Your goals</h2>
 
         {goals.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-            <TargetIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No goals yet — set one above to see which of your balances get you there.
-            </p>
-          </div>
+          <EmptyState icon={TargetIcon}>
+            No goals yet — set one above to see which of your balances get you there.
+          </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
             {goals.map((goal, index) => {
