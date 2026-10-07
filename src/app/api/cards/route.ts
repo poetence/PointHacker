@@ -1,31 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/user";
+import { NOT_A_JSON_OBJECT, badRequest, readJsonObject, unauthorized } from "@/lib/api-response";
+import { isNonNegativeInteger, parseOptionalDate } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   const userId = await getSessionUserId();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  if (!userId) return unauthorized();
 
-  const body = await request.json().catch(() => null);
+  const body = await readJsonObject(request);
+  if (!body) return badRequest(NOT_A_JSON_OBJECT);
 
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Request body must be a JSON object." }, { status: 400 });
-  }
-
-  const { cardProductId, nickname, openedOn, notes } = body as Record<string, unknown>;
-  let { issuer, productName, rewardsProgramId, annualFeeCents } = body as Record<string, unknown>;
+  const { cardProductId, nickname, openedOn, notes } = body;
+  let { issuer, productName, rewardsProgramId, annualFeeCents } = body;
 
   // Picking from the catalog fills in everything the user would otherwise type.
   if (cardProductId !== undefined) {
     if (typeof cardProductId !== "string" || cardProductId.length === 0) {
-      return NextResponse.json({ error: "cardProductId must be a string." }, { status: 400 });
+      return badRequest("cardProductId must be a string.");
     }
     const product = await prisma.cardProduct.findUnique({ where: { id: cardProductId } });
-    if (!product) {
-      return NextResponse.json({ error: "cardProductId does not exist." }, { status: 400 });
-    }
+    if (!product) return badRequest("cardProductId does not exist.");
+
     issuer = product.issuer;
     productName = product.name;
     rewardsProgramId = product.rewardsProgramId;
@@ -33,53 +29,28 @@ export async function POST(request: NextRequest) {
   }
 
   if (typeof issuer !== "string" || issuer.length === 0) {
-    return NextResponse.json({ error: "issuer is required." }, { status: 400 });
+    return badRequest("issuer is required.");
   }
-
   if (typeof productName !== "string" || productName.length === 0) {
-    return NextResponse.json({ error: "productName is required." }, { status: 400 });
+    return badRequest("productName is required.");
   }
-
   if (typeof rewardsProgramId !== "string" || rewardsProgramId.length === 0) {
-    return NextResponse.json({ error: "rewardsProgramId is required." }, { status: 400 });
+    return badRequest("rewardsProgramId is required.");
   }
-
   if (nickname !== undefined && typeof nickname !== "string") {
-    return NextResponse.json({ error: "nickname must be a string." }, { status: 400 });
+    return badRequest("nickname must be a string.");
   }
-
-  if (
-    annualFeeCents !== undefined &&
-    (typeof annualFeeCents !== "number" ||
-      !Number.isFinite(annualFeeCents) ||
-      !Number.isInteger(annualFeeCents) ||
-      annualFeeCents < 0)
-  ) {
-    return NextResponse.json(
-      { error: "annualFeeCents must be a non-negative integer." },
-      { status: 400 }
-    );
+  if (annualFeeCents !== undefined && !isNonNegativeInteger(annualFeeCents)) {
+    return badRequest("annualFeeCents must be a non-negative integer.");
   }
-
-  let openedOnDate: Date | undefined;
-  if (openedOn !== undefined) {
-    if (typeof openedOn !== "string") {
-      return NextResponse.json({ error: "openedOn must be a date string." }, { status: 400 });
-    }
-    openedOnDate = new Date(openedOn);
-    if (Number.isNaN(openedOnDate.getTime())) {
-      return NextResponse.json({ error: "openedOn must be a valid date." }, { status: 400 });
-    }
-  }
-
+  const opened = parseOptionalDate(openedOn, "openedOn");
+  if ("error" in opened) return badRequest(opened.error);
   if (notes !== undefined && typeof notes !== "string") {
-    return NextResponse.json({ error: "notes must be a string." }, { status: 400 });
+    return badRequest("notes must be a string.");
   }
 
   const program = await prisma.rewardsProgram.findUnique({ where: { id: rewardsProgramId } });
-  if (!program) {
-    return NextResponse.json({ error: "rewardsProgramId does not exist." }, { status: 400 });
-  }
+  if (!program) return badRequest("rewardsProgramId does not exist.");
 
   const created = await prisma.creditCard.create({
     data: {
@@ -90,7 +61,7 @@ export async function POST(request: NextRequest) {
       rewardsProgramId,
       cardProductId: typeof cardProductId === "string" ? cardProductId : undefined,
       annualFeeCents,
-      openedOn: openedOnDate,
+      openedOn: opened.value,
       notes,
     },
     include: { rewardsProgram: true },

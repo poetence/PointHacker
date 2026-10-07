@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/user";
 import { parseGoalInput } from "@/lib/goals/parse-goal-input";
+import { badRequest, noContent, notFound, unauthorized } from "@/lib/api-response";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -9,20 +10,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
 
   const userId = await getSessionUserId();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  if (!userId) return unauthorized();
 
   const existing = await prisma.awardGoal.findFirst({ where: { id, userId } });
-  if (!existing) {
-    return NextResponse.json({ error: "Goal not found." }, { status: 404 });
-  }
+  if (!existing) return notFound("Goal");
 
-  const body = await request.json().catch(() => null);
-  const parsed = parseGoalInput(body);
-  if ("error" in parsed) {
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
-  }
+  const parsed = parseGoalInput(await request.json().catch(() => null));
+  if ("error" in parsed) return badRequest(parsed.error);
 
   const updated = await prisma.awardGoal.update({ where: { id }, data: parsed.input });
 
@@ -33,16 +27,12 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { id } = await params;
 
   const userId = await getSessionUserId();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  if (!userId) return unauthorized();
 
   const existing = await prisma.awardGoal.findFirst({ where: { id, userId } });
-  if (!existing) {
-    return NextResponse.json({ error: "Goal not found." }, { status: 404 });
-  }
+  if (!existing) return notFound("Goal");
 
   await prisma.awardGoal.delete({ where: { id } });
 
-  return new NextResponse(null, { status: 204 });
+  return noContent();
 }
