@@ -19,13 +19,13 @@ import { SpendingProfileForm } from "@/components/recommendations/spending-profi
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
 export const dynamic = "force-dynamic";
 
-const sectionTitle =
-  "font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50";
 
 export default async function RecommendPage({
   searchParams,
@@ -49,25 +49,15 @@ export default async function RecommendPage({
     progress && bestPlan && !bestPlan.isReachable ? await getGoalGapCards(userId, progress) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
-          <CashIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Which card next?
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Which welcome bonus closes the gap on your goal — and which cards earn the most for how
-            you actually spend.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={CashIcon} tone="emerald" title="Which card next?">
+        Which welcome bonus closes the gap on your goal — and which cards earn the most for how
+        you actually spend.
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className={sectionTitle}>
+          <h2 className={sectionTitleClass}>
             {activeGoal ? `Closing the gap for ${activeGoal.label}` : "Working toward a goal?"}
           </h2>
           {goals.length > 1 && activeGoal && (
@@ -155,7 +145,7 @@ export default async function RecommendPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className={sectionTitle}>Your spending</h2>
+        <h2 className={sectionTitleClass}>Your spending</h2>
         <SpendingProfileForm initial={profile ? toScoringProfile(profile) : null} />
       </section>
 
@@ -171,7 +161,7 @@ export default async function RecommendPage({
       {result && (
         <>
           <section className="flex flex-col gap-3">
-            <h2 className={sectionTitle}>Top cards for you</h2>
+            <h2 className={sectionTitleClass}>Top cards for you</h2>
 
             {top.length === 0 ? (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -262,7 +252,7 @@ export default async function RecommendPage({
 
           {Object.keys(result.bestByCategory).length > 0 && (
             <section className="flex flex-col gap-3">
-              <h2 className={sectionTitle}>Best card by category</h2>
+              <h2 className={sectionTitleClass}>Best card by category</h2>
               <ul className="flex flex-wrap gap-2">
                 {SPEND_CATEGORIES.map((category) => {
                   const best = result.bestByCategory[category];
@@ -290,7 +280,7 @@ export default async function RecommendPage({
 
           {result.alreadyHeld.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className={sectionTitle}>Already in your wallet</h2>
+              <h2 className={sectionTitleClass}>Already in your wallet</h2>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {result.alreadyHeld.map((c) => `${c.issuer} ${c.name}`).join(", ")} — skipped
                 since you already hold {result.alreadyHeld.length === 1 ? "it" : "them"}.

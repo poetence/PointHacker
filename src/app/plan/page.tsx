@@ -13,6 +13,8 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { rowCardClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
 
 // Balances mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -27,20 +29,10 @@ export default async function PlanPage({
   const region = rawRegion && isRegion(rawRegion) ? rawRegion : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-violet-50 text-violet-700 shadow-sm dark:from-violet-950 dark:to-violet-900 dark:text-violet-300">
-          <CompassIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Plan a trip
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Pick a region to see which of your balances are actually worth using there.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={CompassIcon} tone="violet" title="Plan a trip">
+        Pick a region to see which of your balances are actually worth using there.
+      </PageHeader>
 
       <form method="GET" className="flex flex-wrap items-end gap-3">
         <Field label="Region" className="w-56">
@@ -159,7 +151,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
 
       {excluded.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h2 className={sectionTitleClass}>
             No {REGION_LABELS[region]} options
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

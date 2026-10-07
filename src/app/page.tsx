@@ -17,6 +17,8 @@ import { getRedemptionSummary } from "@/lib/redemptions/get-redemptions";
 import { rowCardClass, rowCardFrameClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { RegionScene } from "@/components/regions/region-scene";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -71,20 +73,10 @@ export default async function Home() {
   ).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-sm dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300">
-          <CoinsIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Your reward point balances and the best way to use each one.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={CoinsIcon} tone="emerald" title="Dashboard">
+        Your reward point balances and the best way to use each one.
+      </PageHeader>
 
       {balances.length > 0 && (
         <dl
@@ -132,9 +124,7 @@ export default async function Home() {
       {goals.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-              Your goals
-            </h2>
+            <h2 className={sectionTitleClass}>Your goals</h2>
             <Link
               href="/goals"
               className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
@@ -198,9 +188,7 @@ export default async function Home() {
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Your balances
-        </h2>
+        <h2 className={sectionTitleClass}>Your balances</h2>
 
         {balances.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
@@ -312,9 +300,7 @@ export default async function Home() {
 
       <section className="flex flex-col gap-4 rounded-xl border border-dashed border-zinc-300 p-5 dark:border-zinc-700">
         <div>
-          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Add a balance
-          </h2>
+          <h2 className={sectionTitleClass}>Add a balance</h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Track another program to see where its points are worth the most.
           </p>

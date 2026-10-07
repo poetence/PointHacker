@@ -8,6 +8,8 @@ import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { rowCardClass } from "@/components/ui/card";
 import { LocalDate } from "@/components/ui/local-date";
+import { pageContainerClass } from "@/components/ui/page-header";
+import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
 
 export default async function ProgramDetailPage({
   params,
@@ -37,7 +39,7 @@ export default async function ProgramDetailPage({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
+    <div className={pageContainerClass}>
       <div>
         <Link href="/" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
           &larr; Back to dashboard
@@ -47,7 +49,7 @@ export default async function ProgramDetailPage({
       <header className="flex items-center gap-4">
         <ProgramBadge name={program.name} shortName={program.shortName} type={program.type} />
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className={pageTitleClass}>
             {program.name}
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-400">
@@ -76,9 +78,7 @@ export default async function ProgramDetailPage({
       </header>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Redemption options, ranked
-        </h2>
+        <h2 className={sectionTitleClass}>Redemption options, ranked</h2>
 
         <ul className="flex flex-col gap-3">
           {options.map((option, index) => (
@@ -131,9 +131,7 @@ export default async function ProgramDetailPage({
 
       {pointsBalance && pointsBalance.snapshots.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Balance history
-          </h2>
+          <h2 className={sectionTitleClass}>Balance history</h2>
           <ul className="flex flex-col gap-2">
             {pointsBalance.snapshots.map((snapshot, index) => {
               const older = pointsBalance.snapshots[index + 1];
@@ -170,9 +168,7 @@ export default async function ProgramDetailPage({
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Cards earning this program
-        </h2>
+        <h2 className={sectionTitleClass}>Cards earning this program</h2>
 
         {cards.length === 0 ? (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

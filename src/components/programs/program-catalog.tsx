@@ -7,6 +7,7 @@ import { ProgramBadge } from "@/components/programs/program-badge";
 import { Input } from "@/components/ui/input";
 import { rowCardClass } from "@/components/ui/card";
 import { programLabel } from "@/lib/format";
+import { sectionTitleClass } from "@/components/ui/text";
 
 type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
@@ -71,7 +72,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
 
         return (
           <section key={type} className="flex flex-col gap-3">
-            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h2 className={sectionTitleClass}>
               {label}
             </h2>
             <ul className="flex flex-col gap-3">

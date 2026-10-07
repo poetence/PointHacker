@@ -9,6 +9,8 @@ import { ProgramBadge } from "@/components/programs/program-badge";
 import { TicketIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
 
 // Redemptions mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -54,20 +56,10 @@ export default async function RedemptionsPage() {
     }));
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 text-sky-700 shadow-sm dark:from-sky-950 dark:to-sky-900 dark:text-sky-300">
-          <TicketIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Redemptions
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            What you actually booked, and what your points were really worth.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={TicketIcon} tone="sky" title="Redemptions">
+        What you actually booked, and what your points were really worth.
+      </PageHeader>
 
       {summary.count > 0 && (
         <dl className="grid grid-cols-3 divide-x divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -93,9 +85,7 @@ export default async function RedemptionsPage() {
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          History
-        </h2>
+        <h2 className={sectionTitleClass}>History</h2>
 
         {rows.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
@@ -193,9 +183,7 @@ export default async function RedemptionsPage() {
 
       <section className="flex flex-col gap-4 rounded-xl border border-dashed border-zinc-300 p-5 dark:border-zinc-700">
         <div>
-          <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Log a redemption
-          </h2>
+          <h2 className={sectionTitleClass}>Log a redemption</h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Record what you booked to see the rate you actually got.
           </p>

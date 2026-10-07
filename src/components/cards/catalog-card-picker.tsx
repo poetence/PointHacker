@@ -5,6 +5,7 @@ import { CardArt } from "@/components/recommendations/card-art";
 import { controlClass, Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDialogFocus } from "@/components/ui/use-dialog-focus";
+import { sectionTitleClass } from "@/components/ui/text";
 
 export type PickableCard = {
   id: string;
@@ -90,9 +91,7 @@ export function CatalogCardPicker({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-                Choose a card
-              </h2>
+              <h2 className={sectionTitleClass}>Choose a card</h2>
               <Button size="sm" variant="link" type="button" onClick={() => setIsOpen(false)}>
                 Close
               </Button>

@@ -17,9 +17,9 @@ import { CardArt } from "@/components/recommendations/card-art";
 import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
+import { pageContainerClass } from "@/components/ui/page-header";
+import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
 
-const sectionTitle =
-  "font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50";
 
 export default async function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,7 +49,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   const originPct = originZone ? Math.round((originMultiplier(goal.region, originZone) - 1) * 100) : 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
+    <div className={pageContainerClass}>
       <div>
         <Link href="/goals" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
           &larr; All goals
@@ -59,7 +59,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       <header className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
         <RegionScene region={goal.region} className="h-36" />
         <div className="bg-white px-5 py-4 dark:bg-zinc-900/50">
-          <h1 className="break-words font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className={`break-words ${pageTitleClass}`}>
             {goal.label}
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -110,7 +110,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
 
       {plans.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className={sectionTitle}>Ways to book it</h2>
+          <h2 className={sectionTitleClass}>Ways to book it</h2>
           <ul className="flex flex-col gap-3">
             {plans.map((plan, index) => (
               <li
@@ -204,7 +204,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       {gapCards && (
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className={sectionTitle}>Close the gap with a card</h2>
+            <h2 className={sectionTitleClass}>Close the gap with a card</h2>
             <Link
               href={`/recommend?goal=${goal.id}`}
               className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
