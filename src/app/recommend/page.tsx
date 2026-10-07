@@ -18,7 +18,7 @@ import { effectiveRate } from "@/lib/recommendations/score-cards";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
-import { rowCardClass } from "@/components/ui/card";
+import { rowBreakdownClass, rowCardClass } from "@/components/ui/card";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -205,7 +205,7 @@ export default async function RecommendPage({
                       </div>
                     )}
 
-                    <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
+                    <dl className={rowBreakdownClass}>
                       <div className="flex gap-1.5">
                         <dt className="text-zinc-500 dark:text-zinc-400">Earns</dt>
                         <dd className="font-medium text-emerald-600 dark:text-emerald-400">

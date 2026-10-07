@@ -16,7 +16,7 @@ import { ProgramBadge } from "@/components/programs/program-badge";
 import { CardArt } from "@/components/recommendations/card-art";
 import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
-import { rowCardClass } from "@/components/ui/card";
+import { rowBreakdownClass, rowCardClass } from "@/components/ui/card";
 import { pageContainerClass } from "@/components/ui/page-header";
 import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -157,7 +157,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                   label={`Progress via ${programLabel(plan.program)}`}
                 />
 
-                <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
+                <dl className={rowBreakdownClass}>
                   <div className="flex gap-1.5">
                     <dt className="text-zinc-500 dark:text-zinc-400">Held</dt>
                     <dd

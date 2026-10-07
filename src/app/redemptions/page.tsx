@@ -7,7 +7,7 @@ import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form"
 import { DeleteButton } from "@/components/ui/delete-button";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { TicketIcon } from "@/components/icons";
-import { rowCardClass } from "@/components/ui/card";
+import { riseInDelay, rowBreakdownClass, rowCardClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
@@ -88,7 +88,7 @@ export default async function RedemptionsPage() {
               <li
                 key={row.id}
                 className={`rise-in-item flex flex-col gap-3 ${rowCardClass}`}
-                style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
+                style={riseInDelay(index)}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
@@ -127,7 +127,7 @@ export default async function RedemptionsPage() {
                   </div>
                 </div>
 
-                <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
+                <dl className={rowBreakdownClass}>
                   <div className="flex gap-1.5">
                     <dt className="text-zinc-500 dark:text-zinc-400">Spent</dt>
                     <dd className="text-zinc-700 tabular-nums dark:text-zinc-300">

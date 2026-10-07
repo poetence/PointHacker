@@ -8,7 +8,7 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
-import { rowCardFrameClass } from "@/components/ui/card";
+import { riseInDelay, rowCardFrameClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
 import { programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
@@ -56,7 +56,7 @@ export default async function GoalsPage() {
                 <li
                   key={goal.id}
                   className={`rise-in-item ${rowCardFrameClass}`}
-                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
+                  style={riseInDelay(index)}
                 >
                   <RegionScene region={goal.region} className="h-20" />
                   <div className="flex flex-col gap-3 p-4">
