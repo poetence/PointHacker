@@ -5,6 +5,8 @@
 // the ratio by the caller). Pure and DB-agnostic — callers map Prisma records
 // into these input shapes.
 
+import { groupBy } from "@/lib/group-by";
+
 export type GoalSpec =
   | { kind: "FLIGHT"; travelers: number; roundTrip: boolean }
   | { kind: "HOTEL"; nights: number; rooms: number };
@@ -90,7 +92,7 @@ export function computeGoalProgress({
   transferRoutes,
 }: ComputeGoalProgressInput): GoalTargetPlan[] {
   const balanceByProgramId = new Map(balances.map((b) => [b.programId, b.balance]));
-  const routesByTargetId = groupRoutesByTarget(transferRoutes);
+  const routesByTargetId = groupBy(transferRoutes, (route) => route.toProgramId);
 
   return awardCosts
     .map((awardCost) =>
@@ -135,16 +137,6 @@ function compareGoalPlans(a: GoalTargetPlan, b: GoalTargetPlan): number {
     a.shortfall - b.shortfall ||
     a.pointsNeeded - b.pointsNeeded
   );
-}
-
-function groupRoutesByTarget(routes: GoalTransferRoute[]): Map<string, GoalTransferRoute[]> {
-  const routesByTargetId = new Map<string, GoalTransferRoute[]>();
-  for (const route of routes) {
-    const group = routesByTargetId.get(route.toProgramId);
-    if (group) group.push(route);
-    else routesByTargetId.set(route.toProgramId, [route]);
-  }
-  return routesByTargetId;
 }
 
 type TransferSource = { route: GoalTransferRoute; balance: number; maxTransferable: number };

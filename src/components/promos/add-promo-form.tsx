@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { sendJson } from "@/lib/send-json";
+import { groupBy } from "@/lib/group-by";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -23,12 +24,7 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const groups = new Map<string, PromoPartner[]>();
-  for (const partner of partners) {
-    const group = groups.get(partner.fromProgramName) ?? [];
-    group.push(partner);
-    groups.set(partner.fromProgramName, group);
-  }
+  const groups = groupBy(partners, (partner) => partner.fromProgramName);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
