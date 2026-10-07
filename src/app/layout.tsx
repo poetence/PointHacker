@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Nav } from "@/components/nav";
 import "./globals.css";
@@ -22,6 +22,14 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "PointHacker",
   description: "Maximize the value of your credit-card reward points.",
+};
+
+// Browser chrome (mobile address bar, tab strip) matches the page ground.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

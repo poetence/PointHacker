@@ -24,10 +24,30 @@
   }
 }
 
+html {
+  /* The nav is sticky, so anything scrolled into view (a focused control, the
+     skip link's #main target) has to clear it rather than land underneath. */
+  scroll-padding-top: 4.5rem;
+  /* No double-tap-to-zoom delay on taps. Pressed states are drawn per control,
+     so the grey iOS tap flash would only double them up. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  /* Nearly every number here is a balance, a price or a rate that gets compared
+     with the one above it, so figures share one width everywhere. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Headings break into even lines instead of leaving one word on the last. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 /* One keyboard-focus ring for every interactive element, so variants that carry

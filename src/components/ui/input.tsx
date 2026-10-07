@@ -23,6 +23,9 @@ export function Input({
 }) {
   const input = (
     <input
+      // None of these fields are identity or address data, so browser autofill
+      // and password managers only get in the way; a caller can still opt in.
+      autoComplete="off"
       {...props}
       className={`${controlClass} ${sizeClass[size]} w-full ${prefix ? "pl-7" : ""} ${
         suffix ? "pr-8" : ""

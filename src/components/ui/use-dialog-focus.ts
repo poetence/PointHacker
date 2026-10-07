@@ -7,7 +7,8 @@ const FOCUSABLE =
 
 /**
  * Keyboard focus for the picker dialogs: on open, focus moves into the panel
- * (to a `data-autofocus` element if there is one, else the first control);
+ * (to a `data-autofocus` element if there is one, else the first control —
+ * but never a text field on a touch screen, where that pops the keyboard);
  * Tab and Shift+Tab wrap around inside it; on close, focus goes back to the
  * button that opened it. Without this a keyboard user was left behind the
  * backdrop, tabbing through the page they could no longer see.
@@ -25,10 +26,16 @@ export function useDialogFocus(
     const trigger = triggerRef.current;
     if (!isOpen || !panel) return;
 
-    const initial =
+    let initial =
       panel.querySelector<HTMLElement>("[data-autofocus]") ??
       panel.querySelector<HTMLElement>(FOCUSABLE) ??
       panel;
+    // On touch screens, focusing a text field opens the keyboard over half the
+    // picker before the user has asked to type, so land on the panel instead.
+    const typesText = initial instanceof HTMLInputElement || initial instanceof HTMLTextAreaElement;
+    if (typesText && window.matchMedia("(pointer: coarse)").matches) {
+      initial = panel;
+    }
     initial.focus();
 
     function handleKeyDown(event: KeyboardEvent) {

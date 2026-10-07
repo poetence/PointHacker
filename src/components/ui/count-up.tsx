@@ -16,7 +16,7 @@ import { formatCents } from "@/lib/format";
  * is animated.
  */
 const FORMATTERS = {
-  number: (n: number) => n.toLocaleString(),
+  number: (n: number) => n.toLocaleString("en-US"),
   cents: formatCents,
 } as const;
 

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 
 // Focus rings come from the global :focus-visible rule in globals.css, so no
 // variant can accidentally ship without one.
@@ -20,7 +20,7 @@ export function Button({
   size = "md",
   className = "",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
+}: ComponentProps<"button"> & {
   variant?: keyof typeof variantClass;
   size?: "md" | "sm";
 }) {
