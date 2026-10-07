@@ -44,3 +44,9 @@ next-env.d.ts
 # project-specific: case-insensitive filesystems treat this as CLAUDE.md too —
 # see the "Repository gotcha" section in CLAUDE.md
 claude.md
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+.claude
+.agents
+skills-lock.json
