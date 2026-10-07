@@ -50,3 +50,7 @@ claude.md
 .claude
 .agents
 skills-lock.json
+
+# Rewritten by `next dev` (and appended to by skill installers). Kept on disk so
+# Next doesn't fall back to writing its rules block into CLAUDE.md, but untracked.
+AGENTS.md
