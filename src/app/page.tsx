@@ -3,7 +3,7 @@ import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemption-options";
-import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
+import { formatCents, formatCentsPerPoint, formatSignedCount, programLabel } from "@/lib/format";
 import { AddBalanceForm } from "@/components/balances/add-balance-form";
 import { BalanceRowActions } from "@/components/balances/balance-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
@@ -262,7 +262,7 @@ function BalanceRow({
                       : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
                   }`}
                 >
-                  {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString("en-US")}
+                  {formatSignedCount(delta)}
                 </span>
               )}
               <BalanceSparkline values={history} />

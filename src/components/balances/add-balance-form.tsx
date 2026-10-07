@@ -8,6 +8,7 @@ import { sortProgramsByPriority } from "@/lib/program-priority";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { unitLabel } from "@/lib/format";
 
 export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   const router = useRouter();
@@ -72,7 +73,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
         />
       </div>
 
-      <Field label={selectedProgram?.pointsUnit === "miles" ? "Miles" : "Points"} className="w-36">
+      <Field label={unitLabel(selectedProgram?.pointsUnit ?? "points")} className="w-36">
         <Input
           type="number"
           min={0}

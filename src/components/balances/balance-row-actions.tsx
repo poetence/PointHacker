@@ -7,6 +7,7 @@ import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { unitLabel } from "@/lib/format";
 
 export function BalanceRowActions({
   id,
@@ -61,8 +62,8 @@ export function BalanceRowActions({
           min={0}
           step={1}
           required
-          aria-label={`${programName} ${pointsUnit === "miles" ? "miles" : "points"}`}
-          placeholder={pointsUnit === "miles" ? "Miles" : "Points"}
+          aria-label={`${programName} ${unitLabel(pointsUnit).toLowerCase()}`}
+          placeholder={unitLabel(pointsUnit)}
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
           className="w-28"

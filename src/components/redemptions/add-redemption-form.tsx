@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { sendJson } from "@/lib/send-json";
-import { formatCentsPerPoint } from "@/lib/format";
+import { formatCentsPerPoint, unitLabel, unitSingular } from "@/lib/format";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -137,7 +137,7 @@ export function AddRedemptionForm({
           </Select>
         </Field>
 
-        <Field label={`${unit === "miles" ? "Miles" : "Points"} spent`}>
+        <Field label={`${unitLabel(unit)} spent`}>
           <Input
             required
             type="number"
@@ -205,7 +205,7 @@ export function AddRedemptionForm({
           <span className="font-display font-semibold text-emerald-600 dark:text-emerald-400">
             {formatCentsPerPoint(centsPerPoint)}
           </span>{" "}
-          per {unit === "miles" ? "mile" : "point"}.
+          per {unitSingular(unit)}.
         </p>
       )}
 
