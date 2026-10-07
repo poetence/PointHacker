@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function RedemptionDeleteButton({ id }: { id: string }) {
+export function RedemptionDeleteButton({ id, description }: { id: string; description: string }) {
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
     // Says what it won't do: the balance stays put, since the user may have
@@ -13,15 +15,28 @@ export function RedemptionDeleteButton({ id }: { id: string }) {
       return;
     }
 
-    const response = await fetch(`/api/redemptions/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      router.refresh();
+    // Disabled until the request settles, so a double-click can't send two DELETEs.
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/redemptions/${id}`, { method: "DELETE" });
+      if (response.ok) {
+        router.refresh();
+      }
+    } finally {
+      setIsDeleting(false);
     }
   }
 
   return (
-    <Button size="sm" variant="danger" onClick={handleDelete}>
-      Delete
+    <Button
+      size="sm"
+      variant="danger"
+      onClick={handleDelete}
+      disabled={isDeleting}
+      // Every row's button reads "Delete", so name the booking for screen readers.
+      aria-label={`Delete redemption: ${description}`}
+    >
+      {isDeleting ? "Deleting…" : "Delete"}
     </Button>
   );
 }

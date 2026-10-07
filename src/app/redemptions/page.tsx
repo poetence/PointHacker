@@ -139,7 +139,7 @@ export default async function RedemptionsPage() {
                     >
                       {formatCentsPerPoint(row.centsPerPoint)}
                     </p>
-                    <RedemptionDeleteButton id={row.id} />
+                    <RedemptionDeleteButton id={row.id} description={row.description} />
                   </div>
                 </div>
 

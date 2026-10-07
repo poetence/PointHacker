@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -22,6 +22,16 @@ function toCents(dollars: string): number {
   return Math.round(Number(dollars || 0) * 100);
 }
 
+/** Today in the browser's time zone, as the YYYY-MM-DD a date input takes. */
+function localToday(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+const noSubscription = () => () => {};
+
 export function AddRedemptionForm({
   programs,
   goals,
@@ -35,7 +45,13 @@ export function AddRedemptionForm({
   const [pointsSpent, setPointsSpent] = useState("");
   const [cashValue, setCashValue] = useState("");
   const [feesPaid, setFeesPaid] = useState("");
-  const [bookedOn, setBookedOn] = useState(new Date().toISOString().slice(0, 10));
+  // "Today" has to come from the browser: the server doesn't know the user's time
+  // zone, and a UTC date reads as tomorrow on a US evening. The server snapshot is
+  // empty, so hydration matches and the date fills in right after; it only stands
+  // in until the user picks a date themselves.
+  const today = useSyncExternalStore(noSubscription, localToday, () => "");
+  const [pickedBookedOn, setBookedOn] = useState("");
+  const bookedOn = pickedBookedOn || today;
   const [awardGoalId, setAwardGoalId] = useState("");
   const [deductFromBalance, setDeductFromBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,20 +71,29 @@ export function AddRedemptionForm({
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch("/api/redemptions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        rewardsProgramId,
-        description,
-        pointsSpent: Number(pointsSpent),
-        cashValueCents: toCents(cashValue),
-        feesPaidCents: toCents(feesPaid),
-        bookedOn,
-        awardGoalId: awardGoalId || null,
-        deductFromBalance,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/redemptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rewardsProgramId,
+          description,
+          pointsSpent: Number(pointsSpent),
+          cashValueCents: toCents(cashValue),
+          feesPaidCents: toCents(feesPaid),
+          bookedOn,
+          awardGoalId: awardGoalId || null,
+          deductFromBalance,
+        }),
+      });
+    } catch {
+      // A thrown fetch (offline, dropped connection) would otherwise leave the
+      // button stuck on "Logging…" with nothing on screen saying why.
+      setIsSubmitting(false);
+      setError("Couldn't reach the server. Check your connection and try again.");
+      return;
+    }
 
     setIsSubmitting(false);
 
@@ -114,7 +139,7 @@ export function AddRedemptionForm({
             {programs.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
-                {p.balance !== null ? ` — ${p.balance.toLocaleString()} ${p.pointsUnit}` : ""}
+                {p.balance !== null ? ` — ${p.balance.toLocaleString("en-US")} ${p.pointsUnit}` : ""}
               </option>
             ))}
           </Select>
