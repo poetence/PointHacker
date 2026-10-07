@@ -20,6 +20,7 @@ import { RegionScene } from "@/components/regions/region-scene";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Stat, StatsStrip } from "@/components/ui/stats-strip";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -80,46 +81,26 @@ export default async function Home() {
       </PageHeader>
 
       {balances.length > 0 && (
-        <dl
-          className={`grid divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50 ${
+        <StatsStrip
+          className={
             redemptions.count > 0
               ? "grid-cols-2 divide-x divide-y sm:grid-cols-4 sm:divide-y-0"
               : "grid-cols-3 divide-x"
-          }`}
+          }
         >
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points held</dt>
-            <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-              <CountUp value={totalPoints} format="number" />
-            </dd>
-          </div>
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Best-case value</dt>
-            <dd className="font-display text-xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl">
-              <CountUp value={totalValueCents} format="cents" />
-            </dd>
-          </div>
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">At risk</dt>
-            <dd
-              className={`font-display text-xl font-semibold tracking-tight sm:text-2xl ${
-                expiringCount > 0
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-black dark:text-zinc-50"
-              }`}
-            >
-              {expiringCount === 0 ? "None" : `${expiringCount} of ${balances.length}`}
-            </dd>
-          </div>
+          <Stat label="Points held">
+            <CountUp value={totalPoints} format="number" />
+          </Stat>
+          <Stat label="Best-case value" tone="positive">
+            <CountUp value={totalValueCents} format="cents" />
+          </Stat>
+          <Stat label="At risk" tone={expiringCount > 0 ? "warning" : "default"}>
+            {expiringCount === 0 ? "None" : `${expiringCount} of ${balances.length}`}
+          </Stat>
           {redemptions.count > 0 && (
-            <div className="px-4 py-3">
-              <dt className="text-xs text-zinc-500 dark:text-zinc-400">Realized</dt>
-              <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-                {formatCentsPerPoint(redemptions.blendedCentsPerPoint)}
-              </dd>
-            </div>
+            <Stat label="Realized">{formatCentsPerPoint(redemptions.blendedCentsPerPoint)}</Stat>
           )}
-        </dl>
+        </StatsStrip>
       )}
 
       {goals.length > 0 && (

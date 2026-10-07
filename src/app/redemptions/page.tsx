@@ -12,6 +12,7 @@ import { CountUp } from "@/components/ui/count-up";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Stat, StatsStrip } from "@/components/ui/stats-strip";
 
 // Redemptions mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
@@ -63,26 +64,15 @@ export default async function RedemptionsPage() {
       </PageHeader>
 
       {summary.count > 0 && (
-        <dl className="grid grid-cols-3 divide-x divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Points redeemed</dt>
-            <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-              <CountUp value={summary.totalPointsSpent} format="number" />
-            </dd>
-          </div>
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Value realized</dt>
-            <dd className="font-display text-xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl">
-              <CountUp value={summary.totalNetValueCents} format="cents" />
-            </dd>
-          </div>
-          <div className="px-4 py-3">
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">Blended rate</dt>
-            <dd className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-2xl">
-              {formatCentsPerPoint(summary.blendedCentsPerPoint)}
-            </dd>
-          </div>
-        </dl>
+        <StatsStrip className="grid-cols-3 divide-x">
+          <Stat label="Points redeemed">
+            <CountUp value={summary.totalPointsSpent} format="number" />
+          </Stat>
+          <Stat label="Value realized" tone="positive">
+            <CountUp value={summary.totalNetValueCents} format="cents" />
+          </Stat>
+          <Stat label="Blended rate">{formatCentsPerPoint(summary.blendedCentsPerPoint)}</Stat>
+        </StatsStrip>
       )}
 
       <section className="flex flex-col gap-3">
