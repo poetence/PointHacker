@@ -264,6 +264,7 @@ export default async function Home() {
 
                     <BalanceRowActions
                       id={balance.id}
+                      programName={balance.rewardsProgram.shortName ?? balance.rewardsProgram.name}
                       currentBalance={balance.balance}
                       currentExpiresOverrideAt={balance.expiresOverrideAt}
                       pointsUnit={balance.rewardsProgram.pointsUnit}

@@ -126,6 +126,7 @@ export default async function CardsPage() {
 
                 <CardRowActions
                   id={card.id}
+                  cardName={`${card.issuer} ${card.productName}`}
                   currentNickname={card.nickname}
                   currentAnnualFeeCents={card.annualFeeCents}
                 />

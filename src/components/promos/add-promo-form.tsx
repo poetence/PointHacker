@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,22 +35,17 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch("/api/promos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        transferPartnerId,
-        bonusPercent: Number(bonusPercent),
-        startsOn,
-        endsOn,
-      }),
+    const result = await sendJson("/api/promos", "POST", {
+      transferPartnerId,
+      bonusPercent: Number(bonusPercent),
+      startsOn,
+      endsOn,
     });
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -98,10 +94,10 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
       </Field>
 
       <Button type="submit" disabled={isSubmitting}>
-        Add promo
+        {isSubmitting ? "Adding…" : "Add promo"}
       </Button>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>
   );
 }

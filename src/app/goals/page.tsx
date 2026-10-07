@@ -5,7 +5,7 @@ import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
 import { GoalForm } from "@/components/goals/goal-form";
-import { GoalDeleteButton } from "@/components/goals/goal-actions";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
 import { rowCardFrameClass } from "@/components/ui/card";
@@ -83,7 +83,11 @@ export default async function GoalsPage() {
                         {REGION_LABELS[goal.region]} · {describeGoal(goal)}
                       </p>
                     </div>
-                    <GoalDeleteButton goalId={goal.id} />
+                    <DeleteButton
+                      url={`/api/goals/${goal.id}`}
+                      itemLabel={`goal: ${goal.label}, ${describeGoal(goal)}`}
+                      confirmMessage="Delete this goal?"
+                    />
                   </div>
 
                   {best ? (

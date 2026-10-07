@@ -2,15 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/ui/delete-button";
 
 export function CardRowActions({
   id,
+  cardName,
   currentNickname,
   currentAnnualFeeCents,
 }: {
   id: string;
+  /** Names the row for screen readers, which otherwise hear a column of identical buttons. */
+  cardName: string;
   currentNickname: string | null;
   currentAnnualFeeCents: number | null;
 }) {
@@ -28,34 +33,20 @@ export function CardRowActions({
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch(`/api/cards/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nickname: nickname || null,
-        annualFeeCents: annualFee === "" ? null : Math.round(Number(annualFee) * 100),
-      }),
+    const result = await sendJson(`/api/cards/${id}`, "PATCH", {
+      nickname: nickname || null,
+      annualFeeCents: annualFee === "" ? null : Math.round(Number(annualFee) * 100),
     });
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
     setIsEditing(false);
     router.refresh();
-  }
-
-  async function handleDelete() {
-    if (!window.confirm("Remove this card?")) return;
-
-    const response = await fetch(`/api/cards/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      router.refresh();
-    }
   }
 
   if (isEditing) {
@@ -65,6 +56,7 @@ export function CardRowActions({
           size="sm"
           type="text"
           placeholder="Nickname"
+          aria-label={`${cardName} nickname`}
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           className="w-32"
@@ -75,30 +67,42 @@ export function CardRowActions({
           min={0}
           step={1}
           placeholder="Fee"
+          aria-label={`${cardName} annual fee`}
           prefix="$"
           value={annualFee}
           onChange={(e) => setAnnualFee(e.target.value)}
           className="w-24"
         />
         <Button size="sm" type="submit" disabled={isSubmitting}>
-          Save
+          {isSubmitting ? "Saving…" : "Save"}
         </Button>
         <Button size="sm" variant="link" type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </Button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
       </form>
     );
   }
 
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="link" onClick={() => setIsEditing(true)}>
+      <Button
+        size="sm"
+        variant="link"
+        onClick={() => setIsEditing(true)}
+        aria-label={`Edit ${cardName}`}
+      >
         Edit
       </Button>
-      <Button size="sm" variant="danger" onClick={handleDelete}>
-        Delete
-      </Button>
+      <DeleteButton
+        url={`/api/cards/${id}`}
+        itemLabel={cardName}
+        confirmMessage="Remove this card?"
+      />
     </div>
   );
 }

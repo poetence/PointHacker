@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
+import { sendJson } from "@/lib/send-json";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -71,35 +72,21 @@ export function AddRedemptionForm({
     setError(null);
     setIsSubmitting(true);
 
-    let response: Response;
-    try {
-      response = await fetch("/api/redemptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rewardsProgramId,
-          description,
-          pointsSpent: Number(pointsSpent),
-          cashValueCents: toCents(cashValue),
-          feesPaidCents: toCents(feesPaid),
-          bookedOn,
-          awardGoalId: awardGoalId || null,
-          deductFromBalance,
-        }),
-      });
-    } catch {
-      // A thrown fetch (offline, dropped connection) would otherwise leave the
-      // button stuck on "Logging…" with nothing on screen saying why.
-      setIsSubmitting(false);
-      setError("Couldn't reach the server. Check your connection and try again.");
-      return;
-    }
+    const result = await sendJson("/api/redemptions", "POST", {
+      rewardsProgramId,
+      description,
+      pointsSpent: Number(pointsSpent),
+      cashValueCents: toCents(cashValue),
+      feesPaidCents: toCents(feesPaid),
+      bookedOn,
+      awardGoalId: awardGoalId || null,
+      deductFromBalance,
+    });
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -230,7 +217,7 @@ export function AddRedemptionForm({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Logging…" : "Log redemption"}
         </Button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
     </form>
   );

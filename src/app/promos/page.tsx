@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { isBonusActive } from "@/lib/redemptions/transfer-bonus";
 import { AddPromoForm } from "@/components/promos/add-promo-form";
-import { PromoRowActions } from "@/components/promos/promo-row-actions";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { SparkleIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 
@@ -46,7 +46,11 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
                   {formatDate(promo.startsOn)} – {formatDate(promo.endsOn)}
                 </p>
               </div>
-              <PromoRowActions id={promo.id} />
+              <DeleteButton
+                url={`/api/promos/${promo.id}`}
+                itemLabel={`promo: ${from.shortName ?? from.name} to ${to.shortName ?? to.name}, +${promo.bonusPercent}%`}
+                confirmMessage="Remove this promo for everyone?"
+              />
             </li>
           );
         })}

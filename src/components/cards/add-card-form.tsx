@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -75,17 +76,12 @@ export function AddCardForm({
                 : Math.round(Number(annualFee) * 100),
           };
 
-    const response = await fetch("/api/cards", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const result = await sendJson("/api/cards", "POST", payload);
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -208,11 +204,11 @@ export function AddCardForm({
         </Field>
 
         <Button type="submit" disabled={isSubmitting}>
-          Add card
+          {isSubmitting ? "Adding…" : "Add card"}
         </Button>
 
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     </form>

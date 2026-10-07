@@ -4,7 +4,7 @@ import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { getRedemptions } from "@/lib/redemptions/get-redemptions";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form";
-import { RedemptionDeleteButton } from "@/components/redemptions/redemption-row-actions";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { TicketIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
@@ -139,7 +139,13 @@ export default async function RedemptionsPage() {
                     >
                       {formatCentsPerPoint(row.centsPerPoint)}
                     </p>
-                    <RedemptionDeleteButton id={row.id} description={row.description} />
+                    {/* Says what it won't do: the balance stays put, since the user may
+                        have corrected it since and putting points back would double-count. */}
+                    <DeleteButton
+                      url={`/api/redemptions/${row.id}`}
+                      itemLabel={`redemption: ${row.description}`}
+                      confirmMessage="Remove this redemption? Your balance won't be changed back."
+                    />
                   </div>
                 </div>
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { SPEND_CATEGORIES, SPEND_CATEGORY_LABELS, type SpendCategory } from "@/lib/spend-categories";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -73,17 +74,12 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
       body[FIELD_BY_CATEGORY[category]] = Math.round(Number(spend[category] || 0) * 100);
     }
 
-    const response = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const result = await sendJson("/api/profile", "PUT", body);
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null);
-      setError(payload?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -99,7 +95,7 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Total{" "}
           <span className="font-medium text-black dark:text-zinc-50">
-            ${monthlyTotal.toLocaleString()}
+            ${monthlyTotal.toLocaleString("en-US")}
           </span>
           /mo
         </p>
@@ -167,10 +163,10 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
         </Field>
 
         <Button type="submit" disabled={isSubmitting}>
-          {initial ? "Update recommendations" : "Get recommendations"}
+          {isSubmitting ? "Saving…" : initial ? "Update recommendations" : "Get recommendations"}
         </Button>
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
     </form>
   );

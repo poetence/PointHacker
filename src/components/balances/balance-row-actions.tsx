@@ -2,16 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/ui/delete-button";
 
 export function BalanceRowActions({
   id,
+  programName,
   currentBalance,
   currentExpiresOverrideAt,
   pointsUnit,
 }: {
   id: string;
+  /** Names the row for screen readers, which otherwise hear a column of identical buttons. */
+  programName: string;
   currentBalance: number;
   currentExpiresOverrideAt: Date | null;
   pointsUnit: string;
@@ -30,31 +35,20 @@ export function BalanceRowActions({
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch(`/api/balances/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ balance: Number(balance), expiresOverrideAt: expiresOn || null }),
+    const result = await sendJson(`/api/balances/${id}`, "PATCH", {
+      balance: Number(balance),
+      expiresOverrideAt: expiresOn || null,
     });
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
     setIsEditing(false);
     router.refresh();
-  }
-
-  async function handleDelete() {
-    if (!window.confirm("Remove this balance?")) return;
-
-    const response = await fetch(`/api/balances/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      router.refresh();
-    }
   }
 
   if (isEditing) {
@@ -66,7 +60,7 @@ export function BalanceRowActions({
           min={0}
           step={1}
           required
-          title={pointsUnit === "miles" ? "Miles" : "Points"}
+          aria-label={`${programName} ${pointsUnit === "miles" ? "miles" : "points"}`}
           placeholder={pointsUnit === "miles" ? "Miles" : "Points"}
           value={balance}
           onChange={(e) => setBalance(e.target.value)}
@@ -75,30 +69,41 @@ export function BalanceRowActions({
         <Input
           size="sm"
           type="date"
-          title="Expires on (override)"
+          aria-label={`${programName} expires on (override)`}
           value={expiresOn}
           onChange={(e) => setExpiresOn(e.target.value)}
           className="w-40"
         />
         <Button size="sm" type="submit" disabled={isSubmitting}>
-          Save
+          {isSubmitting ? "Saving…" : "Save"}
         </Button>
         <Button size="sm" variant="link" type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </Button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
       </form>
     );
   }
 
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="link" onClick={() => setIsEditing(true)}>
+      <Button
+        size="sm"
+        variant="link"
+        onClick={() => setIsEditing(true)}
+        aria-label={`Edit ${programName} balance`}
+      >
         Edit
       </Button>
-      <Button size="sm" variant="danger" onClick={handleDelete}>
-        Delete
-      </Button>
+      <DeleteButton
+        url={`/api/balances/${id}`}
+        itemLabel={`${programName} balance`}
+        confirmMessage="Remove this balance?"
+      />
     </div>
   );
 }

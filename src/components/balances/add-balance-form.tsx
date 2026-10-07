@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { ProgramPickerModal, type PickableProgram } from "@/components/programs/program-picker-modal";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { Field } from "@/components/ui/field";
@@ -38,21 +39,16 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
 
     setIsSubmitting(true);
 
-    const response = await fetch("/api/balances", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        rewardsProgramId: selectedProgram.id,
-        balance: Number(balance),
-        expiresOverrideAt: expiresOn || undefined,
-      }),
+    const result = await sendJson("/api/balances", "POST", {
+      rewardsProgramId: selectedProgram.id,
+      balance: Number(balance),
+      expiresOverrideAt: expiresOn || undefined,
     });
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
@@ -89,10 +85,10 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
       </Field>
 
       <Button type="submit" disabled={isSubmitting}>
-        Add balance
+        {isSubmitting ? "Adding…" : "Add balance"}
       </Button>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>
   );
 }

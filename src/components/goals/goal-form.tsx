@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { sendJson } from "@/lib/send-json";
 import { REGION_LABELS } from "@/lib/regions";
 import { DESTINATIONS_BY_REGION, findDestination } from "@/lib/goals/destinations";
 import { targetMonthOptions } from "@/lib/goals/target-months";
@@ -91,10 +92,10 @@ export function GoalForm({
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch(goalId ? `/api/goals/${goalId}` : "/api/goals", {
-      method: goalId ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const result = await sendJson<{ id: string }>(
+      goalId ? `/api/goals/${goalId}` : "/api/goals",
+      goalId ? "PUT" : "POST",
+      {
         ...values,
         travelers: Number(values.travelers),
         nights: Number(values.nights),
@@ -102,20 +103,18 @@ export function GoalForm({
         originState: values.originState || null,
         targetMonth: values.targetMonth || null,
         notes: values.notes || null,
-      }),
-    });
+      }
+    );
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null);
-      setError(payload?.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
     if (!goalId) {
-      const created = await response.json();
-      router.push(`/goals/${created.id}`);
+      router.push(`/goals/${result.data.id}`);
       return;
     }
 
@@ -262,9 +261,9 @@ export function GoalForm({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={isSubmitting}>
-          {goalId ? "Save goal" : "Set this goal"}
+          {isSubmitting ? "Saving…" : goalId ? "Save goal" : "Set this goal"}
         </Button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
     </form>
   );
