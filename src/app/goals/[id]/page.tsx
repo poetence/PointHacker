@@ -51,7 +51,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <div>
-        <Link href="/goals" className="text-sm text-zinc-500 underline dark:text-zinc-400">
+        <Link href="/goals" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
           &larr; All goals
         </Link>
       </div>
@@ -59,7 +59,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       <header className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
         <RegionScene region={goal.region} className="h-36" />
         <div className="bg-white px-5 py-4 dark:bg-zinc-900/50">
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="break-words font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
             {goal.label}
           </h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -81,13 +81,13 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
           <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
             {best.isReachable
               ? `You can book this today via ${best.program.shortName ?? best.program.name}.`
-              : `Closest route: ${best.program.shortName ?? best.program.name}, ${best.shortfall.toLocaleString()} ${best.program.pointsUnit} short.`}
+              : `Closest route: ${best.program.shortName ?? best.program.name}, ${best.shortfall.toLocaleString("en-US")} ${best.program.pointsUnit} short.`}
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {best.pointsNeeded.toLocaleString()} {best.program.pointsUnit} for{" "}
-            {describeGoalUnit(goal)} · you hold {best.heldPoints.toLocaleString()}{" "}
+            {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} for{" "}
+            {describeGoalUnit(goal)} · you hold {best.heldPoints.toLocaleString("en-US")}{" "}
             there and can transfer in{" "}
-            {(best.potentialPoints - best.heldPoints).toLocaleString()} more.
+            {(best.potentialPoints - best.heldPoints).toLocaleString("en-US")} more.
             {originZone && originPct !== 0 && (
               <>
                 {" "}
@@ -135,7 +135,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                         {plan.program.shortName ?? plan.program.name}
                       </Link>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {plan.pointsNeeded.toLocaleString()} {plan.program.pointsUnit} needed
+                        {plan.pointsNeeded.toLocaleString("en-US")} {plan.program.pointsUnit} needed
                       </p>
                     </div>
                   </div>
@@ -156,6 +156,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                   heldPoints={plan.heldPoints}
                   pointsCovered={plan.pointsCovered}
                   pointsNeeded={plan.pointsNeeded}
+                  label={`Progress via ${plan.program.shortName ?? plan.program.name}`}
                 />
 
                 <dl className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800">
@@ -168,15 +169,15 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                           : "text-zinc-400 dark:text-zinc-500"
                       }
                     >
-                      {plan.heldPoints.toLocaleString()}
+                      {plan.heldPoints.toLocaleString("en-US")}
                     </dd>
                   </div>
                   {plan.transfers.map((step) => (
                     <div key={step.fromProgramId} className="flex gap-1.5">
                       <dt className="text-zinc-500 dark:text-zinc-400">Transfer</dt>
                       <dd className="font-medium text-sky-600 dark:text-sky-400">
-                        {step.pointsToTransfer.toLocaleString()} {step.fromProgramName} →{" "}
-                        {step.pointsReceived.toLocaleString()}
+                        {step.pointsToTransfer.toLocaleString("en-US")} {step.fromProgramName} →{" "}
+                        {step.pointsReceived.toLocaleString("en-US")}
                         {step.activeBonusPercent ? ` (+${step.activeBonusPercent}% bonus)` : ""}
                       </dd>
                     </div>
@@ -190,7 +191,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                           : "text-zinc-400 dark:text-zinc-500"
                       }
                     >
-                      {plan.shortfall > 0 ? plan.shortfall.toLocaleString() : "nothing"}
+                      {plan.shortfall > 0 ? plan.shortfall.toLocaleString("en-US") : "nothing"}
                     </dd>
                   </div>
                 </dl>
@@ -229,7 +230,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
                       {card.issuer} {card.name}
                     </p>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {card.welcomeBonusPoints?.toLocaleString()} {card.program.shortName ?? card.program.name}{" "}
+                      {card.welcomeBonusPoints?.toLocaleString("en-US")} {card.program.shortName ?? card.program.name}{" "}
                       {card.program.pointsUnit} after {formatCents(card.welcomeBonusSpendCents ?? 0)} in{" "}
                       {card.welcomeBonusMonths} mo ·{" "}
                       {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}

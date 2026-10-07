@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { sendJson } from "@/lib/send-json";
+import { formatCentsPerPoint } from "@/lib/format";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
 
 export type RedemptionProgramOption = {
   id: string;
@@ -57,6 +60,8 @@ export function AddRedemptionForm({
   const [deductFromBalance, setDeductFromBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useWarnOnLeave(Boolean(description || pointsSpent || cashValue || feesPaid));
 
   const program = programs.find((p) => p.id === rewardsProgramId) ?? null;
   const unit = program?.pointsUnit ?? "points";
@@ -111,7 +116,7 @@ export function AddRedemptionForm({
       <Field label="What did you book?">
         <Input
           required
-          placeholder="ANA business class, SFO to HND"
+          placeholder="ANA business class, SFO to HND…"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -150,6 +155,7 @@ export function AddRedemptionForm({
             type="number"
             min={0}
             step="0.01"
+            inputMode="decimal"
             prefix="$"
             placeholder="1800.00"
             value={cashValue}
@@ -162,6 +168,7 @@ export function AddRedemptionForm({
             type="number"
             min={0}
             step="0.01"
+            inputMode="decimal"
             prefix="$"
             placeholder="85.00"
             value={feesPaid}
@@ -196,22 +203,22 @@ export function AddRedemptionForm({
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           That works out to{" "}
           <span className="font-display font-semibold text-emerald-600 dark:text-emerald-400">
-            {centsPerPoint.toFixed(2)}¢
+            {formatCentsPerPoint(centsPerPoint)}
           </span>{" "}
           per {unit === "miles" ? "mile" : "point"}.
         </p>
       )}
 
-      <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-        <input
-          type="checkbox"
-          checked={deductFromBalance}
-          onChange={(e) => setDeductFromBalance(e.target.checked)}
-          className="h-4 w-4 rounded border-zinc-300 text-emerald-600 dark:border-zinc-700"
-        />
-        Subtract these {unit} from my tracked balance
-        {program?.balance === null && " (no balance tracked yet)"}
-      </label>
+      <Checkbox
+        checked={deductFromBalance}
+        onChange={(e) => setDeductFromBalance(e.target.checked)}
+        label={
+          <>
+            Subtract these {unit} from my tracked balance
+            {program?.balance === null && " (no balance tracked yet)"}
+          </>
+        }
+      />
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSubmitting}>

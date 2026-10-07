@@ -72,10 +72,10 @@ export default async function GoalsPage() {
                   <RegionScene region={goal.region} className="h-20" />
                   <div className="flex flex-col gap-3 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <Link
                         href={`/goals/${goal.id}`}
-                        className="font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                        className="break-words font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
                       >
                         {goal.label}
                       </Link>
@@ -96,6 +96,7 @@ export default async function GoalsPage() {
                         heldPoints={best.heldPoints}
                         pointsCovered={best.pointsCovered}
                         pointsNeeded={best.pointsNeeded}
+                        label={`${goal.label} via ${best.program.shortName ?? best.program.name}`}
                       />
                       <p className="text-sm text-zinc-700 dark:text-zinc-300">
                         {best.isReachable ? (
@@ -104,13 +105,13 @@ export default async function GoalsPage() {
                               Bookable now
                             </span>{" "}
                             via {best.program.shortName ?? best.program.name} —{" "}
-                            {best.pointsNeeded.toLocaleString()} {best.program.pointsUnit}
+                            {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit}
                           </>
                         ) : (
                           <>
                             Closest: {best.program.shortName ?? best.program.name} —{" "}
-                            {best.pointsCovered.toLocaleString()} of{" "}
-                            {best.pointsNeeded.toLocaleString()} {best.program.pointsUnit} (
+                            {best.pointsCovered.toLocaleString("en-US")} of{" "}
+                            {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} (
                             {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}%)
                           </>
                         )}

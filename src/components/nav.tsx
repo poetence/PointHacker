@@ -39,7 +39,9 @@ export async function Nav() {
 
         {user && (
           <div className="ml-auto flex shrink-0 items-center gap-2 border-l border-zinc-200 pl-3 dark:border-zinc-800 sm:pl-4">
+            {/* Decorative: the initial alone tells a screen reader nothing. */}
             <span
+              aria-hidden="true"
               title={user.email ?? undefined}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-semibold text-white shadow-sm"
             >

@@ -114,7 +114,7 @@ export default async function RecommendPage({
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {REGION_LABELS[activeGoal.region]} · {describeGoal(activeGoal)} · closest route is{" "}
               {bestPlan.program.shortName ?? bestPlan.program.name},{" "}
-              {bestPlan.shortfall.toLocaleString()} {bestPlan.program.pointsUnit} short.{" "}
+              {bestPlan.shortfall.toLocaleString("en-US")} {bestPlan.program.pointsUnit} short.{" "}
               <Link href={`/goals/${activeGoal.id}`} className="underline-offset-2 hover:underline">
                 View goal &rarr;
               </Link>
@@ -139,7 +139,7 @@ export default async function RecommendPage({
                         {card.issuer} {card.name}
                       </p>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {card.welcomeBonusPoints?.toLocaleString()}{" "}
+                        {card.welcomeBonusPoints?.toLocaleString("en-US")}{" "}
                         {card.program.shortName ?? card.program.name} {card.program.pointsUnit} after{" "}
                         {formatCents(card.welcomeBonusSpendCents ?? 0)} in {card.welcomeBonusMonths} mo ·{" "}
                         {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
@@ -196,7 +196,7 @@ export default async function RecommendPage({
                           #{index + 1} {rec.card.issuer} {rec.card.name}
                         </p>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                          {Math.round(rec.annualPoints).toLocaleString()}{" "}
+                          {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
                           {rec.card.program.shortName ?? rec.card.program.name}{" "}
                           {rec.card.program.pointsUnit}/yr
                         </p>

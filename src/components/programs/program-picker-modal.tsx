@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { controlClass } from "@/components/ui/input";
@@ -19,13 +19,17 @@ export function ProgramPickerModal({
   programs,
   selectedProgram,
   onSelect,
+  labelId,
 }: {
   programs: PickableProgram[];
   selectedProgram: PickableProgram | null;
   onSelect: (program: PickableProgram) => void;
+  /** id of the visible label beside the trigger, so it's announced as "Program, Amex MR". */
+  labelId?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const ordered = sortProgramsByPriority(programs);
+  const triggerId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   useDialogFocus(isOpen, panelRef, triggerRef);
@@ -45,8 +49,10 @@ export function ProgramPickerModal({
     <>
       <button
         ref={triggerRef}
+        id={triggerId}
         type="button"
         aria-haspopup="dialog"
+        aria-labelledby={labelId ? `${labelId} ${triggerId}` : undefined}
         onClick={() => setIsOpen(true)}
         className={`${controlClass} flex items-center gap-2 p-1.5`}
       >

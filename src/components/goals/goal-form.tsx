@@ -24,6 +24,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
 
 const EMPTY: GoalFormValues = {
   label: "Tokyo",
@@ -56,9 +57,11 @@ export function GoalForm({
   onSaved?: () => void;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState<GoalFormValues>(
-    initial ?? { ...EMPTY, originState: defaultOriginState }
+  const [startingValues] = useState<GoalFormValues>(
+    () => initial ?? { ...EMPTY, originState: defaultOriginState }
   );
+  const [values, setValues] = useState<GoalFormValues>(startingValues);
+  useWarnOnLeave(JSON.stringify(values) !== JSON.stringify(startingValues));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

@@ -8,6 +8,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
 
 export type ProfileFormValues = {
   monthlySpendCents: Record<SpendCategory, number>;
@@ -38,20 +39,27 @@ const SLIDER_MAX: Record<SpendCategory, number> = {
 
 const SLIDER_STEP = 25;
 
+function toFormState(initial: ProfileFormValues | null) {
+  const spend = {} as Record<SpendCategory, string>;
+  for (const category of SPEND_CATEGORIES) {
+    const cents = initial?.monthlySpendCents[category] ?? 0;
+    spend[category] = cents > 0 ? String(cents / 100) : "";
+  }
+  return {
+    spend,
+    preference: initial?.rewardsPreference ?? "ANY",
+    maxFee: initial?.maxAnnualFeeCents != null ? String(initial.maxAnnualFeeCents / 100) : "",
+  };
+}
+
 export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | null }) {
   const router = useRouter();
-  const [spend, setSpend] = useState<Record<SpendCategory, string>>(() => {
-    const values = {} as Record<SpendCategory, string>;
-    for (const category of SPEND_CATEGORIES) {
-      const cents = initial?.monthlySpendCents[category] ?? 0;
-      values[category] = cents > 0 ? String(cents / 100) : "";
-    }
-    return values;
-  });
-  const [preference, setPreference] = useState(initial?.rewardsPreference ?? "ANY");
-  const [maxFee, setMaxFee] = useState(
-    initial?.maxAnnualFeeCents != null ? String(initial.maxAnnualFeeCents / 100) : ""
-  );
+  const saved = toFormState(initial);
+  const [spend, setSpend] = useState<Record<SpendCategory, string>>(saved.spend);
+  const [preference, setPreference] = useState(saved.preference);
+  const [maxFee, setMaxFee] = useState(saved.maxFee);
+  // `initial` is re-read from the server after a save, so a saved form is clean again.
+  useWarnOnLeave(JSON.stringify({ spend, preference, maxFee }) !== JSON.stringify(saved));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

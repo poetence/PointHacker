@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { sendJson } from "@/lib/send-json";
 import { ProgramPickerModal, type PickableProgram } from "@/components/programs/program-picker-modal";
 import { sortProgramsByPriority } from "@/lib/program-priority";
@@ -19,6 +19,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   const [expiresOn, setExpiresOn] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const programLabelId = useId();
 
   if (programs.length === 0) {
     return (
@@ -60,8 +61,11 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300">Program</span>
+        <span id={programLabelId} className="font-medium text-zinc-700 dark:text-zinc-300">
+          Program
+        </span>
         <ProgramPickerModal
+          labelId={programLabelId}
           programs={programs}
           selectedProgram={selectedProgram}
           onSelect={setSelectedProgram}

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useInlineEdit } from "@/components/ui/use-inline-edit";
 import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ export function CardRowActions({
   currentAnnualFeeCents: number | null;
 }) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
+  const { isEditing, setIsEditing, editButtonRef, editorRef } = useInlineEdit<HTMLFormElement>();
   const [nickname, setNickname] = useState(currentNickname ?? "");
   const [annualFee, setAnnualFee] = useState(
     currentAnnualFeeCents !== null ? String(currentAnnualFeeCents / 100) : ""
@@ -51,7 +52,7 @@ export function CardRowActions({
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSave} className="flex flex-wrap items-center gap-2">
+      <form ref={editorRef} onSubmit={handleSave} className="flex flex-wrap items-center gap-2">
         <Input
           size="sm"
           type="text"
@@ -91,6 +92,7 @@ export function CardRowActions({
   return (
     <div className="flex items-center gap-2">
       <Button
+        ref={editButtonRef}
         size="sm"
         variant="link"
         onClick={() => setIsEditing(true)}

@@ -156,7 +156,7 @@ export default async function Home() {
                     <div className="min-w-0">
                       <Link
                         href={`/goals/${goal.id}`}
-                        className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+                        className="break-words font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                       >
                         {goal.label}
                       </Link>
@@ -170,6 +170,7 @@ export default async function Home() {
                           heldPoints={best.heldPoints}
                           pointsCovered={best.pointsCovered}
                           pointsNeeded={best.pointsNeeded}
+                          label={`${goal.label} via ${best.program.shortName ?? best.program.name}`}
                         />
                         <p className="text-xs text-zinc-600 dark:text-zinc-400">
                           {best.isReachable ? (
@@ -180,7 +181,7 @@ export default async function Home() {
                             <>
                               {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
                               {best.program.shortName ?? best.program.name} ·{" "}
-                              {best.shortfall.toLocaleString()} short
+                              {best.shortfall.toLocaleString("en-US")} short
                             </>
                           )}
                         </p>
@@ -238,7 +239,7 @@ export default async function Home() {
                         </Link>
                         <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                           <span className="font-display text-base font-semibold tabular-nums text-black dark:text-zinc-50">
-                            {balance.balance.toLocaleString()}
+                            {balance.balance.toLocaleString("en-US")}
                           </span>
                           {balance.rewardsProgram.pointsUnit}
                           {delta !== null && delta !== 0 && (
@@ -249,7 +250,7 @@ export default async function Home() {
                                   : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
                               }`}
                             >
-                              {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString()}
+                              {delta > 0 ? "+" : "−"}{Math.abs(delta).toLocaleString("en-US")}
                             </span>
                           )}
                           <BalanceSparkline values={history} />

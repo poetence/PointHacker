@@ -86,7 +86,7 @@ export default async function CardsPage() {
                 key={card.id}
                 className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   {card.cardProductId ? (
                     <CardArt issuer={card.issuer} name={card.productName} />
                   ) : (
@@ -97,8 +97,8 @@ export default async function CardsPage() {
                       size="sm"
                     />
                   )}
-                  <div>
-                    <p className="font-medium text-black dark:text-zinc-50">
+                  <div className="min-w-0">
+                    <p className="break-words font-medium text-black dark:text-zinc-50">
                       {card.issuer} {card.productName}
                       {card.nickname && (
                         <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>

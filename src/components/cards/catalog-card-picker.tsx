@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { CardArt } from "@/components/recommendations/card-art";
 import { controlClass, Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,17 @@ export function CatalogCardPicker({
   cards,
   selected,
   onSelect,
+  labelId,
 }: {
   cards: PickableCard[];
   selected: PickableCard | null;
   onSelect: (card: PickableCard) => void;
+  /** id of the visible label beside the trigger, so it's announced as "Card, Chase Sapphire…". */
+  labelId?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const triggerId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   useDialogFocus(isOpen, panelRef, triggerRef);
@@ -47,8 +51,10 @@ export function CatalogCardPicker({
     <>
       <button
         ref={triggerRef}
+        id={triggerId}
         type="button"
         aria-haspopup="dialog"
+        aria-labelledby={labelId ? `${labelId} ${triggerId}` : undefined}
         onClick={() => setIsOpen(true)}
         className={`${controlClass} flex items-center gap-3 p-1.5 pr-3`}
       >

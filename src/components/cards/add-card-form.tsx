@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { sendJson } from "@/lib/send-json";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ export function AddCardForm({
   const [openedOn, setOpenedOn] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const cardLabelId = useId();
 
   if (programs.length === 0) {
     return (
@@ -101,6 +102,7 @@ export function AddCardForm({
             <button
               key={option}
               type="button"
+              aria-pressed={mode === option}
               onClick={() => setMode(option)}
               className={`rounded-md px-3 py-1 font-medium transition ${
                 mode === option
@@ -117,10 +119,11 @@ export function AddCardForm({
       <div className="flex flex-wrap items-end gap-3">
         {mode === "catalog" ? (
           <div className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            <span id={cardLabelId} className="font-medium text-zinc-700 dark:text-zinc-300">
               Card
             </span>
             <CatalogCardPicker
+              labelId={cardLabelId}
               cards={catalog}
               selected={selectedCard}
               onSelect={setSelectedCard}
@@ -132,7 +135,7 @@ export function AddCardForm({
               <Input
                 type="text"
                 required
-                placeholder="Chase"
+                placeholder="Chase…"
                 value={issuer}
                 onChange={(e) => setIssuer(e.target.value)}
               />
@@ -142,7 +145,7 @@ export function AddCardForm({
               <Input
                 type="text"
                 required
-                placeholder="Sapphire Preferred"
+                placeholder="Sapphire Preferred…"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
               />

@@ -121,8 +121,8 @@ export default async function RedemptionsPage() {
                       size="sm"
                     />
                     <div className="min-w-0">
-                      <p className="font-medium text-black dark:text-zinc-50">{row.description}</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      <p className="break-words font-medium text-black dark:text-zinc-50">{row.description}</p>
+                      <p className="break-words text-sm text-zinc-500 dark:text-zinc-400">
                         {row.program.shortName ?? row.program.name} ·{" "}
                         {dateFormat.format(row.bookedOn)}
                         {row.goal && ` · for ${row.goal.label}`}
@@ -153,7 +153,7 @@ export default async function RedemptionsPage() {
                   <div className="flex gap-1.5">
                     <dt className="text-zinc-500 dark:text-zinc-400">Spent</dt>
                     <dd className="text-zinc-700 tabular-nums dark:text-zinc-300">
-                      {row.pointsSpent.toLocaleString()} {row.program.pointsUnit}
+                      {row.pointsSpent.toLocaleString("en-US")} {row.program.pointsUnit}
                     </dd>
                   </div>
                   <div className="flex gap-1.5">

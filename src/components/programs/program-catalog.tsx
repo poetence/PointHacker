@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,21 @@ const TYPE_GROUPS: { type: ProgramType; label: string }[] = [
 ];
 
 export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
-  const [filter, setFilter] = useState("");
+  // The filter lives in ?q= so a filtered view can be linked or reloaded.
+  const searchParams = useSearchParams();
+  const [filter, setFilter] = useState(searchParams.get("q") ?? "");
+
+  function updateFilter(value: string) {
+    setFilter(value);
+    // replaceState rather than router.replace: no server round trip per
+    // keystroke, and Next keeps useSearchParams in sync with it.
+    const query = value.trim();
+    window.history.replaceState(
+      null,
+      "",
+      query ? `?q=${encodeURIComponent(query)}` : window.location.pathname
+    );
+  }
 
   const filtered = useMemo(() => {
     const query = filter.trim().toLowerCase();
@@ -42,9 +57,10 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
     <div className="flex flex-col gap-8">
       <Input
         type="search"
+        aria-label="Filter programs"
         placeholder="Filter by name…"
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(e) => updateFilter(e.target.value)}
         className="max-w-sm"
       />
 
@@ -101,7 +117,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
       })}
 
       {filtered.length === 0 && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No programs match &quot;{filter}&quot;.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No programs match “{filter}”.</p>
       )}
     </div>
   );

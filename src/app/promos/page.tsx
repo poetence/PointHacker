@@ -12,7 +12,12 @@ import { rowCardClass } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 type PromoWithPartner = Prisma.TransferBonusGetPayload<{

@@ -19,10 +19,10 @@ export function GapCardPill({ contribution }: { contribution: CardGapContributio
       <span className="font-medium">
         {contribution.closesGap
           ? "Closes the gap"
-          : `Leaves ${contribution.shortfallAfter.toLocaleString()} short`}
+          : `Leaves ${contribution.shortfallAfter.toLocaleString("en-US")} short`}
       </span>
       <span className="opacity-80">
-        +{contribution.pointsContributed.toLocaleString()} {contribution.targetProgramName}
+        +{contribution.pointsContributed.toLocaleString("en-US")} {contribution.targetProgramName}
         {via}
       </span>
     </span>

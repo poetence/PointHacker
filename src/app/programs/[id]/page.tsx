@@ -7,6 +7,7 @@ import { formatCents, formatCentsPerPoint } from "@/lib/format";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { rowCardClass } from "@/components/ui/card";
+import { LocalDate } from "@/components/ui/local-date";
 
 export default async function ProgramDetailPage({
   params,
@@ -38,7 +39,7 @@ export default async function ProgramDetailPage({
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
       <div>
-        <Link href="/" className="text-sm text-zinc-500 underline dark:text-zinc-400">
+        <Link href="/" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
           &larr; Back to dashboard
         </Link>
       </div>
@@ -50,7 +51,7 @@ export default async function ProgramDetailPage({
             {program.name}
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-400">
-            {balance.toLocaleString()} {program.pointsUnit} &middot; direct value{" "}
+            {balance.toLocaleString("en-US")} {program.pointsUnit} &middot; direct value{" "}
             {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/{unitSingular}
             {pointsBalance && (
               <ExpirationPill
@@ -84,7 +85,7 @@ export default async function ProgramDetailPage({
             <li
               key={option.kind === "direct" ? "direct" : option.partnerProgramId}
               className={`flex flex-wrap items-center justify-between gap-3 ${rowCardClass} ${
-                option.kind === "transfer" && !option.isViable ? "opacity-50" : ""
+                option.kind === "transfer" && !option.isViable ? "border-dashed shadow-none" : ""
               } ${index === 0 ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""}`}
             >
               <div>
@@ -99,8 +100,8 @@ export default async function ProgramDetailPage({
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   {option.kind === "direct"
-                    ? `${option.pointsUsed.toLocaleString()} ${program.pointsUnit} used`
-                    : `${option.pointsUsed.toLocaleString()} ${program.pointsUnit} -> ${option.pointsReceived.toLocaleString()} received${
+                    ? `${option.pointsUsed.toLocaleString("en-US")} ${program.pointsUnit} used`
+                    : `${option.pointsUsed.toLocaleString("en-US")} ${program.pointsUnit} → ${option.pointsReceived.toLocaleString("en-US")} received${
                         option.transferFeeCents > 0
                           ? ` · ${formatCents(option.transferFeeCents)} fee`
                           : ""
@@ -109,7 +110,7 @@ export default async function ProgramDetailPage({
                 {option.kind === "transfer" && !option.isViable && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     {option.minimumTransfer !== null
-                      ? `Requires at least ${option.minimumTransfer.toLocaleString()} ${program.pointsUnit} to transfer.`
+                      ? `Requires at least ${option.minimumTransfer.toLocaleString("en-US")} ${program.pointsUnit} to transfer.`
                       : `Not enough ${program.pointsUnit} for a full transfer block.`}
                   </p>
                 )}
@@ -143,11 +144,7 @@ export default async function ProgramDetailPage({
                   className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
                 >
                   <span className="text-zinc-500 dark:text-zinc-400">
-                    {snapshot.recordedAt.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    <LocalDate iso={snapshot.recordedAt.toISOString()} />
                   </span>
                   <span className="flex items-center gap-3">
                     {change !== null && change !== 0 && (
@@ -158,11 +155,11 @@ export default async function ProgramDetailPage({
                             : "text-zinc-400 dark:text-zinc-500"
                         }
                       >
-                        {change > 0 ? "+" : "−"}{Math.abs(change).toLocaleString()}
+                        {change > 0 ? "+" : "−"}{Math.abs(change).toLocaleString("en-US")}
                       </span>
                     )}
                     <span className="font-medium text-black dark:text-zinc-50">
-                      {snapshot.balance.toLocaleString()} {program.pointsUnit}
+                      {snapshot.balance.toLocaleString("en-US")} {program.pointsUnit}
                     </span>
                   </span>
                 </li>
