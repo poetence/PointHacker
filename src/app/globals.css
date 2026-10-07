@@ -4,6 +4,9 @@
 :root {
   --background: #fafafa;
   --foreground: #171717;
+  /* Lets native UI follow the theme too: the date picker, a select's open list,
+     checkboxes and scrollbars otherwise stay light on the dark ground. */
+  color-scheme: light dark;
 }
 
 @theme inline {

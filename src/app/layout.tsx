@@ -31,8 +31,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        {/* Keyboard users would otherwise tab through every nav link on every page. */}
+        <a
+          href="#main"
+          className="sr-only rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 dark:bg-emerald-500 dark:text-emerald-950"
+        >
+          Skip to content
+        </a>
         <Nav />
-        <main className="rise-in flex-1">{children}</main>
+        <main id="main" tabIndex={-1} className="rise-in flex-1 focus:outline-none">
+          {children}
+        </main>
         <footer className="border-t border-zinc-200/80 px-6 py-6 text-center text-xs text-zinc-500 dark:border-zinc-800/80 dark:text-zinc-500">
           Values and award prices are ballpark estimates — always check the program before you
           transfer.

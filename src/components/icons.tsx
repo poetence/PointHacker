@@ -2,7 +2,10 @@ import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
+// Every icon here sits next to a visible label (or inside a control that carries
+// its own aria-label), so they're decorative and hidden from screen readers.
 const base = {
+  "aria-hidden": true,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
