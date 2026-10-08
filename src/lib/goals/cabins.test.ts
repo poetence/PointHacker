@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeGoal, describeGoalUnit } from "./cabins";
+import { describeGoal, describeGoalUnit, goalNames } from "./cabins";
 
 const base = {
   cabin: "BUSINESS" as const,
@@ -37,5 +37,38 @@ describe("describeGoalUnit", () => {
     expect(describeGoalUnit({ ...base, kind: "FLIGHT" })).toBe("business");
     expect(describeGoalUnit({ ...base, kind: "HOTEL" })).toBe("an upscale hotel");
     expect(describeGoalUnit({ ...base, kind: "HOTEL", hotelTier: "LUXURY" })).toBe("a luxury hotel");
+  });
+});
+
+describe("goalNames", () => {
+  type Overrides = { kind?: "FLIGHT" | "HOTEL"; cabin?: "ECONOMY" | "BUSINESS"; travelers?: number };
+  const goal = (id: string, label: string, extra: Overrides = {}) => ({
+    ...base,
+    kind: "FLIGHT" as "FLIGHT" | "HOTEL",
+    cabin: "BUSINESS" as "ECONOMY" | "BUSINESS",
+    id,
+    label,
+    ...extra,
+  });
+
+  it("uses the bare label when it's unique", () => {
+    expect(goalNames([goal("a", "Tokyo"), goal("b", "Paris")])).toEqual(new Map([["a", "Tokyo"], ["b", "Paris"]]));
+  });
+
+  it("adds the cabin or tier when labels repeat", () => {
+    const names = goalNames([
+      goal("a", "Tokyo"),
+      goal("b", "Tokyo", { cabin: "ECONOMY" }),
+      goal("c", "Tokyo", { kind: "HOTEL" }),
+    ]);
+    expect(names).toEqual(
+      new Map([["a", "Tokyo (Business)"], ["b", "Tokyo (Economy)"], ["c", "Tokyo (Upscale hotel)"]])
+    );
+  });
+
+  it("falls back to the full description when the cabin still clashes", () => {
+    const names = goalNames([goal("a", "Tokyo"), goal("b", "Tokyo", { travelers: 1 })]);
+    expect(names.get("a")).toBe("Tokyo (Business · 2 travelers · round trip)");
+    expect(names.get("b")).toBe("Tokyo (Business · 1 traveler · round trip)");
   });
 });

@@ -1,10 +1,8 @@
 import Link from "next/link";
-import type { AwardGoal } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
-import { getGoalProgress } from "@/lib/goals/get-goal-progress";
+import { getGoalsProgress, type GoalProgress, type GoalsProgress } from "@/lib/goals/get-goal-progress";
 import { GoalForm } from "@/components/goals/goal-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
@@ -15,7 +13,9 @@ import { programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
-import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
+import { percentCovered } from "@/lib/goals/compute-goal-progress";
+import { GoalLinks, SharedPointsNote } from "@/components/goals/shared-points-note";
+import { Stat, StatsStrip } from "@/components/ui/stats-strip";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
@@ -24,18 +24,16 @@ export const dynamic = "force-dynamic";
 export default async function GoalsPage() {
   const userId = await requireSessionUserId();
 
-  const goals = await prisma.awardGoal.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const progress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
+  const progress = await getGoalsProgress(userId);
+  const goals = progress.goals.map((p) => p.goal);
 
   return (
     <div className={pageContainerClass}>
       <PageHeader icon={TargetIcon} tone="rose" title="Award goals">
         Name the trip, and see how close your points already get you.
       </PageHeader>
+
+      {goals.length > 1 && <SharingSummary progress={progress} />}
 
       <section className="flex flex-col gap-3">
         <h2 className={sectionTitleClass}>Set a goal</h2>
@@ -51,8 +49,8 @@ export default async function GoalsPage() {
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
-            {goals.map((goal, index) => (
-              <GoalRow key={goal.id} goal={goal} best={progress[index].plans[0] ?? null} index={index} />
+            {progress.goals.map((goalProgress, index) => (
+              <GoalRow key={goalProgress.goal.id} progress={goalProgress} index={index} />
             ))}
           </ul>
         )}
@@ -61,7 +59,52 @@ export default async function GoalsPage() {
   );
 }
 
-function GoalRow({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan | null; index: number }) {
+/**
+ * How the goals fare together: one balance can't pay for two trips, so the
+ * soonest trip is planned first and each goal after it gets what's left.
+ */
+function SharingSummary({ progress }: { progress: GoalsProgress }) {
+  const total = progress.goals.length;
+  const alone = progress.goals.filter((p) => p.standalonePlans[0]?.isReachable).length;
+  const together = progress.goals.filter((p) => p.shared.plans[0]?.isReachable).length;
+
+  return (
+    <section className="flex flex-col gap-3">
+      <StatsStrip className="grid-cols-3 divide-x">
+        <Stat label="Goals">{total}</Stat>
+        <Stat label="Bookable on their own">{alone}</Stat>
+        <Stat
+          label="Bookable together"
+          tone={together < alone ? "warning" : together > 0 ? "positive" : "default"}
+        >
+          {together}
+        </Stat>
+      </StatsStrip>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Goals share your points: the soonest trip is planned first, then undated goals in the
+        order you set them, and each one counts only what the goals ahead of it leave.
+      </p>
+      {progress.contested.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {progress.contested.map((balance) => (
+            <li
+              key={balance.programId}
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <span className="font-medium">{balance.programName} is stretched:</span>{" "}
+              <GoalLinks goals={balance.goals} /> would use {balance.wanted.toLocaleString("en-US")}{" "}
+              between them; you hold {balance.held.toLocaleString("en-US")}.
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function GoalRow({ progress, index }: { progress: GoalProgress; index: number }) {
+  const { goal, squeezedBy } = progress;
+  const best = progress.shared.plans[0] ?? null;
   return (
     <li className={`rise-in-item ${rowCardFrameClass}`} style={riseInDelay(index)}>
       <RegionScene region={goal.region} className="h-20" />
@@ -111,6 +154,7 @@ function GoalRow({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan 
                 </>
               )}
             </p>
+            <SharedPointsNote standaloneBest={progress.standalonePlans[0] ?? null} squeezedBy={squeezedBy} />
           </div>
         ) : (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

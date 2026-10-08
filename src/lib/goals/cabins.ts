@@ -88,3 +88,25 @@ export function describeGoalUnit(goal: DescribableGoal): string {
     ? CABIN_LABELS[goal.cabin].toLowerCase()
     : `${goal.hotelTier === "UPSCALE" ? "an" : "a"} ${HOTEL_TIER_LABELS[goal.hotelTier].toLowerCase()} hotel`;
 }
+
+/**
+ * A name for each goal that tells it apart from the user's other goals: the
+ * label alone when it's unique, plus the cabin or hotel tier when two share a
+ * label ("Tokyo (Business)"), and the whole description if that still clashes.
+ */
+export function goalNames<G extends DescribableGoal & { id: string; label: string }>(
+  goals: G[]
+): Map<string, string> {
+  const shortName = (goal: G) =>
+    `${goal.label} (${goal.kind === "FLIGHT" ? CABIN_LABELS[goal.cabin] : `${HOTEL_TIER_LABELS[goal.hotelTier]} hotel`})`;
+  const clashes = (name: (goal: G) => string, goal: G) =>
+    goals.some((other) => other.id !== goal.id && name(other) === name(goal));
+
+  return new Map(
+    goals.map((goal) => {
+      if (!clashes((g) => g.label, goal)) return [goal.id, goal.label];
+      if (!clashes(shortName, goal)) return [goal.id, shortName(goal)];
+      return [goal.id, `${goal.label} (${describeGoal(goal)})`];
+    })
+  );
+}

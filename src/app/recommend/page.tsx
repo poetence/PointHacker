@@ -5,7 +5,8 @@ import { requireSessionUserId } from "@/lib/user";
 import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
-import { getGoalProgress } from "@/lib/goals/get-goal-progress";
+import { getGoalsProgress, type GoalProgress } from "@/lib/goals/get-goal-progress";
+import { SharedPointsNote } from "@/components/goals/shared-points-note";
 import { getGoalGapCards, type GoalGapCardsResult } from "@/lib/goals/get-goal-gap-cards";
 import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import type { CardGapContribution } from "@/lib/goals/close-gap-with-cards";
@@ -40,15 +41,18 @@ export default async function RecommendPage({
   const { goal: goalParam } = await searchParams;
   const userId = await requireSessionUserId();
 
-  const [profile, goals] = await Promise.all([
+  const [profile, goalsProgress] = await Promise.all([
     prisma.spendingProfile.findUnique({ where: { userId } }),
-    prisma.awardGoal.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
+    getGoalsProgress(userId),
   ]);
+  const goals = goalsProgress.goals.map((p) => p.goal);
   const result = profile ? await getCardRecommendations(userId, profile) : null;
   const top = result?.ranked.slice(0, 8) ?? [];
 
   const activeGoal = goals.find((g) => g.id === goalParam) ?? goals[0] ?? null;
-  const progress = activeGoal ? await getGoalProgress(userId, activeGoal) : null;
+  const goalProgress = activeGoal ? (goalsProgress.byId.get(activeGoal.id) ?? null) : null;
+  // The shared figure, so the cards target what's still missing once other goals take their share.
+  const progress = goalProgress?.shared ?? null;
   const bestPlan = progress?.plans[0] ?? null;
   const gapCards =
     progress && bestPlan && !bestPlan.isReachable ? await getGoalGapCards(userId, progress) : null;
@@ -63,14 +67,14 @@ export default async function RecommendPage({
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className={sectionTitleClass}>
-            {activeGoal ? `Closing the gap for ${activeGoal.label}` : "Working toward a goal?"}
+            {goalProgress ? `Closing the gap for ${goalProgress.name}` : "Working toward a goal?"}
           </h2>
           {goals.length > 1 && activeGoal && (
             <form method="GET" className="flex items-center gap-2">
               <Select name="goal" size="sm" defaultValue={activeGoal.id} aria-label="Goal" className="w-48">
-                {goals.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label}
+                {goalsProgress.goals.map(({ goal, name }) => (
+                  <option key={goal.id} value={goal.id}>
+                    {name}
                   </option>
                 ))}
               </Select>
@@ -81,7 +85,7 @@ export default async function RecommendPage({
           )}
         </div>
 
-        <GoalGap activeGoal={activeGoal} bestPlan={bestPlan} gapCards={gapCards} />
+        <GoalGap activeGoal={activeGoal} bestPlan={bestPlan} goalProgress={goalProgress} gapCards={gapCards} />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -172,10 +176,12 @@ export default async function RecommendPage({
 function GoalGap({
   activeGoal,
   bestPlan,
+  goalProgress,
   gapCards,
 }: {
   activeGoal: AwardGoal | null;
   bestPlan: GoalTargetPlan | null;
+  goalProgress: GoalProgress | null;
   gapCards: GoalGapCardsResult | null;
 }) {
   if (!activeGoal) {
@@ -221,6 +227,10 @@ function GoalGap({
           View goal &rarr;
         </Link>
       </p>
+      <SharedPointsNote
+        standaloneBest={goalProgress?.standalonePlans[0] ?? null}
+        squeezedBy={goalProgress?.squeezedBy ?? []}
+      />
 
       {gapCards && gapCards.ranked.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">

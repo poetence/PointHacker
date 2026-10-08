@@ -30,7 +30,11 @@ account only sees and manages its own cards and balances.
   from), shows how close each of your
   balances gets you — including the exact transfers (with active promos) that would close the gap
   — and which catalog card's welcome bonus would finish the job. Each goal leads with generated
-  artwork for its region, and its progress bar fills as you get closer
+  artwork for its region, and its progress bar fills as you get closer. Goals share your points
+  rather than each counting all of them: the soonest trip is planned first and every goal after it
+  works with what's left, so two trips can't both read "bookable" on the same balance. The goals
+  page shows how many are bookable on their own vs. together and flags a balance the goals want
+  more of than you hold
 - **Redemptions** — log what you actually booked (points spent, the cash price it replaced, any
   taxes and fees) and see the rate you really got, how it compares to what the app estimated
   those points were worth, and a blended rate across everything you've redeemed. Logging can
@@ -64,7 +68,8 @@ shipping real logos or photography.
 - Postgres (Supabase) via Prisma ORM
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
-  expiration, card scoring, goal progress and descriptions, gap-closing cards, origin adjustment,
+  expiration, card scoring, goal progress and descriptions, sharing points across goals,
+  gap-closing cards, origin adjustment,
   target months, realized redemption value, input validation, formatting helpers, the client
   request helper, the sign-in allowlist)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR

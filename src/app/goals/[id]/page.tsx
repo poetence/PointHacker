@@ -7,13 +7,14 @@ import { programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
-import { getGoalProgress, goalOriginZone } from "@/lib/goals/get-goal-progress";
+import { getGoalsProgress, goalOriginZone, type GoalProgress } from "@/lib/goals/get-goal-progress";
 import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import { ORIGIN_ZONE_LABELS, originMultiplier } from "@/lib/goals/origin-adjustment";
 import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
 import { GoalActions } from "@/components/goals/goal-actions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { GapCardItem } from "@/components/goals/gap-card-item";
+import { SharedPointsNote } from "@/components/goals/shared-points-note";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
@@ -27,12 +28,13 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const userId = await requireSessionUserId();
 
-  const goal = await prisma.awardGoal.findFirst({ where: { id, userId } });
-  if (!goal) {
+  // Fetched with every other goal: what this one can count depends on the goals ahead of it.
+  const goalProgress = (await getGoalsProgress(userId)).byId.get(id);
+  if (!goalProgress) {
     notFound();
   }
 
-  const progress = await getGoalProgress(userId, goal);
+  const { goal, shared: progress } = goalProgress;
   const { plans } = progress;
   const best = plans[0] ?? null;
 
@@ -61,7 +63,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       <GoalActions goalId={goal.id} initial={toGoalFormValues(goal)} />
 
       {best ? (
-        <BestRouteSummary goal={goal} best={best} />
+        <BestRouteSummary goal={goal} best={best} goalProgress={goalProgress} />
       ) : (
         <EmptyState icon={TargetIcon}>
           No program in the catalog prices {describeGoalUnit(goal)} in{" "}
@@ -78,6 +80,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
               <PlanRow
                 key={plan.program.id}
                 plan={plan}
+                heldInAll={heldInTarget(goalProgress, plan)}
                 index={index}
                 programType={programTypeById.get(plan.program.id) ?? (goal.kind === "HOTEL" ? "HOTEL" : "AIRLINE")}
               />
@@ -133,7 +136,15 @@ async function findProgramTypes(programIds: string[]) {
 }
 
 /** The headline under the header: whether the trip is bookable now, and where the points come from. */
-function BestRouteSummary({ goal, best }: { goal: AwardGoal; best: GoalTargetPlan }) {
+function BestRouteSummary({
+  goal,
+  best,
+  goalProgress,
+}: {
+  goal: AwardGoal;
+  best: GoalTargetPlan;
+  goalProgress: GoalProgress;
+}) {
   const originZone = goalOriginZone(goal);
   const originPct = originZone ? Math.round((originMultiplier(goal.region, originZone) - 1) * 100) : 0;
   return (
@@ -151,8 +162,11 @@ function BestRouteSummary({ goal, best }: { goal: AwardGoal; best: GoalTargetPla
       </p>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} for{" "}
-        {describeGoalUnit(goal)} · you hold {best.heldPoints.toLocaleString("en-US")}{" "}
-        there and can transfer in{" "}
+        {describeGoalUnit(goal)} · you hold {heldInTarget(goalProgress, best).toLocaleString("en-US")}{" "}
+        there
+        {best.heldPoints < heldInTarget(goalProgress, best) &&
+          ` (${best.heldPoints.toLocaleString("en-US")} not set aside for other goals)`}{" "}
+        and can transfer in{" "}
         {(best.potentialPoints - best.heldPoints).toLocaleString("en-US")} more.
         {originZone && originPct !== 0 && (
           <>
@@ -162,16 +176,28 @@ function BestRouteSummary({ goal, best }: { goal: AwardGoal; best: GoalTargetPla
           </>
         )}
       </p>
+      <SharedPointsNote
+        standaloneBest={goalProgress.standalonePlans[0] ?? null}
+        squeezedBy={goalProgress.squeezedBy}
+        className="mt-2 text-sm"
+      />
     </div>
   );
 }
 
+/** Everything the user holds in a plan's target program, before other goals take their share. */
+function heldInTarget(goalProgress: GoalProgress, plan: GoalTargetPlan): number {
+  return goalProgress.standalonePlans.find((p) => p.program.id === plan.program.id)?.heldPoints ?? plan.heldPoints;
+}
+
 function PlanRow({
   plan,
+  heldInAll,
   index,
   programType,
 }: {
   plan: GoalTargetPlan;
+  heldInAll: number;
   index: number;
   programType: ProgramType;
 }) {
@@ -231,6 +257,7 @@ function PlanRow({
           }
         >
           {plan.heldPoints.toLocaleString("en-US")}
+          {plan.heldPoints < heldInAll && ` free of ${heldInAll.toLocaleString("en-US")}`}
         </BreakdownItem>
         {plan.transfers.map((step) => (
           <BreakdownItem key={step.fromProgramId}
