@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { rowCardClass } from "@/components/ui/card";
 import { programLabel } from "@/lib/format";
 import { sectionTitleClass } from "@/components/ui/text";
-
-type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+import type { ProgramType } from "@/lib/program-type";
 
 type ProgramEntry = {
   id: string;

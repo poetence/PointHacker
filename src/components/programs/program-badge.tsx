@@ -1,7 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import { BankIcon, CashIcon, HotelIcon, PlaneIcon, SparkleIcon } from "@/components/icons";
+import type { ProgramType } from "@/lib/program-type";
 
-type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
 
 const COLORS_BY_TYPE: Record<ProgramType, string> = {
   BANK_TRANSFERABLE:

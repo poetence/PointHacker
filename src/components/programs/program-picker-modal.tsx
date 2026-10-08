@@ -7,12 +7,13 @@ import { controlClass } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PickerDialog } from "@/components/ui/picker-dialog";
 import { sectionTitleClass } from "@/components/ui/text";
+import type { ProgramType } from "@/lib/program-type";
 
 export type PickableProgram = {
   id: string;
   name: string;
   shortName: string | null;
-  type: "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+  type: ProgramType;
   pointsUnit: string;
 };
 

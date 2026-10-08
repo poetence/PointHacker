@@ -1,4 +1,5 @@
 import { getExpirationStatus } from "@/lib/points-expiration";
+import { formatCalendarDate } from "@/lib/format";
 
 export function ExpirationPill({
   lastUpdatedAt,
@@ -15,13 +16,6 @@ export function ExpirationPill({
     return null;
   }
 
-  const dateLabel = expiresAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
   return (
     <span
       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -30,7 +24,7 @@ export function ExpirationPill({
           : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
       }`}
     >
-      {status === "expired" ? "Likely expired" : "Expiring soon"} · {dateLabel}
+      {status === "expired" ? "Likely expired" : "Expiring soon"} · {formatCalendarDate(expiresAt)}
     </span>
   );
 }

@@ -1,4 +1,6 @@
-export type RegionRelevanceProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+import type { ProgramType } from "@/lib/program-type";
+
+export type RegionRelevanceProgramType = ProgramType;
 
 export function isRegionRelevant(
   program: { type: RegionRelevanceProgramType; regions: string[] },

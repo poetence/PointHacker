@@ -1,6 +1,7 @@
 // Ranks credit card products by estimated value for a spending profile.
 // Pure and DB-agnostic — callers map Prisma records into these input shapes.
 
+import type { ProgramType } from "@/lib/program-type";
 import {
   SPEND_CATEGORIES,
   type EarnRates,
@@ -16,7 +17,7 @@ export type ScoringProfile = {
   maxAnnualFeeCents: number | null;
 };
 
-export type ScoringProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+export type ScoringProgramType = ProgramType;
 
 export type ScoringCard = {
   id: string;

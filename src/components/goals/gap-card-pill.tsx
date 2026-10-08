@@ -1,13 +1,14 @@
 import type { CardGapContribution } from "@/lib/goals/close-gap-with-cards";
 
+/** " via transfer (+30%)" when the bonus has to be moved, "" when it lands directly. */
+function viaLabel(viaTransfer: CardGapContribution["viaTransfer"]): string {
+  if (!viaTransfer) return "";
+  if (!viaTransfer.activeBonusPercent) return " via transfer";
+  return ` via transfer (+${viaTransfer.activeBonusPercent}%)`;
+}
+
 /** "Closes the gap → Virgin Atlantic" / "Leaves 22,000 short → United" for a card's welcome bonus. */
 export function GapCardPill({ contribution }: { contribution: CardGapContribution }) {
-  const via = contribution.viaTransfer
-    ? contribution.viaTransfer.activeBonusPercent
-      ? ` via transfer (+${contribution.viaTransfer.activeBonusPercent}%)`
-      : " via transfer"
-    : "";
-
   return (
     <span
       className={`inline-flex flex-col rounded-lg px-2.5 py-1.5 text-xs ${
@@ -23,7 +24,7 @@ export function GapCardPill({ contribution }: { contribution: CardGapContributio
       </span>
       <span className="opacity-80">
         +{contribution.pointsContributed.toLocaleString("en-US")} {contribution.targetProgramName}
-        {via}
+        {viaLabel(contribution.viaTransfer)}
       </span>
     </span>
   );
