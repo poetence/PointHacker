@@ -6,3 +6,15 @@ export const rowCardFrameClass =
 /** The list-row card surface. Hover lifts the border as well as the shadow —
  * on the near-black dark ground a shadow alone reads as no feedback at all. */
 export const rowCardClass = `${rowCardFrameClass} p-4`;
+
+/** The secondary-numbers line under a row's hairline: a wrapping `<dl>` of label/value pairs. */
+export const rowBreakdownClass =
+  "flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 pt-3 text-sm dark:border-zinc-800";
+
+/**
+ * Inline style for a `.rise-in-item` row's entrance delay. Capped at the
+ * seventh row so a long list doesn't keep the reader waiting.
+ */
+export function riseInDelay(index: number) {
+  return { animationDelay: `${Math.min(index, 6) * 50}ms` };
+}

@@ -54,20 +54,25 @@ type DescribableGoal = {
   targetMonth: Date | null;
 };
 
+/** "1 night", "2 nights" — every noun counted here takes a plain -s. */
+function countOf(count: number, noun: string): string {
+  return `${count} ${count === 1 ? noun : `${noun}s`}`;
+}
+
 /** "Business · 2 travelers · round trip · Apr 2027" or "Upscale hotel · 4 nights · 1 room · Apr 2027" */
 export function describeGoal(goal: DescribableGoal): string {
   const parts =
     goal.kind === "FLIGHT"
       ? [
           CABIN_LABELS[goal.cabin],
-          `${goal.travelers} ${goal.travelers === 1 ? "traveler" : "travelers"}`,
+          countOf(goal.travelers, "traveler"),
           goal.roundTrip ? "round trip" : "one way",
           ...(goal.originState && isUsState(goal.originState) ? [`from ${US_STATES[goal.originState]}`] : []),
         ]
       : [
           `${HOTEL_TIER_LABELS[goal.hotelTier]} hotel`,
-          `${goal.nights} ${goal.nights === 1 ? "night" : "nights"}`,
-          `${goal.rooms} ${goal.rooms === 1 ? "room" : "rooms"}`,
+          countOf(goal.nights, "night"),
+          countOf(goal.rooms, "room"),
         ];
   if (goal.targetMonth) {
     parts.push(

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { groupBy } from "@/lib/group-by";
 import {
   computeBestRedemptions,
   type RedemptionOption,
@@ -31,9 +32,14 @@ export async function getRedemptionOptionsForProgram(
   });
 }
 
-export async function getTopRedemptionOptionsForBalances(
+/**
+ * Every option for each balance, best first, from one round of queries — or
+ * null where the program no longer exists. The fetched programs and partners
+ * come back too, for callers that filter on more than the ranking.
+ */
+export async function rankRedemptionOptionsForBalances(
   balances: { rewardsProgramId: string; balance: number }[]
-): Promise<Map<string, RedemptionOption | null>> {
+) {
   const programIds = balances.map((b) => b.rewardsProgramId);
 
   const [programs, transferPartners] = await Promise.all([
@@ -45,33 +51,34 @@ export async function getTopRedemptionOptionsForBalances(
   ]);
 
   const programsById = new Map(programs.map((p) => [p.id, p]));
-  const partnersByFromProgramId = new Map<string, typeof transferPartners>();
-  for (const partner of transferPartners) {
-    const existing = partnersByFromProgramId.get(partner.fromProgramId) ?? [];
-    existing.push(partner);
-    partnersByFromProgramId.set(partner.fromProgramId, existing);
-  }
+  const partnersByFromProgramId = groupBy(transferPartners, (partner) => partner.fromProgramId);
 
-  const result = new Map<string, RedemptionOption | null>();
+  const optionsByProgramId = new Map<string, RedemptionOption[] | null>();
   for (const { rewardsProgramId, balance } of balances) {
     const program = programsById.get(rewardsProgramId);
-    if (!program) {
-      result.set(rewardsProgramId, null);
-      continue;
-    }
-
-    const options = computeBestRedemptions({
-      program: toRedemptionProgram(program),
-      balance,
-      transferPartners: (partnersByFromProgramId.get(rewardsProgramId) ?? []).map(
-        toTransferPartnerOption
-      ),
-    });
-
-    result.set(rewardsProgramId, options[0] ?? null);
+    optionsByProgramId.set(
+      rewardsProgramId,
+      program
+        ? computeBestRedemptions({
+            program: toRedemptionProgram(program),
+            balance,
+            transferPartners: (partnersByFromProgramId.get(rewardsProgramId) ?? []).map(
+              toTransferPartnerOption
+            ),
+          })
+        : null
+    );
   }
 
-  return result;
+  return { programs, transferPartners, optionsByProgramId };
+}
+
+/** The single best option per balance, for the dashboard's "top pick". */
+export async function getTopRedemptionOptionsForBalances(
+  balances: { rewardsProgramId: string; balance: number }[]
+): Promise<Map<string, RedemptionOption | null>> {
+  const { optionsByProgramId } = await rankRedemptionOptionsForBalances(balances);
+  return new Map([...optionsByProgramId].map(([id, options]) => [id, options?.[0] ?? null]));
 }
 
 export function toRedemptionProgram(program: {

@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { sendJson } from "@/lib/send-json";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -11,6 +10,9 @@ import {
   CatalogCardPicker,
   type PickableCard,
 } from "@/components/cards/catalog-card-picker";
+import { dollarsToCents, programLabel } from "@/lib/format";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 type Program = { id: string; name: string; shortName: string | null };
 
@@ -36,8 +38,7 @@ export function AddCardForm({
   );
   const [annualFee, setAnnualFee] = useState("");
   const [openedOn, setOpenedOn] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error, setError } = useJsonSubmit();
   const cardLabelId = useId();
 
   if (programs.length === 0) {
@@ -50,12 +51,9 @@ export function AddCardForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
     if (mode === "catalog" && !selectedCard) {
       setError("Choose a card first.");
-      setIsSubmitting(false);
       return;
     }
 
@@ -71,20 +69,12 @@ export function AddCardForm({
             issuer,
             productName,
             rewardsProgramId,
-            annualFeeCents:
-              annualFee === ""
-                ? undefined
-                : Math.round(Number(annualFee) * 100),
+            annualFeeCents: annualFee === "" ? undefined : dollarsToCents(annualFee),
           };
 
-    const result = await sendJson("/api/cards", "POST", payload);
+    const result = await submit("/api/cards", "POST", payload);
 
-    setIsSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setIssuer("");
     setProductName("");
@@ -167,7 +157,7 @@ export function AddCardForm({
               >
                 {programs.map((program) => (
                   <option key={program.id} value={program.id}>
-                    {program.shortName ?? program.name}
+                    {programLabel(program)}
                   </option>
                 ))}
               </Select>
@@ -210,9 +200,7 @@ export function AddCardForm({
           {isSubmitting ? "Adding…" : "Add card"}
         </Button>
 
-        {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        <FormError message={error} />
       </div>
     </form>
   );

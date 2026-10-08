@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { REGION_LABELS } from "@/lib/regions";
@@ -8,15 +9,17 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
-import { rowCardFrameClass } from "@/components/ui/card";
+import { riseInDelay, rowCardFrameClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
+import { programLabel } from "@/lib/format";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
+import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 
 // Goals and balances change via API mutations after build, so this page must
 // be re-rendered per request rather than statically prerendered at build time.
 export const dynamic = "force-dynamic";
-
-const sectionTitle =
-  "font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50";
 
 export default async function GoalsPage() {
   const userId = await requireSessionUserId();
@@ -29,107 +32,93 @@ export default async function GoalsPage() {
   const progress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 shadow-sm dark:from-rose-950 dark:to-rose-900 dark:text-rose-300">
-          <TargetIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Award goals
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Name the trip, and see how close your points already get you.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={TargetIcon} tone="rose" title="Award goals">
+        Name the trip, and see how close your points already get you.
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
-        <h2 className={sectionTitle}>Set a goal</h2>
+        <h2 className={sectionTitleClass}>Set a goal</h2>
         <GoalForm defaultOriginState={goals.find((g) => g.originState)?.originState ?? ""} />
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className={sectionTitle}>Your goals</h2>
+        <h2 className={sectionTitleClass}>Your goals</h2>
 
         {goals.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-            <TargetIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No goals yet — set one above to see which of your balances get you there.
-            </p>
-          </div>
+          <EmptyState icon={TargetIcon}>
+            No goals yet — set one above to see which of your balances get you there.
+          </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
-            {goals.map((goal, index) => {
-              const best = progress[index].plans[0] ?? null;
-              return (
-                <li
-                  key={goal.id}
-                  className={`rise-in-item ${rowCardFrameClass}`}
-                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
-                >
-                  <RegionScene region={goal.region} className="h-20" />
-                  <div className="flex flex-col gap-3 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <Link
-                        href={`/goals/${goal.id}`}
-                        className="break-words font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
-                      >
-                        {goal.label}
-                      </Link>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {REGION_LABELS[goal.region]} · {describeGoal(goal)}
-                      </p>
-                    </div>
-                    <DeleteButton
-                      url={`/api/goals/${goal.id}`}
-                      itemLabel={`goal: ${goal.label}, ${describeGoal(goal)}`}
-                      confirmMessage="Delete this goal?"
-                    />
-                  </div>
-
-                  {best ? (
-                    <div className="flex flex-col gap-1.5">
-                      <GoalProgressBar
-                        heldPoints={best.heldPoints}
-                        pointsCovered={best.pointsCovered}
-                        pointsNeeded={best.pointsNeeded}
-                        label={`${goal.label} via ${best.program.shortName ?? best.program.name}`}
-                      />
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                        {best.isReachable ? (
-                          <>
-                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                              Bookable now
-                            </span>{" "}
-                            via {best.program.shortName ?? best.program.name} —{" "}
-                            {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit}
-                          </>
-                        ) : (
-                          <>
-                            Closest: {best.program.shortName ?? best.program.name} —{" "}
-                            {best.pointsCovered.toLocaleString("en-US")} of{" "}
-                            {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} (
-                            {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}%)
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      No program in the catalog prices this {goal.kind === "FLIGHT" ? "cabin" : "tier"} in{" "}
-                      {REGION_LABELS[goal.region]} yet.
-                    </p>
-                  )}
-                  </div>
-                </li>
-              );
-            })}
+            {goals.map((goal, index) => (
+              <GoalRow key={goal.id} goal={goal} best={progress[index].plans[0] ?? null} index={index} />
+            ))}
           </ul>
         )}
       </section>
     </div>
+  );
+}
+
+function GoalRow({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan | null; index: number }) {
+  return (
+    <li className={`rise-in-item ${rowCardFrameClass}`} style={riseInDelay(index)}>
+      <RegionScene region={goal.region} className="h-20" />
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Link
+              href={`/goals/${goal.id}`}
+              className="break-words font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
+            >
+              {goal.label}
+            </Link>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {REGION_LABELS[goal.region]} · {describeGoal(goal)}
+            </p>
+          </div>
+          <DeleteButton
+            url={`/api/goals/${goal.id}`}
+            itemLabel={`goal: ${goal.label}, ${describeGoal(goal)}`}
+            confirmMessage="Delete this goal?"
+          />
+        </div>
+
+        {best ? (
+          <div className="flex flex-col gap-1.5">
+            <GoalProgressBar
+              heldPoints={best.heldPoints}
+              pointsCovered={best.pointsCovered}
+              pointsNeeded={best.pointsNeeded}
+              label={`${goal.label} via ${programLabel(best.program)}`}
+            />
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              {best.isReachable ? (
+                <>
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                    Bookable now
+                  </span>{" "}
+                  via {programLabel(best.program)} —{" "}
+                  {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit}
+                </>
+              ) : (
+                <>
+                  Closest: {programLabel(best.program)} —{" "}
+                  {best.pointsCovered.toLocaleString("en-US")} of{" "}
+                  {best.pointsNeeded.toLocaleString("en-US")} {best.program.pointsUnit} (
+                  {percentCovered(best)}%)
+                </>
+              )}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No program in the catalog prices this {goal.kind === "FLIGHT" ? "cabin" : "tier"} in{" "}
+            {REGION_LABELS[goal.region]} yet.
+          </p>
+        )}
+      </div>
+    </li>
   );
 }

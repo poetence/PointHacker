@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendJson } from "@/lib/send-json";
+import { groupBy } from "@/lib/group-by";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 export type PromoPartner = {
   id: string;
@@ -20,34 +22,21 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
   const [bonusPercent, setBonusPercent] = useState("");
   const [startsOn, setStartsOn] = useState("");
   const [endsOn, setEndsOn] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
-  const groups = new Map<string, PromoPartner[]>();
-  for (const partner of partners) {
-    const group = groups.get(partner.fromProgramName) ?? [];
-    group.push(partner);
-    groups.set(partner.fromProgramName, group);
-  }
+  const groups = groupBy(partners, (partner) => partner.fromProgramName);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson("/api/promos", "POST", {
+    const result = await submit("/api/promos", "POST", {
       transferPartnerId,
       bonusPercent: Number(bonusPercent),
       startsOn,
       endsOn,
     });
 
-    setIsSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setBonusPercent("");
     setStartsOn("");
@@ -97,7 +86,7 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
         {isSubmitting ? "Adding…" : "Add promo"}
       </Button>
 
-      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <FormError message={error} />
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import { signIn } from "@/lib/auth";
 import { CoinsIcon, CompassIcon, LogoMarkIcon, TargetIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { pageTitleClass } from "@/components/ui/text";
 
 const highlights = [
   { icon: CoinsIcon, text: "See what every balance is really worth" },
@@ -24,7 +25,7 @@ export default async function SignInPage({
             <LogoMarkIcon className="h-8 w-8" />
           </span>
           <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h1 className={pageTitleClass}>
               PointHacker
             </h1>
             <p className="mt-1 text-zinc-600 dark:text-zinc-400">

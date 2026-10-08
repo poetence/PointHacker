@@ -1,3 +1,5 @@
+import { isIntInRange, toValidDate } from "@/lib/validation";
+
 export type RedemptionInput = {
   rewardsProgramId: string;
   description: string;
@@ -17,10 +19,6 @@ export type RedemptionInput = {
 
 export const MAX_POINTS_SPENT = 100_000_000;
 export const MAX_CENTS = 100_000_000;
-
-function isIntInRange(value: unknown, min: number, max: number): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
-}
 
 /** Validates a JSON body for the redemptions API. Returns an input or an error. */
 export function parseRedemptionInput(
@@ -68,8 +66,8 @@ export function parseRedemptionInput(
   if (typeof bookedOn !== "string") {
     return { error: "bookedOn must be a date string." };
   }
-  const bookedOnDate = new Date(bookedOn);
-  if (Number.isNaN(bookedOnDate.getTime())) {
+  const bookedOnDate = toValidDate(bookedOn);
+  if (!bookedOnDate) {
     return { error: "bookedOn must be a valid date." };
   }
 

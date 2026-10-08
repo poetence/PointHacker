@@ -6,8 +6,9 @@ import { useMemo, useState } from "react";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { Input } from "@/components/ui/input";
 import { rowCardClass } from "@/components/ui/card";
-
-type ProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+import { programLabel } from "@/lib/format";
+import { sectionTitleClass } from "@/components/ui/text";
+import type { ProgramType } from "@/lib/program-type";
 
 type ProgramEntry = {
   id: string;
@@ -70,7 +71,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
 
         return (
           <section key={type} className="flex flex-col gap-3">
-            <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h2 className={sectionTitleClass}>
               {label}
             </h2>
             <ul className="flex flex-col gap-3">
@@ -90,7 +91,7 @@ export function ProgramCatalog({ programs }: { programs: ProgramEntry[] }) {
                       href={`/programs/${program.id}`}
                       className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
                     >
-                      {program.shortName ?? program.name}
+                      {programLabel(program)}
                     </Link>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
                       {program.valuePerPoint}/point &middot; {program.transferPartnerCount} transfer

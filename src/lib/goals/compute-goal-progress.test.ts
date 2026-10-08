@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeGoalProgress,
+  percentCovered,
   pointsNeededForGoal,
   transferablePoints,
   type GoalTransferRoute,
@@ -53,6 +54,13 @@ describe("computeGoalProgress for a hotel goal", () => {
       transfers: [{ fromProgramId: "chase", pointsToTransfer: 60_000, pointsReceived: 60_000 }],
       isReachable: true,
     });
+  });
+});
+
+describe("percentCovered", () => {
+  it("rounds to a whole percent", () => {
+    expect(percentCovered({ pointsCovered: 5_000, pointsNeeded: 108_000 })).toBe(5);
+    expect(percentCovered({ pointsCovered: 108_000, pointsNeeded: 108_000 })).toBe(100);
   });
 });
 
@@ -159,6 +167,34 @@ describe("computeGoalProgress", () => {
 
     expect(plan.transfers).toEqual([]);
     expect(plan.shortfall).toBe(10_000);
+  });
+
+  it("breaks a ratio tie by drawing from the deepest balance first", () => {
+    const [plan] = computeGoalProgress({
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 30_000 }],
+      balances: [
+        { programId: "amex", programName: "Amex MR", balance: 20_000 },
+        { programId: "chase", programName: "Chase UR", balance: 50_000 },
+      ],
+      transferRoutes: [amexToVirgin, chaseToVirgin],
+    });
+
+    expect(plan.transfers.map((t) => t.fromProgramId)).toEqual(["chase"]);
+  });
+
+  it("sends at least the route's minimum even when the gap is smaller", () => {
+    const [plan] = computeGoalProgress({
+      goal: { kind: "FLIGHT", travelers: 1, roundTrip: false },
+      awardCosts: [{ program: virgin, pointsPerUnit: 10_500 }],
+      balances: [
+        { programId: "virgin", programName: "Virgin", balance: 10_000 },
+        { programId: "amex", programName: "Amex MR", balance: 5_000 },
+      ],
+      transferRoutes: [{ ...amexToVirgin, minimumTransfer: 1_000 }],
+    });
+
+    expect(plan.transfers[0]).toMatchObject({ pointsToTransfer: 1_000, pointsReceived: 1_000 });
   });
 
   it("ranks reachable programs first, then by smallest shortfall, then cheapest", () => {

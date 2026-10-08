@@ -2,28 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendJson } from "@/lib/send-json";
-import { SPEND_CATEGORIES, SPEND_CATEGORY_LABELS, type SpendCategory } from "@/lib/spend-categories";
+import {
+  SPEND_CATEGORIES,
+  SPEND_CATEGORY_LABELS,
+  SPEND_CENTS_FIELD,
+  type SpendCategory,
+} from "@/lib/spend-categories";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
+import { dollarsToCents } from "@/lib/format";
 
 export type ProfileFormValues = {
   monthlySpendCents: Record<SpendCategory, number>;
   rewardsPreference: "ANY" | "TRAVEL" | "CASHBACK";
   maxAnnualFeeCents: number | null;
-};
-
-const FIELD_BY_CATEGORY: Record<SpendCategory, string> = {
-  DINING: "diningCents",
-  GROCERIES: "groceriesCents",
-  TRAVEL: "travelCents",
-  GAS: "gasCents",
-  TRANSIT: "transitCents",
-  ONLINE: "onlineCents",
-  OTHER: "otherCents",
 };
 
 /** Slider ceilings in dollars — the number box still accepts anything above these. */
@@ -60,8 +57,7 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
   const [maxFee, setMaxFee] = useState(saved.maxFee);
   // `initial` is re-read from the server after a save, so a saved form is clean again.
   useWarnOnLeave(JSON.stringify({ spend, preference, maxFee }) !== JSON.stringify(saved));
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   const monthlyTotal = SPEND_CATEGORIES.reduce((sum, c) => sum + (Number(spend[c]) || 0), 0);
 
@@ -71,25 +67,18 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
     const body: Record<string, unknown> = {
       rewardsPreference: preference,
-      maxAnnualFeeCents: maxFee === "" ? null : Math.round(Number(maxFee) * 100),
+      maxAnnualFeeCents: maxFee === "" ? null : dollarsToCents(maxFee),
     };
     for (const category of SPEND_CATEGORIES) {
-      body[FIELD_BY_CATEGORY[category]] = Math.round(Number(spend[category] || 0) * 100);
+      body[SPEND_CENTS_FIELD[category]] = dollarsToCents(spend[category]);
     }
 
-    const result = await sendJson("/api/profile", "PUT", body);
+    const result = await submit("/api/profile", "PUT", body);
 
-    setIsSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     router.refresh();
   }
@@ -174,7 +163,7 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
           {isSubmitting ? "Saving…" : initial ? "Update recommendations" : "Get recommendations"}
         </Button>
 
-        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <FormError message={error} />
       </div>
     </form>
   );

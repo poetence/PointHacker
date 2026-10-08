@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useInlineEdit } from "@/components/ui/use-inline-edit";
-import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
+import { dollarsToCents } from "@/lib/format";
 
 export function CardRowActions({
   id,
@@ -26,25 +28,17 @@ export function CardRowActions({
   const [annualFee, setAnnualFee] = useState(
     currentAnnualFeeCents !== null ? String(currentAnnualFeeCents / 100) : ""
   );
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson(`/api/cards/${id}`, "PATCH", {
+    const result = await submit(`/api/cards/${id}`, "PATCH", {
       nickname: nickname || null,
-      annualFeeCents: annualFee === "" ? null : Math.round(Number(annualFee) * 100),
+      annualFeeCents: annualFee === "" ? null : dollarsToCents(annualFee),
     });
 
-    setIsSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setIsEditing(false);
     router.refresh();
@@ -80,11 +74,7 @@ export function CardRowActions({
         <Button size="sm" variant="link" type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </Button>
-        {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
+        <FormError message={error} />
       </form>
     );
   }

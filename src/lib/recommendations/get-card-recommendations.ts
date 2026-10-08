@@ -1,8 +1,13 @@
 import type { SpendingProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { EarnRates } from "@/lib/spend-categories";
 import {
-  cardKey,
+  SPEND_CATEGORIES,
+  SPEND_CENTS_FIELD,
+  type EarnRates,
+  type MonthlySpendCents,
+} from "@/lib/spend-categories";
+import {
+  indexHeldCards,
   scoreCards,
   type RewardsPreference,
   type ScoreCardsResult,
@@ -11,18 +16,20 @@ import {
 
 export function toScoringProfile(profile: SpendingProfile): ScoringProfile {
   return {
-    monthlySpendCents: {
-      DINING: profile.diningCents,
-      GROCERIES: profile.groceriesCents,
-      TRAVEL: profile.travelCents,
-      GAS: profile.gasCents,
-      TRANSIT: profile.transitCents,
-      ONLINE: profile.onlineCents,
-      OTHER: profile.otherCents,
-    },
+    monthlySpendCents: Object.fromEntries(
+      SPEND_CATEGORIES.map((category) => [category, profile[SPEND_CENTS_FIELD[category]]])
+    ) as MonthlySpendCents,
     rewardsPreference: profile.rewardsPreference as RewardsPreference,
     maxAnnualFeeCents: profile.maxAnnualFeeCents,
   };
+}
+
+/** The wallet cards that `isHeldCard` matches catalog cards against. */
+export function findHeldCards(userId: string) {
+  return prisma.creditCard.findMany({
+    where: { userId },
+    select: { issuer: true, productName: true, cardProductId: true },
+  });
 }
 
 export async function getCardRecommendations(
@@ -34,10 +41,7 @@ export async function getCardRecommendations(
       where: { isActive: true },
       include: { rewardsProgram: true },
     }),
-    prisma.creditCard.findMany({
-      where: { userId },
-      select: { issuer: true, productName: true, cardProductId: true },
-    }),
+    findHeldCards(userId),
   ]);
 
   return scoreCards({
@@ -61,9 +65,6 @@ export async function getCardRecommendations(
       baseEarnRate: card.baseEarnRate.toNumber(),
       earnRates: (card.earnRates ?? {}) as EarnRates,
     })),
-    heldCardKeys: new Set(heldCards.map((c) => cardKey(c.issuer, c.productName))),
-    heldCardProductIds: new Set(
-      heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : []))
-    ),
+    ...indexHeldCards(heldCards),
   });
 }

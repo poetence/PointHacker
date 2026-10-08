@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents } from "@/lib/format";
+import { formatCents, programLabel } from "@/lib/format";
 import { AddCardForm } from "@/components/cards/add-card-form";
 import { CardRowActions } from "@/components/cards/card-row-actions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { WalletIcon } from "@/components/icons";
 import { CardArt } from "@/components/recommendations/card-art";
 import { rowCardClass } from "@/components/ui/card";
+import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
+import { sectionTitleClass } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Cards mutate via the API after build, so this page must be re-rendered per
 // request rather than statically prerendered at build time.
@@ -16,11 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function CardsPage() {
   const userId = await requireSessionUserId();
 
-  const cards = await prisma.creditCard.findMany({
-    where: { userId },
-    include: { rewardsProgram: true },
-    orderBy: [{ issuer: "asc" }, { productName: "asc" }],
-  });
+  const cards = await findCards(userId);
 
   const [programs, catalog] = await Promise.all([
     prisma.rewardsProgram.findMany({
@@ -42,99 +41,93 @@ export default async function CardsPage() {
       id: c.id,
       issuer: c.issuer,
       name: c.name,
-      programLabel: c.rewardsProgram.shortName ?? c.rewardsProgram.name,
+      programLabel: programLabel(c.rewardsProgram),
       annualFeeCents: c.annualFeeCents,
     }));
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 text-sky-700 shadow-sm dark:from-sky-950 dark:to-sky-900 dark:text-sky-300">
-          <WalletIcon className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Your cards
-          </h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Track which cards feed which program&apos;s pooled balance.
-          </p>
-        </div>
-      </header>
+    <div className={pageContainerClass}>
+      <PageHeader icon={WalletIcon} tone="sky" title="Your cards">
+        Track which cards feed which program&apos;s pooled balance.
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Add a card
-        </h2>
+        <h2 className={sectionTitleClass}>Add a card</h2>
         <AddCardForm programs={programs} catalog={pickableCatalog} />
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-black dark:text-zinc-50">
-          Your wallet
-        </h2>
+        <h2 className={sectionTitleClass}>Your wallet</h2>
 
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-            <WalletIcon className="h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">No cards tracked yet.</p>
-          </div>
+          <EmptyState icon={WalletIcon}>No cards tracked yet.</EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
             {cards.map((card) => (
-              <li
-                key={card.id}
-                className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  {card.cardProductId ? (
-                    <CardArt issuer={card.issuer} name={card.productName} />
-                  ) : (
-                    <ProgramBadge
-                      name={card.rewardsProgram.name}
-                      shortName={card.rewardsProgram.shortName}
-                      type={card.rewardsProgram.type}
-                      size="sm"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="break-words font-medium text-black dark:text-zinc-50">
-                      {card.issuer} {card.productName}
-                      {card.nickname && (
-                        <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>
-                      )}
-                    </p>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      Feeds{" "}
-                      <Link
-                        href={`/programs/${card.rewardsProgramId}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {card.rewardsProgram.shortName ?? card.rewardsProgram.name}
-                      </Link>
-                      {card.openedOn &&
-                        ` · opened ${card.openedOn.toLocaleDateString("en-US", { timeZone: "UTC" })}`}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                    {card.annualFeeCents ? formatCents(card.annualFeeCents) : "No annual fee"}
-                  </p>
-                </div>
-
-                <CardRowActions
-                  id={card.id}
-                  cardName={`${card.issuer} ${card.productName}`}
-                  currentNickname={card.nickname}
-                  currentAnnualFeeCents={card.annualFeeCents}
-                />
-              </li>
+              <WalletCardRow key={card.id} card={card} />
             ))}
           </ul>
         )}
       </section>
     </div>
+  );
+}
+
+function findCards(userId: string) {
+  return prisma.creditCard.findMany({
+    where: { userId },
+    include: { rewardsProgram: true },
+    orderBy: [{ issuer: "asc" }, { productName: "asc" }],
+  });
+}
+
+function WalletCardRow({ card }: { card: Awaited<ReturnType<typeof findCards>>[number] }) {
+  return (
+    <li className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}>
+      <div className="flex min-w-0 items-center gap-3">
+        {card.cardProductId ? (
+          <CardArt issuer={card.issuer} name={card.productName} />
+        ) : (
+          <ProgramBadge
+            name={card.rewardsProgram.name}
+            shortName={card.rewardsProgram.shortName}
+            type={card.rewardsProgram.type}
+            size="sm"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="break-words font-medium text-black dark:text-zinc-50">
+            {card.issuer} {card.productName}
+            {card.nickname && (
+              <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>
+            )}
+          </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Feeds{" "}
+            <Link
+              href={`/programs/${card.rewardsProgramId}`}
+              className="underline-offset-2 hover:underline"
+            >
+              {programLabel(card.rewardsProgram)}
+            </Link>
+            {card.openedOn &&
+              ` · opened ${card.openedOn.toLocaleDateString("en-US", { timeZone: "UTC" })}`}
+          </p>
+        </div>
+      </div>
+
+      <div className="text-right">
+        <p className="text-sm text-zinc-700 dark:text-zinc-300">
+          {card.annualFeeCents ? formatCents(card.annualFeeCents) : "No annual fee"}
+        </p>
+      </div>
+
+      <CardRowActions
+        id={card.id}
+        cardName={`${card.issuer} ${card.productName}`}
+        currentNickname={card.nickname}
+        currentAnnualFeeCents={card.annualFeeCents}
+      />
+    </li>
   );
 }

@@ -2,14 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { sendJson } from "@/lib/send-json";
 import { REGION_LABELS } from "@/lib/regions";
 import { DESTINATIONS_BY_REGION, findDestination } from "@/lib/goals/destinations";
 import { targetMonthOptions } from "@/lib/goals/target-months";
 import {
-  ALL_CABINS,
-  ALL_GOAL_KINDS,
-  ALL_HOTEL_TIERS,
   CABIN_LABELS,
   GOAL_KIND_LABELS,
   HOTEL_TIER_LABELS,
@@ -19,12 +15,14 @@ import {
 } from "@/lib/goals/cabins";
 import { MAX_NIGHTS, MAX_ROOMS, MAX_TRAVELERS } from "@/lib/goals/parse-goal-input";
 import type { GoalFormValues } from "@/lib/goals/goal-form-values";
-import { ALL_US_STATES, US_STATES } from "@/lib/goals/origin-adjustment";
+import { US_STATES } from "@/lib/goals/origin-adjustment";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { LabelOptions, Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 const EMPTY: GoalFormValues = {
   label: "Tokyo",
@@ -62,8 +60,7 @@ export function GoalForm({
   );
   const [values, setValues] = useState<GoalFormValues>(startingValues);
   useWarnOnLeave(JSON.stringify(values) !== JSON.stringify(startingValues));
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   // Goals saved before the picker existed may carry a free-text label; keep it selectable
   // under its region so editing doesn't silently rename the trip.
@@ -92,10 +89,8 @@ export function GoalForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson<{ id: string }>(
+    const result = await submit<{ id: string }>(
       goalId ? `/api/goals/${goalId}` : "/api/goals",
       goalId ? "PUT" : "POST",
       {
@@ -109,12 +104,7 @@ export function GoalForm({
       }
     );
 
-    setIsSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     if (!goalId) {
       router.push(`/goals/${result.data.id}`);
@@ -144,11 +134,7 @@ export function GoalForm({
 
         <Field label="What">
           <Select value={values.kind} onChange={(e) => set("kind", e.target.value as GoalKind)}>
-            {ALL_GOAL_KINDS.map((k) => (
-              <option key={k} value={k}>
-                {GOAL_KIND_LABELS[k]}
-              </option>
-            ))}
+            <LabelOptions labels={GOAL_KIND_LABELS} />
           </Select>
         </Field>
 
@@ -156,11 +142,7 @@ export function GoalForm({
           <>
             <Field label="Cabin">
               <Select value={values.cabin} onChange={(e) => set("cabin", e.target.value as Cabin)}>
-                {ALL_CABINS.map((c) => (
-                  <option key={c} value={c}>
-                    {CABIN_LABELS[c]}
-                  </option>
-                ))}
+                <LabelOptions labels={CABIN_LABELS} />
               </Select>
             </Field>
 
@@ -191,11 +173,7 @@ export function GoalForm({
             <Field label="Flying from" hint="Nudges prices by coast — Asia is cheaper from the West, Europe from the East.">
               <Select value={values.originState} onChange={(e) => set("originState", e.target.value)}>
                 <option value="">Anywhere in the US</option>
-                {ALL_US_STATES.map((code) => (
-                  <option key={code} value={code}>
-                    {US_STATES[code]}
-                  </option>
-                ))}
+                <LabelOptions labels={US_STATES} />
               </Select>
             </Field>
           </>
@@ -206,11 +184,7 @@ export function GoalForm({
                 value={values.hotelTier}
                 onChange={(e) => set("hotelTier", e.target.value as HotelTier)}
               >
-                {ALL_HOTEL_TIERS.map((t) => (
-                  <option key={t} value={t}>
-                    {HOTEL_TIER_LABELS[t]}
-                  </option>
-                ))}
+                <LabelOptions labels={HOTEL_TIER_LABELS} />
               </Select>
             </Field>
 
@@ -266,7 +240,7 @@ export function GoalForm({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : goalId ? "Save goal" : "Set this goal"}
         </Button>
-        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <FormError message={error} />
       </div>
     </form>
   );

@@ -1,6 +1,7 @@
 // Ranks credit card products by estimated value for a spending profile.
 // Pure and DB-agnostic — callers map Prisma records into these input shapes.
 
+import type { ProgramType } from "@/lib/program-type";
 import {
   SPEND_CATEGORIES,
   type EarnRates,
@@ -16,7 +17,7 @@ export type ScoringProfile = {
   maxAnnualFeeCents: number | null;
 };
 
-export type ScoringProgramType = "BANK_TRANSFERABLE" | "AIRLINE" | "HOTEL" | "CASHBACK" | "OTHER";
+export type ScoringProgramType = ProgramType;
 
 export type ScoringCard = {
   id: string;
@@ -60,6 +61,33 @@ export function cardKey(issuer: string, name: string): string {
   return `${issuer.trim()} ${name.trim()}`.toLowerCase();
 }
 
+export type HeldCardIndex = {
+  heldCardKeys: Set<string>;
+  heldCardProductIds: Set<string>;
+};
+
+/** Indexes wallet cards for `isHeldCard`. */
+export function indexHeldCards(
+  heldCards: { issuer: string; productName: string; cardProductId: string | null }[]
+): HeldCardIndex {
+  return {
+    heldCardKeys: new Set(heldCards.map((c) => cardKey(c.issuer, c.productName))),
+    heldCardProductIds: new Set(heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : []))),
+  };
+}
+
+/**
+ * Whether a catalog card is already in the wallet: by catalog id when the
+ * wallet card was picked from the catalog, else by issuer + name for cards
+ * typed in by hand.
+ */
+export function isHeldCard(
+  card: { id: string; issuer: string; name: string },
+  { heldCardKeys, heldCardProductIds }: HeldCardIndex
+): boolean {
+  return heldCardProductIds.has(card.id) || heldCardKeys.has(cardKey(card.issuer, card.name));
+}
+
 export function effectiveRate(card: ScoringCard, category: SpendCategory): number {
   return card.earnRates[category] ?? card.baseEarnRate;
 }
@@ -79,7 +107,7 @@ export function scoreCards({
   const candidates: ScoringCard[] = [];
 
   for (const card of cards) {
-    if (heldCardProductIds.has(card.id) || heldCardKeys.has(cardKey(card.issuer, card.name))) {
+    if (isHeldCard(card, { heldCardKeys, heldCardProductIds })) {
       alreadyHeld.push(card);
       continue;
     }
@@ -99,18 +127,26 @@ export function scoreCards({
   const bestByCategory: Partial<Record<SpendCategory, CardRecommendation>> = {};
   for (const category of SPEND_CATEGORIES) {
     if (profile.monthlySpendCents[category] <= 0) continue;
-    let best: CardRecommendation | null = null;
-    for (const rec of ranked) {
-      const value = effectiveRate(rec.card, category) * rec.card.program.defaultRedemptionValueCents;
-      const bestValue = best
-        ? effectiveRate(best.card, category) * best.card.program.defaultRedemptionValueCents
-        : -1;
-      if (value > bestValue) best = rec;
-    }
+    const best = bestCardForCategory(ranked, category);
     if (best) bestByCategory[category] = best;
   }
 
   return { ranked, alreadyHeld, bestByCategory };
+}
+
+/** The card worth the most per dollar in one category; ties go to the higher-ranked card. */
+function bestCardForCategory(
+  ranked: CardRecommendation[],
+  category: SpendCategory
+): CardRecommendation | null {
+  const centsPerDollar = (rec: CardRecommendation) =>
+    effectiveRate(rec.card, category) * rec.card.program.defaultRedemptionValueCents;
+
+  let best: CardRecommendation | null = null;
+  for (const rec of ranked) {
+    if (centsPerDollar(rec) > (best ? centsPerDollar(best) : -1)) best = rec;
+  }
+  return best;
 }
 
 function matchesPreference(type: ScoringProgramType, preference: RewardsPreference): boolean {

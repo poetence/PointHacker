@@ -3,7 +3,13 @@
 // program, or transferring in along a partner route (bonus already folded in
 // by the caller)? Pure and DB-agnostic.
 
-import { transferablePoints, type GoalTargetPlan, type GoalTransferRoute } from "./compute-goal-progress";
+import {
+  receivedFor,
+  transferablePoints,
+  type GoalTargetPlan,
+  type GoalTransferRoute,
+} from "./compute-goal-progress";
+import { programLabel } from "@/lib/format";
 
 export type GapCard = {
   id: string;
@@ -58,33 +64,48 @@ function contributionFor(
   plan: GoalTargetPlan,
   transferRoutes: GoalTransferRoute[]
 ): CardGapContribution | null {
-  const bonus = card.welcomeBonusPoints ?? 0;
-  let pointsContributed = 0;
-  let viaTransfer: CardGapContribution["viaTransfer"] = null;
+  const reach = bonusReachingTarget(card, plan.program.id, transferRoutes);
+  if (!reach) return null;
 
-  if (card.programId === plan.program.id) {
-    pointsContributed = bonus;
-  } else {
-    const route = transferRoutes.find(
-      (r) => r.fromProgramId === card.programId && r.toProgramId === plan.program.id
-    );
-    if (!route) return null;
-    const sendable = transferablePoints(bonus, route);
-    if (sendable === 0) return null;
-    pointsContributed = (sendable / route.ratioFrom) * route.ratioTo;
-    viaTransfer = { activeBonusPercent: route.activeBonusPercent ?? null };
-  }
-
+  const { pointsContributed, viaTransfer } = reach;
   const shortfallAfter = Math.max(0, plan.shortfall - pointsContributed);
   return {
     cardId: card.id,
     targetProgramId: plan.program.id,
-    targetProgramName: plan.program.shortName ?? plan.program.name,
+    targetProgramName: programLabel(plan.program),
     pointsContributed,
     shortfallBefore: plan.shortfall,
     shortfallAfter,
     closesGap: shortfallAfter === 0,
     viaTransfer,
+  };
+}
+
+/**
+ * How much of a card's welcome bonus lands in the target program: all of it
+ * when the card earns there, otherwise what a partner route carries over in
+ * whole blocks. Null when the bonus can't get there at all.
+ */
+function bonusReachingTarget(
+  card: GapCard,
+  targetProgramId: string,
+  transferRoutes: GoalTransferRoute[]
+): Pick<CardGapContribution, "pointsContributed" | "viaTransfer"> | null {
+  const bonus = card.welcomeBonusPoints ?? 0;
+  if (card.programId === targetProgramId) {
+    return { pointsContributed: bonus, viaTransfer: null };
+  }
+
+  const route = transferRoutes.find(
+    (r) => r.fromProgramId === card.programId && r.toProgramId === targetProgramId
+  );
+  if (!route) return null;
+  const sendable = transferablePoints(bonus, route);
+  if (sendable === 0) return null;
+
+  return {
+    pointsContributed: receivedFor(sendable, route),
+    viaTransfer: { activeBonusPercent: route.activeBonusPercent ?? null },
   };
 }
 

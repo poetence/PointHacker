@@ -13,3 +13,16 @@ export function Select({
     />
   );
 }
+
+/** One `<option>` per entry of a value → label map (CABIN_LABELS, REGION_LABELS, …), in the map's order. */
+export function LabelOptions({ labels }: { labels: Readonly<Record<string, string>> }) {
+  return (
+    <>
+      {Object.entries(labels).map(([value, label]) => (
+        <option key={value} value={value}>
+          {label}
+        </option>
+      ))}
+    </>
+  );
+}
