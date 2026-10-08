@@ -22,7 +22,6 @@ export type RedemptionProgramOption = {
 
 export type RedemptionGoalOption = { id: string; label: string };
 
-/** Dollars in the UI, cents at the fetch boundary — the repo's money convention. */
 /** Today in the browser's time zone, as the YYYY-MM-DD a date input takes. */
 function localToday(): string {
   const now = new Date();

@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SPEND_CATEGORIES, SPEND_CATEGORY_LABELS, type SpendCategory } from "@/lib/spend-categories";
+import {
+  SPEND_CATEGORIES,
+  SPEND_CATEGORY_LABELS,
+  SPEND_CENTS_FIELD,
+  type SpendCategory,
+} from "@/lib/spend-categories";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -16,16 +21,6 @@ export type ProfileFormValues = {
   monthlySpendCents: Record<SpendCategory, number>;
   rewardsPreference: "ANY" | "TRAVEL" | "CASHBACK";
   maxAnnualFeeCents: number | null;
-};
-
-const FIELD_BY_CATEGORY: Record<SpendCategory, string> = {
-  DINING: "diningCents",
-  GROCERIES: "groceriesCents",
-  TRAVEL: "travelCents",
-  GAS: "gasCents",
-  TRANSIT: "transitCents",
-  ONLINE: "onlineCents",
-  OTHER: "otherCents",
 };
 
 /** Slider ceilings in dollars — the number box still accepts anything above these. */
@@ -78,7 +73,7 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
       maxAnnualFeeCents: maxFee === "" ? null : dollarsToCents(maxFee),
     };
     for (const category of SPEND_CATEGORIES) {
-      body[FIELD_BY_CATEGORY[category]] = dollarsToCents(spend[category]);
+      body[SPEND_CENTS_FIELD[category]] = dollarsToCents(spend[category]);
     }
 
     const result = await submit("/api/profile", "PUT", body);

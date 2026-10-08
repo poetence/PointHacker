@@ -3,16 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/user";
 import { NOT_A_JSON_OBJECT, badRequest, readJsonObject, unauthorized } from "@/lib/api-response";
 import { isNonNegativeInteger } from "@/lib/validation";
+import { SPEND_CATEGORIES, SPEND_CENTS_FIELD, type SpendCentsField } from "@/lib/spend-categories";
 
-const SPEND_FIELDS = [
-  "diningCents",
-  "groceriesCents",
-  "travelCents",
-  "gasCents",
-  "transitCents",
-  "onlineCents",
-  "otherCents",
-] as const;
+const SPEND_FIELDS = SPEND_CATEGORIES.map((category) => SPEND_CENTS_FIELD[category]);
 
 const PREFERENCES = ["ANY", "TRAVEL", "CASHBACK"] as const;
 
@@ -23,7 +16,7 @@ export async function PUT(request: NextRequest) {
   const input = await readJsonObject(request);
   if (!input) return badRequest(NOT_A_JSON_OBJECT);
 
-  const spend = {} as Record<(typeof SPEND_FIELDS)[number], number>;
+  const spend = {} as Record<SpendCentsField, number>;
   for (const field of SPEND_FIELDS) {
     const cents = input[field];
     if (!isNonNegativeInteger(cents)) {

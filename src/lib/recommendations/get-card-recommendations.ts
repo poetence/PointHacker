@@ -1,6 +1,11 @@
 import type { SpendingProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { EarnRates } from "@/lib/spend-categories";
+import {
+  SPEND_CATEGORIES,
+  SPEND_CENTS_FIELD,
+  type EarnRates,
+  type MonthlySpendCents,
+} from "@/lib/spend-categories";
 import {
   indexHeldCards,
   scoreCards,
@@ -11,15 +16,9 @@ import {
 
 export function toScoringProfile(profile: SpendingProfile): ScoringProfile {
   return {
-    monthlySpendCents: {
-      DINING: profile.diningCents,
-      GROCERIES: profile.groceriesCents,
-      TRAVEL: profile.travelCents,
-      GAS: profile.gasCents,
-      TRANSIT: profile.transitCents,
-      ONLINE: profile.onlineCents,
-      OTHER: profile.otherCents,
-    },
+    monthlySpendCents: Object.fromEntries(
+      SPEND_CATEGORIES.map((category) => [category, profile[SPEND_CENTS_FIELD[category]]])
+    ) as MonthlySpendCents,
     rewardsPreference: profile.rewardsPreference as RewardsPreference,
     maxAnnualFeeCents: profile.maxAnnualFeeCents,
   };
