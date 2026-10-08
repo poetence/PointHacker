@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getTopRedemptionOptionsForBalances } from "@/lib/redemptions/get-redemption-options";
@@ -11,8 +10,9 @@ import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { BalanceSparkline } from "@/components/balances/balance-sparkline";
 import { CoinsIcon } from "@/components/icons";
 import { describeGoal } from "@/lib/goals/cabins";
-import { getGoalProgress } from "@/lib/goals/get-goal-progress";
-import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
+import { getGoalsProgress, type GoalProgress } from "@/lib/goals/get-goal-progress";
+import { percentCovered } from "@/lib/goals/compute-goal-progress";
+import { SharedPointsNote } from "@/components/goals/shared-points-note";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
@@ -46,12 +46,8 @@ export default async function Home() {
     select: { id: true, name: true, shortName: true, type: true, pointsUnit: true },
   });
 
-  const goals = await prisma.awardGoal.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 4,
-  });
-  const goalProgress = await Promise.all(goals.map((goal) => getGoalProgress(userId, goal)));
+  // Every goal is planned (they share balances), but only the newest four are shown.
+  const goals = (await getGoalsProgress(userId)).goals.slice(0, 4);
 
   const redemptions = await getRedemptionSummary(userId);
 
@@ -106,8 +102,8 @@ export default async function Home() {
             </Link>
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
-            {goals.map((goal, index) => (
-              <GoalCard key={goal.id} goal={goal} best={goalProgress[index].plans[0] ?? null} index={index} />
+            {goals.map((progress, index) => (
+              <GoalCard key={progress.goal.id} progress={progress} index={index} />
             ))}
           </ul>
         </section>
@@ -178,7 +174,9 @@ function recentHistory(balance: DashboardBalance) {
   return { history, delta };
 }
 
-function GoalCard({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan | null; index: number }) {
+function GoalCard({ progress, index }: { progress: GoalProgress; index: number }) {
+  const { goal, squeezedBy } = progress;
+  const best = progress.shared.plans[0] ?? null;
   return (
     <li className={`rise-in-item ${rowCardFrameClass}`} style={riseInDelay(index)}>
       <RegionScene region={goal.region} className="h-20" />
@@ -215,6 +213,11 @@ function GoalCard({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan
                 </>
               )}
             </p>
+            <SharedPointsNote
+              standaloneBest={progress.standalonePlans[0] ?? null}
+              squeezedBy={squeezedBy}
+              className="text-xs"
+            />
           </>
         ) : (
           <p className="text-xs text-zinc-500 dark:text-zinc-400">No pricing yet</p>
