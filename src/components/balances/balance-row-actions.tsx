@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useInlineEdit } from "@/components/ui/use-inline-edit";
-import { sendJson } from "@/lib/send-json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { unitLabel } from "@/lib/format";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 export function BalanceRowActions({
   id,
@@ -29,25 +30,18 @@ export function BalanceRowActions({
   const [expiresOn, setExpiresOn] = useState(
     currentExpiresOverrideAt ? currentExpiresOverrideAt.toISOString().slice(0, 10) : ""
   );
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson(`/api/balances/${id}`, "PATCH", {
+    const result = await submit(`/api/balances/${id}`, "PATCH", {
       balance: Number(balance),
       expiresOverrideAt: expiresOn || null,
     });
 
-    setIsSubmitting(false);
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setIsEditing(false);
     router.refresh();
@@ -82,11 +76,7 @@ export function BalanceRowActions({
         <Button size="sm" variant="link" type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </Button>
-        {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
+        <FormError message={error} />
       </form>
     );
   }

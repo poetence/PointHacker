@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { sendJson } from "@/lib/send-json";
 import { REGION_LABELS } from "@/lib/regions";
 import { DESTINATIONS_BY_REGION, findDestination } from "@/lib/goals/destinations";
 import { targetMonthOptions } from "@/lib/goals/target-months";
@@ -25,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 const EMPTY: GoalFormValues = {
   label: "Tokyo",
@@ -62,8 +63,7 @@ export function GoalForm({
   );
   const [values, setValues] = useState<GoalFormValues>(startingValues);
   useWarnOnLeave(JSON.stringify(values) !== JSON.stringify(startingValues));
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   // Goals saved before the picker existed may carry a free-text label; keep it selectable
   // under its region so editing doesn't silently rename the trip.
@@ -92,10 +92,8 @@ export function GoalForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson<{ id: string }>(
+    const result = await submit<{ id: string }>(
       goalId ? `/api/goals/${goalId}` : "/api/goals",
       goalId ? "PUT" : "POST",
       {
@@ -109,12 +107,8 @@ export function GoalForm({
       }
     );
 
-    setIsSubmitting(false);
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     if (!goalId) {
       router.push(`/goals/${result.data.id}`);
@@ -266,7 +260,7 @@ export function GoalForm({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : goalId ? "Save goal" : "Set this goal"}
         </Button>
-        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <FormError message={error} />
       </div>
     </form>
   );

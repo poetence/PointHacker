@@ -37,3 +37,8 @@ const calendarDate = new Intl.DateTimeFormat("en-US", {
 export function formatCalendarDate(date: Date): string {
   return calendarDate.format(date);
 }
+
+/** A dollar amount typed into a money field, in whole cents. Blank counts as zero. */
+export function dollarsToCents(dollars: string): number {
+  return Math.round(Number(dollars || 0) * 100);
+}

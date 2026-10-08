@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  dollarsToCents,
   formatCalendarDate,
   formatCents,
   formatCentsPerPoint,
@@ -49,5 +50,14 @@ describe("formatSignedCount", () => {
 describe("formatCalendarDate", () => {
   it("reads a UTC-midnight date in UTC", () => {
     expect(formatCalendarDate(new Date("2026-09-12T00:00:00Z"))).toBe("Sep 12, 2026");
+  });
+});
+
+describe("dollarsToCents", () => {
+  it("converts typed dollars to whole cents, blank as zero", () => {
+    expect(dollarsToCents("95")).toBe(9500);
+    expect(dollarsToCents("19.99")).toBe(1999);
+    expect(dollarsToCents("0.1")).toBe(10);
+    expect(dollarsToCents("")).toBe(0);
   });
 });

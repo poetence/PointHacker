@@ -2,14 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
-import { sendJson } from "@/lib/send-json";
-import { formatCentsPerPoint, unitLabel, unitSingular } from "@/lib/format";
+import { dollarsToCents, formatCentsPerPoint, unitLabel, unitSingular } from "@/lib/format";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useWarnOnLeave } from "@/components/ui/use-warn-on-leave";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 export type RedemptionProgramOption = {
   id: string;
@@ -22,10 +23,6 @@ export type RedemptionProgramOption = {
 export type RedemptionGoalOption = { id: string; label: string };
 
 /** Dollars in the UI, cents at the fetch boundary — the repo's money convention. */
-function toCents(dollars: string): number {
-  return Math.round(Number(dollars || 0) * 100);
-}
-
 /** Today in the browser's time zone, as the YYYY-MM-DD a date input takes. */
 function localToday(): string {
   const now = new Date();
@@ -58,8 +55,7 @@ export function AddRedemptionForm({
   const bookedOn = pickedBookedOn || today;
   const [awardGoalId, setAwardGoalId] = useState("");
   const [deductFromBalance, setDeductFromBalance] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error } = useJsonSubmit();
 
   useWarnOnLeave(Boolean(description || pointsSpent || cashValue || feesPaid));
 
@@ -69,31 +65,25 @@ export function AddRedemptionForm({
   // Preview the rate as it's typed — the whole point of logging this is to see
   // what the booking was actually worth.
   const points = Number(pointsSpent);
-  const netCents = toCents(cashValue) - toCents(feesPaid);
+  const netCents = dollarsToCents(cashValue) - dollarsToCents(feesPaid);
   const centsPerPoint = points > 0 ? netCents / points : null;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    const result = await sendJson("/api/redemptions", "POST", {
+    const result = await submit("/api/redemptions", "POST", {
       rewardsProgramId,
       description,
       pointsSpent: Number(pointsSpent),
-      cashValueCents: toCents(cashValue),
-      feesPaidCents: toCents(feesPaid),
+      cashValueCents: dollarsToCents(cashValue),
+      feesPaidCents: dollarsToCents(feesPaid),
       bookedOn,
       awardGoalId: awardGoalId || null,
       deductFromBalance,
     });
 
-    setIsSubmitting(false);
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setDescription("");
     setPointsSpent("");
@@ -224,7 +214,7 @@ export function AddRedemptionForm({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Logging…" : "Log redemption"}
         </Button>
-        {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <FormError message={error} />
       </div>
     </form>
   );

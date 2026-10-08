@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { sendJson } from "@/lib/send-json";
 import { ProgramPickerModal, type PickableProgram } from "@/components/programs/program-picker-modal";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { unitLabel } from "@/lib/format";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
+import { FormError } from "@/components/ui/form-error";
 
 export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   const router = useRouter();
@@ -18,8 +19,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
   );
   const [balance, setBalance] = useState("");
   const [expiresOn, setExpiresOn] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submit, isSubmitting, error, setError } = useJsonSubmit();
   const programLabelId = useId();
 
   if (programs.length === 0) {
@@ -32,27 +32,20 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
 
     if (!selectedProgram) {
       setError("Choose a program first.");
       return;
     }
 
-    setIsSubmitting(true);
-
-    const result = await sendJson("/api/balances", "POST", {
+    const result = await submit("/api/balances", "POST", {
       rewardsProgramId: selectedProgram.id,
       balance: Number(balance),
       expiresOverrideAt: expiresOn || undefined,
     });
 
-    setIsSubmitting(false);
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    if (!result.ok) return;
 
     setBalance("");
     setExpiresOn("");
@@ -93,7 +86,7 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
         {isSubmitting ? "Adding…" : "Add balance"}
       </Button>
 
-      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <FormError message={error} />
     </form>
   );
 }
