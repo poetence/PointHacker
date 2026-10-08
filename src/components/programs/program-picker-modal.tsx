@@ -33,7 +33,6 @@ export function ProgramPickerModal({
   const triggerId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-
   return (
     <>
       <button

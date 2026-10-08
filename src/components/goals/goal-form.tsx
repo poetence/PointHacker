@@ -104,7 +104,6 @@ export function GoalForm({
       }
     );
 
-
     if (!result.ok) return;
 
     if (!goalId) {

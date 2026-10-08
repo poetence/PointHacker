@@ -38,7 +38,6 @@ export function CardRowActions({
       annualFeeCents: annualFee === "" ? null : dollarsToCents(annualFee),
     });
 
-
     if (!result.ok) return;
 
     setIsEditing(false);

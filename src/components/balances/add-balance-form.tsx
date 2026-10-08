@@ -44,7 +44,6 @@ export function AddBalanceForm({ programs }: { programs: PickableProgram[] }) {
       expiresOverrideAt: expiresOn || undefined,
     });
 
-
     if (!result.ok) return;
 
     setBalance("");

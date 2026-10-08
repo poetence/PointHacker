@@ -74,7 +74,6 @@ export function AddCardForm({
 
     const result = await submit("/api/cards", "POST", payload);
 
-
     if (!result.ok) return;
 
     setIssuer("");

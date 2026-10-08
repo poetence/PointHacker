@@ -36,7 +36,6 @@ export function AddPromoForm({ partners }: { partners: PromoPartner[] }) {
       endsOn,
     });
 
-
     if (!result.ok) return;
 
     setBonusPercent("");

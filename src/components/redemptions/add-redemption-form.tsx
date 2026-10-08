@@ -82,7 +82,6 @@ export function AddRedemptionForm({
       deductFromBalance,
     });
 
-
     if (!result.ok) return;
 
     setDescription("");

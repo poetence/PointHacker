@@ -32,7 +32,6 @@ export function CatalogCardPicker({
   const triggerId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-
   const query = filter.trim().toLowerCase();
   const visible = query
     ? cards.filter((c) => `${c.issuer} ${c.name}`.toLowerCase().includes(query))

@@ -40,7 +40,6 @@ export function BalanceRowActions({
       expiresOverrideAt: expiresOn || null,
     });
 
-
     if (!result.ok) return;
 
     setIsEditing(false);

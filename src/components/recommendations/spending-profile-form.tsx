@@ -83,7 +83,6 @@ export function SpendingProfileForm({ initial }: { initial: ProfileFormValues | 
 
     const result = await submit("/api/profile", "PUT", body);
 
-
     if (!result.ok) return;
 
     router.refresh();
