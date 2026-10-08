@@ -78,6 +78,11 @@ export function pointsNeededForGoal(goal: GoalSpec, pointsPerUnit: number): numb
     : pointsPerUnit * goal.nights * goal.rooms;
 }
 
+/** How far along a plan is, as a whole percent of the points it needs. */
+export function percentCovered(plan: Pick<GoalTargetPlan, "pointsCovered" | "pointsNeeded">): number {
+  return Math.round((plan.pointsCovered / plan.pointsNeeded) * 100);
+}
+
 /** Points a source balance can send along a route in whole ratio blocks, honoring the minimum. */
 export function transferablePoints(balance: number, route: GoalTransferRoute): number {
   const usable = Math.floor(balance / route.ratioFrom) * route.ratioFrom;

@@ -19,11 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function CardsPage() {
   const userId = await requireSessionUserId();
 
-  const cards = await prisma.creditCard.findMany({
-    where: { userId },
-    include: { rewardsProgram: true },
-    orderBy: [{ issuer: "asc" }, { productName: "asc" }],
-  });
+  const cards = await findCards(userId);
 
   const [programs, catalog] = await Promise.all([
     prisma.rewardsProgram.findMany({
@@ -68,59 +64,70 @@ export default async function CardsPage() {
         ) : (
           <ul className="flex flex-col gap-3">
             {cards.map((card) => (
-              <li
-                key={card.id}
-                className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  {card.cardProductId ? (
-                    <CardArt issuer={card.issuer} name={card.productName} />
-                  ) : (
-                    <ProgramBadge
-                      name={card.rewardsProgram.name}
-                      shortName={card.rewardsProgram.shortName}
-                      type={card.rewardsProgram.type}
-                      size="sm"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="break-words font-medium text-black dark:text-zinc-50">
-                      {card.issuer} {card.productName}
-                      {card.nickname && (
-                        <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>
-                      )}
-                    </p>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      Feeds{" "}
-                      <Link
-                        href={`/programs/${card.rewardsProgramId}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {programLabel(card.rewardsProgram)}
-                      </Link>
-                      {card.openedOn &&
-                        ` · opened ${card.openedOn.toLocaleDateString("en-US", { timeZone: "UTC" })}`}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                    {card.annualFeeCents ? formatCents(card.annualFeeCents) : "No annual fee"}
-                  </p>
-                </div>
-
-                <CardRowActions
-                  id={card.id}
-                  cardName={`${card.issuer} ${card.productName}`}
-                  currentNickname={card.nickname}
-                  currentAnnualFeeCents={card.annualFeeCents}
-                />
-              </li>
+              <WalletCardRow key={card.id} card={card} />
             ))}
           </ul>
         )}
       </section>
     </div>
+  );
+}
+
+function findCards(userId: string) {
+  return prisma.creditCard.findMany({
+    where: { userId },
+    include: { rewardsProgram: true },
+    orderBy: [{ issuer: "asc" }, { productName: "asc" }],
+  });
+}
+
+function WalletCardRow({ card }: { card: Awaited<ReturnType<typeof findCards>>[number] }) {
+  return (
+    <li className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}>
+      <div className="flex min-w-0 items-center gap-3">
+        {card.cardProductId ? (
+          <CardArt issuer={card.issuer} name={card.productName} />
+        ) : (
+          <ProgramBadge
+            name={card.rewardsProgram.name}
+            shortName={card.rewardsProgram.shortName}
+            type={card.rewardsProgram.type}
+            size="sm"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="break-words font-medium text-black dark:text-zinc-50">
+            {card.issuer} {card.productName}
+            {card.nickname && (
+              <span className="text-zinc-500 dark:text-zinc-400"> ({card.nickname})</span>
+            )}
+          </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Feeds{" "}
+            <Link
+              href={`/programs/${card.rewardsProgramId}`}
+              className="underline-offset-2 hover:underline"
+            >
+              {programLabel(card.rewardsProgram)}
+            </Link>
+            {card.openedOn &&
+              ` · opened ${card.openedOn.toLocaleDateString("en-US", { timeZone: "UTC" })}`}
+          </p>
+        </div>
+      </div>
+
+      <div className="text-right">
+        <p className="text-sm text-zinc-700 dark:text-zinc-300">
+          {card.annualFeeCents ? formatCents(card.annualFeeCents) : "No annual fee"}
+        </p>
+      </div>
+
+      <CardRowActions
+        id={card.id}
+        cardName={`${card.issuer} ${card.productName}`}
+        currentNickname={card.nickname}
+        currentAnnualFeeCents={card.annualFeeCents}
+      />
+    </li>
   );
 }

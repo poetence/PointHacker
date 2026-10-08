@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redemption-options";
 import { formatCents, programLabel } from "@/lib/format";
-import { ALL_REGIONS, REGION_LABELS, isRegion } from "@/lib/regions";
+import { ALL_REGIONS, REGION_LABELS, isRegion, type Region } from "@/lib/regions";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
@@ -61,13 +61,10 @@ export default async function PlanPage({
   );
 }
 
-async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
+async function PlanResults({ region }: { region: Region }) {
   const userId = await requireSessionUserId();
 
-  const balances = await prisma.pointsBalance.findMany({
-    where: { userId },
-    include: { rewardsProgram: true },
-  });
+  const balances = await findBalances(userId);
 
   if (balances.length === 0) {
     return (
@@ -82,14 +79,12 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
     region
   );
 
-  type RankedRow = { balance: (typeof balances)[number]; option: RedemptionOption };
-
   const ranked: RankedRow[] = balances
     .map((balance) => ({ balance, option: options.get(balance.rewardsProgramId) ?? null }))
     .filter((row): row is RankedRow => row.option !== null)
     .sort((a, b) => b.option.totalValueCents - a.option.totalValueCents);
 
-  const excluded = balances.filter((balance) => (options.get(balance.rewardsProgramId) ?? null) === null);
+  const excluded = balances.filter((balance) => !options.get(balance.rewardsProgramId));
 
   return (
     <>
@@ -108,42 +103,7 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
         ) : (
           <ul className="flex flex-col gap-3">
             {ranked.map(({ balance, option }) => (
-              <li
-                key={balance.id}
-                className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}
-              >
-                <div className="flex items-center gap-3">
-                  <ProgramBadge
-                    name={balance.rewardsProgram.name}
-                    shortName={balance.rewardsProgram.shortName}
-                    type={balance.rewardsProgram.type}
-                    size="sm"
-                  />
-                  <div>
-                    <Link
-                      href={`/programs/${balance.rewardsProgramId}`}
-                      className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
-                    >
-                      {programLabel(balance.rewardsProgram)}
-                    </Link>
-                    <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      {balance.balance.toLocaleString("en-US")} {balance.rewardsProgram.pointsUnit}
-                      <ExpirationPill
-                        lastUpdatedAt={balance.lastUpdatedAt}
-                        expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
-                        overrideAt={balance.expiresOverrideAt}
-                      />
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                  {formatCents(option.totalValueCents)} —{" "}
-                  {option.kind === "direct"
-                    ? "direct redemption"
-                    : `transfer to ${option.partnerProgramName}${option.activeBonusPercent ? ` (+${option.activeBonusPercent}% bonus)` : ""}`}
-                </p>
-              </li>
+              <PlanRow key={balance.id} balance={balance} option={option} />
             ))}
           </ul>
         )}
@@ -151,13 +111,9 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
 
       {excluded.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className={sectionTitleClass}>
-            No {REGION_LABELS[region]} options
-          </h2>
+          <h2 className={sectionTitleClass}>No {REGION_LABELS[region]} options</h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {excluded
-              .map((b) => programLabel(b.rewardsProgram))
-              .join(", ")}{" "}
+            {excluded.map((b) => programLabel(b.rewardsProgram)).join(", ")}{" "}
             {excluded.length === 1 ? "doesn't" : "don't"} have a good redemption for this region
             right now.
           </p>
@@ -165,4 +121,57 @@ async function PlanResults({ region }: { region: keyof typeof REGION_LABELS }) {
       )}
     </>
   );
+}
+
+function findBalances(userId: string) {
+  return prisma.pointsBalance.findMany({
+    where: { userId },
+    include: { rewardsProgram: true },
+  });
+}
+
+type PlanBalance = Awaited<ReturnType<typeof findBalances>>[number];
+type RankedRow = { balance: PlanBalance; option: RedemptionOption };
+
+function PlanRow({ balance, option }: RankedRow) {
+  return (
+    <li className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}>
+      <div className="flex items-center gap-3">
+        <ProgramBadge
+          name={balance.rewardsProgram.name}
+          shortName={balance.rewardsProgram.shortName}
+          type={balance.rewardsProgram.type}
+          size="sm"
+        />
+        <div>
+          <Link
+            href={`/programs/${balance.rewardsProgramId}`}
+            className="font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+          >
+            {programLabel(balance.rewardsProgram)}
+          </Link>
+          <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+            {balance.balance.toLocaleString("en-US")} {balance.rewardsProgram.pointsUnit}
+            <ExpirationPill
+              lastUpdatedAt={balance.lastUpdatedAt}
+              expirationMonths={balance.rewardsProgram.pointsExpirationMonths}
+              overrideAt={balance.expiresOverrideAt}
+            />
+          </p>
+        </div>
+      </div>
+
+      <p className="text-sm text-zinc-700 dark:text-zinc-300">
+        {formatCents(option.totalValueCents)} —{" "}
+        {bestUseLabel(option)}
+      </p>
+    </li>
+  );
+}
+
+/** "direct redemption", or "transfer to ANA (+30% bonus)". */
+function bestUseLabel(option: RedemptionOption): string {
+  if (option.kind === "direct") return "direct redemption";
+  const bonus = option.activeBonusPercent ? ` (+${option.activeBonusPercent}% bonus)` : "";
+  return `transfer to ${option.partnerProgramName}${bonus}`;
 }

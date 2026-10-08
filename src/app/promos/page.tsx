@@ -6,7 +6,7 @@ import { AddPromoForm } from "@/components/promos/add-promo-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { SparkleIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
-import { programLabel } from "@/lib/format";
+import { formatCalendarDate, programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,15 +14,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
 export const dynamic = "force-dynamic";
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 type PromoWithPartner = Prisma.TransferBonusGetPayload<{
   include: { transferPartner: { include: { fromProgram: true; toProgram: true } } };
@@ -32,9 +23,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
   if (items.length === 0) return null;
   return (
     <section className="flex flex-col gap-3">
-      <h2 className={sectionTitleClass}>
-        {title}
-      </h2>
+      <h2 className={sectionTitleClass}>{title}</h2>
       <ul className="flex flex-col gap-3">
         {items.map((promo) => {
           const from = promo.transferPartner.fromProgram;
@@ -52,7 +41,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
                   </span>
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {formatDate(promo.startsOn)} – {formatDate(promo.endsOn)}
+                  {formatCalendarDate(promo.startsOn)} – {formatCalendarDate(promo.endsOn)}
                 </p>
               </div>
               <DeleteButton

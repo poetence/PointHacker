@@ -1,7 +1,8 @@
+import type { ProgramType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
-import { getRedemptions } from "@/lib/redemptions/get-redemptions";
+import { formatCalendarDate, formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
+import { getRedemptions, type RedemptionRow } from "@/lib/redemptions/get-redemptions";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -18,13 +19,6 @@ import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 // Redemptions mutate via the API after build, so this page must be re-rendered
 // per request rather than statically prerendered at build time.
 export const dynamic = "force-dynamic";
-
-const dateFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
 export default async function RedemptionsPage() {
   const userId = await requireSessionUserId();
@@ -52,11 +46,11 @@ export default async function RedemptionsPage() {
     ...prioritized.filter((p) => balanceByProgram.has(p.id)),
     ...prioritized.filter((p) => !balanceByProgram.has(p.id)),
   ].map((p) => ({
-      id: p.id,
-      name: programLabel(p),
-      pointsUnit: p.pointsUnit,
-      balance: balanceByProgram.get(p.id) ?? null,
-    }));
+    id: p.id,
+    name: programLabel(p),
+    pointsUnit: p.pointsUnit,
+    balance: balanceByProgram.get(p.id) ?? null,
+  }));
 
   return (
     <div className={pageContainerClass}>
@@ -86,80 +80,12 @@ export default async function RedemptionsPage() {
         ) : (
           <ul className="flex flex-col gap-3">
             {rows.map((row, index) => (
-              <li
+              <RedemptionItem
                 key={row.id}
-                className={`rise-in-item flex flex-col gap-3 ${rowCardClass}`}
-                style={riseInDelay(index)}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <ProgramBadge
-                      name={row.program.name}
-                      shortName={row.program.shortName}
-                      type={programTypeById.get(row.program.id) ?? "OTHER"}
-                      size="sm"
-                    />
-                    <div className="min-w-0">
-                      <p className="break-words font-medium text-black dark:text-zinc-50">{row.description}</p>
-                      <p className="break-words text-sm text-zinc-500 dark:text-zinc-400">
-                        {programLabel(row.program)} ·{" "}
-                        {dateFormat.format(row.bookedOn)}
-                        {row.goal && ` · for ${row.goal.label}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p
-                      className={`font-display text-lg font-semibold ${
-                        row.vsBaseline.beatBaseline
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-zinc-700 dark:text-zinc-300"
-                      }`}
-                    >
-                      {formatCentsPerPoint(row.centsPerPoint)}
-                    </p>
-                    {/* Says what it won't do: the balance stays put, since the user may
-                        have corrected it since and putting points back would double-count. */}
-                    <DeleteButton
-                      url={`/api/redemptions/${row.id}`}
-                      itemLabel={`redemption: ${row.description}`}
-                      confirmMessage="Remove this redemption? Your balance won't be changed back."
-                    />
-                  </div>
-                </div>
-
-                <Breakdown>
-                  <BreakdownItem
-                    label="Spent"
-                    valueClassName="text-zinc-700 tabular-nums dark:text-zinc-300"
-                  >
-                    {row.pointsSpent.toLocaleString("en-US")} {row.program.pointsUnit}
-                  </BreakdownItem>
-                  <BreakdownItem
-                    label="Worth"
-                    valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
-                  >
-                    {formatCents(row.cashValueCents)}
-                  </BreakdownItem>
-                  {row.feesPaidCents > 0 && (
-                    <BreakdownItem label="Fees" valueClassName="text-zinc-700 dark:text-zinc-300">
-                      {formatCents(row.feesPaidCents)}
-                    </BreakdownItem>
-                  )}
-                  <BreakdownItem
-                    label="vs. estimate"
-                    valueClassName={
-                      row.vsBaseline.beatBaseline
-                        ? "font-medium text-emerald-600 dark:text-emerald-400"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    }
-                  >
-                    {row.vsBaseline.deltaPercent >= 0 ? "+" : "−"}
-                    {Math.abs(Math.round(row.vsBaseline.deltaPercent))}% vs{" "}
-                    {formatCentsPerPoint(row.vsBaseline.baselineCentsPerPoint)}
-                  </BreakdownItem>
-                </Breakdown>
-              </li>
+                row={row}
+                index={index}
+                programType={programTypeById.get(row.program.id) ?? "OTHER"}
+              />
             ))}
           </ul>
         )}
@@ -177,3 +103,87 @@ export default async function RedemptionsPage() {
     </div>
   );
 }
+
+function RedemptionItem({
+  row,
+  index,
+  programType,
+}: {
+  row: RedemptionRow;
+  index: number;
+  programType: ProgramType;
+}) {
+  return (
+    <li className={`rise-in-item flex flex-col gap-3 ${rowCardClass}`} style={riseInDelay(index)}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <ProgramBadge
+            name={row.program.name}
+            shortName={row.program.shortName}
+            type={programType}
+            size="sm"
+          />
+          <div className="min-w-0">
+            <p className="break-words font-medium text-black dark:text-zinc-50">{row.description}</p>
+            <p className="break-words text-sm text-zinc-500 dark:text-zinc-400">
+              {programLabel(row.program)} ·{" "}
+              {formatCalendarDate(row.bookedOn)}
+              {row.goal && ` · for ${row.goal.label}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <p
+            className={`font-display text-lg font-semibold ${
+              row.vsBaseline.beatBaseline
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-zinc-700 dark:text-zinc-300"
+            }`}
+          >
+            {formatCentsPerPoint(row.centsPerPoint)}
+          </p>
+          {/* Says what it won't do: the balance stays put, since the user may
+              have corrected it since and putting points back would double-count. */}
+          <DeleteButton
+            url={`/api/redemptions/${row.id}`}
+            itemLabel={`redemption: ${row.description}`}
+            confirmMessage="Remove this redemption? Your balance won't be changed back."
+          />
+        </div>
+      </div>
+
+      <Breakdown>
+        <BreakdownItem
+          label="Spent"
+          valueClassName="text-zinc-700 tabular-nums dark:text-zinc-300"
+        >
+          {row.pointsSpent.toLocaleString("en-US")} {row.program.pointsUnit}
+        </BreakdownItem>
+        <BreakdownItem
+          label="Worth"
+          valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+        >
+          {formatCents(row.cashValueCents)}
+        </BreakdownItem>
+        {row.feesPaidCents > 0 && (
+          <BreakdownItem label="Fees" valueClassName="text-zinc-700 dark:text-zinc-300">
+            {formatCents(row.feesPaidCents)}
+          </BreakdownItem>
+        )}
+        <BreakdownItem
+          label="vs. estimate"
+          valueClassName={
+            row.vsBaseline.beatBaseline
+              ? "font-medium text-emerald-600 dark:text-emerald-400"
+              : "text-zinc-500 dark:text-zinc-400"
+          }
+        >
+          {row.vsBaseline.deltaPercent >= 0 ? "+" : "−"}
+          {Math.abs(Math.round(row.vsBaseline.deltaPercent))}% vs{" "}
+          {formatCentsPerPoint(row.vsBaseline.baselineCentsPerPoint)}
+        </BreakdownItem>
+      </Breakdown>
+    </li>
+  );
+}
+

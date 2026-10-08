@@ -12,7 +12,7 @@ import { BalanceSparkline } from "@/components/balances/balance-sparkline";
 import { CoinsIcon } from "@/components/icons";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalProgress } from "@/lib/goals/get-goal-progress";
-import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
+import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
@@ -208,7 +208,7 @@ function GoalCard({ goal, best, index }: { goal: AwardGoal; best: GoalTargetPlan
                 </span>
               ) : (
                 <>
-                  {Math.round((best.pointsCovered / best.pointsNeeded) * 100)}% via{" "}
+                  {percentCovered(best)}% via{" "}
                   {programLabel(best.program)} ·{" "}
                   {best.shortfall.toLocaleString("en-US")} short
                 </>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCalendarDate,
   formatCents,
   formatCentsPerPoint,
   formatSignedCount,
@@ -42,5 +43,11 @@ describe("formatSignedCount", () => {
   it("signs the change and groups thousands", () => {
     expect(formatSignedCount(1500)).toBe("+1,500");
     expect(formatSignedCount(-200)).toBe("−200");
+  });
+});
+
+describe("formatCalendarDate", () => {
+  it("reads a UTC-midnight date in UTC", () => {
+    expect(formatCalendarDate(new Date("2026-09-12T00:00:00Z"))).toBe("Sep 12, 2026");
   });
 });

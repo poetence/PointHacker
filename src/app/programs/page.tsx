@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatCentsPerPoint } from "@/lib/format";
+import { groupBy } from "@/lib/group-by";
 import { REGION_LABELS, type Region } from "@/lib/regions";
 import { ProgramCatalog } from "@/components/programs/program-catalog";
 import { BookOpenIcon } from "@/components/icons";
@@ -21,13 +22,7 @@ export default async function ProgramsCatalogPage() {
     }),
   ]);
 
-  const partnerCountByProgramId = new Map<string, number>();
-  for (const partner of transferPartners) {
-    partnerCountByProgramId.set(
-      partner.fromProgramId,
-      (partnerCountByProgramId.get(partner.fromProgramId) ?? 0) + 1
-    );
-  }
+  const partnersByProgramId = groupBy(transferPartners, (partner) => partner.fromProgramId);
 
   const entries = programs.map((program) => ({
     id: program.id,
@@ -35,7 +30,7 @@ export default async function ProgramsCatalogPage() {
     shortName: program.shortName,
     type: program.type,
     valuePerPoint: formatCentsPerPoint(Number(program.defaultRedemptionValueCents)),
-    transferPartnerCount: partnerCountByProgramId.get(program.id) ?? 0,
+    transferPartnerCount: partnersByProgramId.get(program.id)?.length ?? 0,
     regionLabels: program.regions.map((r) => REGION_LABELS[r as Region]),
   }));
 

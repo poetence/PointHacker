@@ -8,7 +8,7 @@ import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
 import { getGoalProgress, goalOriginZone } from "@/lib/goals/get-goal-progress";
-import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
+import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import { ORIGIN_ZONE_LABELS, originMultiplier } from "@/lib/goals/origin-adjustment";
 import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
 import { GoalActions } from "@/components/goals/goal-actions";
@@ -210,7 +210,7 @@ function PlanRow({
         >
           {plan.isReachable
             ? "Bookable now"
-            : `${Math.round((plan.pointsCovered / plan.pointsNeeded) * 100)}% there`}
+            : `${percentCovered(plan)}% there`}
         </p>
       </div>
 

@@ -25,3 +25,15 @@ export function unitLabel(pointsUnit: string): string {
 export function formatSignedCount(change: number): string {
   return `${change > 0 ? "+" : "−"}${Math.abs(change).toLocaleString("en-US")}`;
 }
+
+const calendarDate = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "Oct 7, 2026" for a calendar date stored as UTC midnight, read in UTC so it never shifts a day. */
+export function formatCalendarDate(date: Date): string {
+  return calendarDate.format(date);
+}

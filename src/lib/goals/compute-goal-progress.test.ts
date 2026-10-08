@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeGoalProgress,
+  percentCovered,
   pointsNeededForGoal,
   transferablePoints,
   type GoalTransferRoute,
@@ -53,6 +54,13 @@ describe("computeGoalProgress for a hotel goal", () => {
       transfers: [{ fromProgramId: "chase", pointsToTransfer: 60_000, pointsReceived: 60_000 }],
       isReachable: true,
     });
+  });
+});
+
+describe("percentCovered", () => {
+  it("rounds to a whole percent", () => {
+    expect(percentCovered({ pointsCovered: 5_000, pointsNeeded: 108_000 })).toBe(5);
+    expect(percentCovered({ pointsCovered: 108_000, pointsNeeded: 108_000 })).toBe(100);
   });
 });
 
