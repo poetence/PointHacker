@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { useDialogFocus } from "./use-dialog-focus";
 
 /**
@@ -8,6 +9,11 @@ import { useDialogFocus } from "./use-dialog-focus";
  * click, a scrolling panel, Escape to close, and useDialogFocus's focus
  * handling. Render it only while the picker is open; unmounting is what hands
  * focus back to `triggerRef`.
+ *
+ * It portals to `document.body`: `<main>`'s rise-in animation leaves a transform
+ * that traps anything inside in its own stacking context, so rendered in place
+ * the backdrop sat under the sticky nav and the nav stayed clickable. Only ever
+ * mounted after a click, so `document` always exists here.
  */
 export function PickerDialog({
   label,
@@ -31,7 +37,7 @@ export function PickerDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -47,6 +53,7 @@ export function PickerDialog({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
