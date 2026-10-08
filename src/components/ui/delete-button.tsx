@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { sendJson } from "@/lib/send-json";
+import { useJsonSubmit } from "@/components/ui/use-json-submit";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -29,21 +28,13 @@ export function DeleteButton({
   redirectTo?: string;
 }) {
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { submit, isSubmitting: isDeleting, error } = useJsonSubmit();
 
   async function handleDelete() {
     if (!window.confirm(confirmMessage)) return;
 
-    setError(null);
-    setIsDeleting(true);
-    const result = await sendJson(url, "DELETE");
-    setIsDeleting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    const result = await submit(url, "DELETE");
+    if (!result.ok) return;
 
     if (redirectTo) router.push(redirectTo);
     router.refresh();

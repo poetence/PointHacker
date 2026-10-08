@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redemption-options";
 import { formatCents, programLabel } from "@/lib/format";
-import { ALL_REGIONS, REGION_LABELS, isRegion, type Region } from "@/lib/regions";
+import { REGION_LABELS, isRegion, type Region } from "@/lib/regions";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { CompassIcon } from "@/components/icons";
 import { Field } from "@/components/ui/field";
-import { Select } from "@/components/ui/select";
+import { LabelOptions, Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { rowCardClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
@@ -40,11 +40,7 @@ export default async function PlanPage({
             <option value="" disabled>
               Choose a region
             </option>
-            {ALL_REGIONS.map((r) => (
-              <option key={r} value={r}>
-                {REGION_LABELS[r]}
-              </option>
-            ))}
+            <LabelOptions labels={REGION_LABELS} />
           </Select>
         </Field>
         <Button type="submit">Show options</Button>
