@@ -12,74 +12,81 @@ import {
 
 const prisma = new PrismaClient();
 
-async function main() {
-  const programIdByName = new Map<string, string>();
+type ProgramIds = Map<string, string>;
 
+/** The seeded id for a program named in reference data, or a thrown error naming where it was used. */
+function requireProgramId(programIds: ProgramIds, name: string, usedIn: string): string {
+  const id = programIds.get(name);
+  if (!id) throw new Error(`${usedIn}: ${name}`);
+  return id;
+}
+
+const regionsByProgramName = new Map<string, readonly string[]>(
+  referencePrograms.map((p) => [p.name, p.regions ?? []])
+);
+
+/** Award prices are looked up by region, so a price in a region the program isn't tagged with would never be found. */
+function assertProgramServesRegion(program: string, region: string, label: string) {
+  if (!regionsByProgramName.get(program)?.includes(region)) {
+    throw new Error(`${label} for ${program} -> ${region} but the program isn't tagged with that region`);
+  }
+}
+
+async function seedPrograms(): Promise<ProgramIds> {
+  const programIds: ProgramIds = new Map();
   for (const program of referencePrograms) {
+    const data = {
+      shortName: program.shortName,
+      type: program.type,
+      defaultRedemptionValueCents: program.defaultRedemptionValueCents,
+      regions: program.regions ?? [],
+      pointsExpirationMonths: program.pointsExpirationMonths ?? null,
+      pointsUnit: program.pointsUnit ?? "points",
+      notes: program.notes,
+    };
     const record = await prisma.rewardsProgram.upsert({
       where: { name: program.name },
-      update: {
-        shortName: program.shortName,
-        type: program.type,
-        defaultRedemptionValueCents: program.defaultRedemptionValueCents,
-        regions: program.regions ?? [],
-        pointsExpirationMonths: program.pointsExpirationMonths ?? null,
-        pointsUnit: program.pointsUnit ?? "points",
-        notes: program.notes,
-      },
-      create: {
-        name: program.name,
-        shortName: program.shortName,
-        type: program.type,
-        defaultRedemptionValueCents: program.defaultRedemptionValueCents,
-        regions: program.regions ?? [],
-        pointsExpirationMonths: program.pointsExpirationMonths ?? null,
-        pointsUnit: program.pointsUnit ?? "points",
-        notes: program.notes,
-      },
+      update: data,
+      create: { name: program.name, ...data },
     });
-    programIdByName.set(program.name, record.id);
+    programIds.set(program.name, record.id);
   }
+  return programIds;
+}
 
+async function seedTransferPartners(programIds: ProgramIds) {
   for (const partner of referenceTransferPartners) {
-    const fromProgramId = programIdByName.get(partner.fromProgram);
-    const toProgramId = programIdByName.get(partner.toProgram);
+    const fromProgramId = programIds.get(partner.fromProgram);
+    const toProgramId = programIds.get(partner.toProgram);
     if (!fromProgramId || !toProgramId) {
       throw new Error(
         `Unknown program in transfer partner: ${partner.fromProgram} -> ${partner.toProgram}`
       );
     }
 
+    const data = {
+      ratioFrom: partner.ratioFrom,
+      ratioTo: partner.ratioTo,
+      minimumTransfer: partner.minimumTransfer,
+      transferFeeCents: partner.transferFeeCents,
+      estimatedRedemptionValueCents: partner.estimatedRedemptionValueCents,
+      notes: partner.notes,
+    };
     await prisma.transferPartner.upsert({
-      where: {
-        fromProgramId_toProgramId: { fromProgramId, toProgramId },
-      },
-      update: {
-        ratioFrom: partner.ratioFrom,
-        ratioTo: partner.ratioTo,
-        minimumTransfer: partner.minimumTransfer,
-        transferFeeCents: partner.transferFeeCents,
-        estimatedRedemptionValueCents: partner.estimatedRedemptionValueCents,
-        notes: partner.notes,
-      },
-      create: {
-        fromProgramId,
-        toProgramId,
-        ratioFrom: partner.ratioFrom,
-        ratioTo: partner.ratioTo,
-        minimumTransfer: partner.minimumTransfer,
-        transferFeeCents: partner.transferFeeCents,
-        estimatedRedemptionValueCents: partner.estimatedRedemptionValueCents,
-        notes: partner.notes,
-      },
+      where: { fromProgramId_toProgramId: { fromProgramId, toProgramId } },
+      update: data,
+      create: { fromProgramId, toProgramId, ...data },
     });
   }
+}
 
+async function seedCards(programIds: ProgramIds) {
   for (const card of referenceCards) {
-    const rewardsProgramId = programIdByName.get(card.program);
-    if (!rewardsProgramId) {
-      throw new Error(`Unknown program for card ${card.issuer} ${card.name}: ${card.program}`);
-    }
+    const rewardsProgramId = requireProgramId(
+      programIds,
+      card.program,
+      `Unknown program for card ${card.issuer} ${card.name}`
+    );
 
     const data = {
       rewardsProgramId,
@@ -91,24 +98,20 @@ async function main() {
       earnRates: card.earnRates ?? {},
       notes: card.notes,
     };
-
     await prisma.cardProduct.upsert({
       where: { issuer_name: { issuer: card.issuer, name: card.name } },
       update: data,
       create: { issuer: card.issuer, name: card.name, ...data },
     });
   }
+}
 
-  const regionsByProgramName = new Map(referencePrograms.map((p) => [p.name, p.regions ?? []]));
-  let awardCostRows = 0;
+/** One row per program × region × cabin that has a price. Returns how many were written. */
+async function seedFlightAwardCosts(programIds: ProgramIds): Promise<number> {
+  let rows = 0;
   for (const cost of referenceAwardCosts) {
-    const rewardsProgramId = programIdByName.get(cost.program);
-    if (!rewardsProgramId) {
-      throw new Error(`Unknown program in award cost: ${cost.program}`);
-    }
-    if (!regionsByProgramName.get(cost.program)?.includes(cost.region)) {
-      throw new Error(`Award cost for ${cost.program} -> ${cost.region} but the program isn't tagged with that region`);
-    }
+    const rewardsProgramId = requireProgramId(programIds, cost.program, "Unknown program in award cost");
+    assertProgramServesRegion(cost.program, cost.region, "Award cost");
 
     for (const cabin of REFERENCE_CABINS) {
       const pointsOneWay = cost.oneWay[cabin];
@@ -118,19 +121,18 @@ async function main() {
         update: { pointsOneWay, notes: cost.notes },
         create: { rewardsProgramId, region: cost.region, cabin, pointsOneWay, notes: cost.notes },
       });
-      awardCostRows += 1;
+      rows += 1;
     }
   }
+  return rows;
+}
 
-  let hotelCostRows = 0;
+/** One row per program × region × tier that has a price. Returns how many were written. */
+async function seedHotelAwardCosts(programIds: ProgramIds): Promise<number> {
+  let rows = 0;
   for (const cost of referenceHotelAwardCosts) {
-    const rewardsProgramId = programIdByName.get(cost.program);
-    if (!rewardsProgramId) {
-      throw new Error(`Unknown program in hotel award cost: ${cost.program}`);
-    }
-    if (!regionsByProgramName.get(cost.program)?.includes(cost.region)) {
-      throw new Error(`Hotel award cost for ${cost.program} -> ${cost.region} but the program isn't tagged with that region`);
-    }
+    const rewardsProgramId = requireProgramId(programIds, cost.program, "Unknown program in hotel award cost");
+    assertProgramServesRegion(cost.program, cost.region, "Hotel award cost");
 
     for (const tier of REFERENCE_HOTEL_TIERS) {
       const pointsPerNight = cost.perNight[tier];
@@ -140,9 +142,18 @@ async function main() {
         update: { pointsPerNight, notes: cost.notes },
         create: { rewardsProgramId, region: cost.region, tier, pointsPerNight, notes: cost.notes },
       });
-      hotelCostRows += 1;
+      rows += 1;
     }
   }
+  return rows;
+}
+
+async function main() {
+  const programIds = await seedPrograms();
+  await seedTransferPartners(programIds);
+  await seedCards(programIds);
+  const awardCostRows = await seedFlightAwardCosts(programIds);
+  const hotelCostRows = await seedHotelAwardCosts(programIds);
 
   console.log(
     `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, ${referenceCards.length} cards, ${awardCostRows} flight award costs, and ${hotelCostRows} hotel award costs.`
