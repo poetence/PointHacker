@@ -25,6 +25,7 @@ import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatsStrip } from "@/components/ui/stats-strip";
 import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
+import { BonusPill } from "@/components/promos/bonus-pill";
 
 // Balances change via API mutations after build, so this page must be
 // re-rendered per request rather than statically prerendered at build time.
@@ -296,16 +297,12 @@ function BalanceRow({
             </BreakdownItem>
             <BreakdownItem label="Best use" valueClassName="text-zinc-700 dark:text-zinc-300">
               {top.kind === "direct" ? (
-              "direct redemption"
+                "direct redemption"
               ) : (
-              <>
-              transfer to {top.partnerProgramName}
-              {top.activeBonusPercent ? (
-              <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-              +{top.activeBonusPercent}% bonus
-              </span>
-              ) : null}
-              </>
+                <>
+                  transfer to {top.partnerProgramName}
+                  {top.activeBonusPercent ? <BonusPill>+{top.activeBonusPercent}% bonus</BonusPill> : null}
+                </>
               )}
             </BreakdownItem>
           </>

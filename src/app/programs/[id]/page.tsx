@@ -15,6 +15,7 @@ import { rowCardClass } from "@/components/ui/card";
 import { LocalDate } from "@/components/ui/local-date";
 import { pageContainerClass } from "@/components/ui/page-header";
 import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
+import { BonusPill } from "@/components/promos/bonus-pill";
 
 export default async function ProgramDetailPage({
   params,
@@ -157,9 +158,7 @@ function OptionRow({
           #{index + 1}{" "}
           {option.kind === "direct" ? "Direct redemption" : `Transfer to ${option.partnerProgramName}`}
           {option.kind === "transfer" && option.activeBonusPercent && (
-            <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-              +{option.activeBonusPercent}% bonus
-            </span>
+            <BonusPill>+{option.activeBonusPercent}% bonus</BonusPill>
           )}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">

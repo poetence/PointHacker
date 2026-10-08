@@ -10,6 +10,7 @@ import { formatCalendarDate, programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
 import { sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BonusPill } from "@/components/promos/bonus-pill";
 
 // No dynamic route segment here, so Next would otherwise try to statically
 // prerender this at build time — which has no DATABASE_URL in CI.
@@ -36,9 +37,7 @@ function PromoList({ title, items }: { title: string; items: PromoWithPartner[] 
               <div>
                 <p className="font-medium text-black dark:text-zinc-50">
                   {programLabel(from)} → {programLabel(to)}
-                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                    +{promo.bonusPercent}%
-                  </span>
+                  <BonusPill>+{promo.bonusPercent}%</BonusPill>
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   {formatCalendarDate(promo.startsOn)} – {formatCalendarDate(promo.endsOn)}
