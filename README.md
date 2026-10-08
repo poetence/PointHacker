@@ -64,8 +64,9 @@ shipping real logos or photography.
 - Postgres (Supabase) via Prisma ORM
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
-  expiration, card scoring, goal progress, gap-closing cards, origin adjustment, target months,
-  realized redemption value, the sign-in allowlist)
+  expiration, card scoring, goal progress and descriptions, gap-closing cards, origin adjustment,
+  target months, realized redemption value, input validation, formatting helpers, the client
+  request helper, the sign-in allowlist)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR
 
 ## Getting started
