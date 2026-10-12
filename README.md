@@ -38,7 +38,8 @@ account only sees and manages its own cards and balances.
 - **Redemptions** — log what you actually booked (points spent, the cash price it replaced, any
   taxes and fees) and see the rate you really got, how it compares to what the app estimated
   those points were worth, and a blended rate across everything you've redeemed. Logging can
-  draw the points down from the tracked balance
+  draw the points down from the tracked balance. After three bookings in an airline or hotel
+  program, your own rate replaces the app's estimate for it in every ranking (tagged "your rate")
 - **Plan a trip** — pick a region and see which of your balances are actually worth using there
 - **Transfer bonuses** — record time-limited promos (e.g. +30% Chase → Hyatt); active ones are
   folded into every ranking and tagged wherever they drive a recommendation
@@ -70,7 +71,7 @@ shipping real logos or photography.
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
   expiration, card scoring, goal progress and descriptions, sharing points across goals,
   gap-closing cards, origin adjustment,
-  target months, realized redemption value, input validation, formatting helpers, the client
+  target months, realized redemption value, personal rates, input validation, formatting helpers, the client
   request helper, the sign-in allowlist)
 - Deployed on Vercel, GitHub Actions CI (lint, typecheck, test, build) on every push/PR
 
