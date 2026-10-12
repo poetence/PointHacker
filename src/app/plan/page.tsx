@@ -2,6 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRegionRedemptionOptions } from "@/lib/redemptions/get-region-redemption-options";
+import { getPersonalRates } from "@/lib/redemptions/get-redemptions";
+import { personalRateFor, type ProgramRateStatus } from "@/lib/redemptions/personal-rates";
+import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
 import { formatCents, programLabel } from "@/lib/format";
 import { REGION_LABELS, isRegion, type Region } from "@/lib/regions";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
@@ -60,7 +63,7 @@ export default async function PlanPage({
 async function PlanResults({ region }: { region: Region }) {
   const userId = await requireSessionUserId();
 
-  const balances = await findBalances(userId);
+  const [balances, personalRates] = await Promise.all([findBalances(userId), getPersonalRates(userId)]);
 
   if (balances.length === 0) {
     return (
@@ -72,7 +75,8 @@ async function PlanResults({ region }: { region: Region }) {
 
   const options = await getRegionRedemptionOptions(
     balances.map((b) => ({ rewardsProgramId: b.rewardsProgramId, balance: b.balance })),
-    region
+    region,
+    personalRates
   );
 
   const ranked: RankedRow[] = balances
@@ -99,7 +103,12 @@ async function PlanResults({ region }: { region: Region }) {
         ) : (
           <ul className="flex flex-col gap-3">
             {ranked.map(({ balance, option }) => (
-              <PlanRow key={balance.id} balance={balance} option={option} />
+              <PlanRow
+                key={balance.id}
+                balance={balance}
+                option={option}
+                personalRate={personalRateFor(option, personalRates)}
+              />
             ))}
           </ul>
         )}
@@ -129,7 +138,11 @@ function findBalances(userId: string) {
 type PlanBalance = Awaited<ReturnType<typeof findBalances>>[number];
 type RankedRow = { balance: PlanBalance; option: RedemptionOption };
 
-function PlanRow({ balance, option }: RankedRow) {
+function PlanRow({
+  balance,
+  option,
+  personalRate,
+}: RankedRow & { personalRate: ProgramRateStatus | null }) {
   return (
     <li className={`flex flex-wrap items-center justify-between gap-4 ${rowCardClass}`}>
       <div className="flex items-center gap-3">
@@ -160,6 +173,7 @@ function PlanRow({ balance, option }: RankedRow) {
       <p className="text-sm text-zinc-700 dark:text-zinc-300">
         {formatCents(option.totalValueCents)} —{" "}
         {bestUseLabel(option)}
+        {personalRate && <PersonalRatePill rate={personalRate} />}
       </p>
     </li>
   );

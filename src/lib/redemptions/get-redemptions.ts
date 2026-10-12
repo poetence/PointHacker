@@ -1,3 +1,4 @@
+import type { ProgramType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   compareToBaseline,
@@ -6,6 +7,13 @@ import {
   type BaselineComparison,
   type RedemptionSummary,
 } from "./redemption-value";
+import {
+  summarizeProgramRates,
+  toPersonalRates,
+  type PersonalRateRecord,
+  type PersonalRates,
+  type ProgramRateStatus,
+} from "./personal-rates";
 
 /** A logged redemption plus what it turned out to be worth. */
 export type RedemptionRow = {
@@ -26,6 +34,8 @@ export type RedemptionRow = {
 export type RedemptionHistory = {
   rows: RedemptionRow[];
   summary: RedemptionSummary;
+  /** Each program's own rate, including ones with too few bookings to be used yet. */
+  programRates: ProgramRateStatus[];
 };
 
 /** Newest booking first — the order the history page reads in. */
@@ -40,6 +50,7 @@ export async function getRedemptions(userId: string): Promise<RedemptionHistory>
           name: true,
           shortName: true,
           pointsUnit: true,
+          type: true,
           defaultRedemptionValueCents: true,
         },
       },
@@ -77,7 +88,27 @@ export async function getRedemptions(userId: string): Promise<RedemptionHistory>
     };
   });
 
-  return { rows, summary: summarizeRedemptions(rows) };
+  return {
+    rows,
+    summary: summarizeRedemptions(rows),
+    programRates: summarizeProgramRates(records.map(toPersonalRateRecord)),
+  };
+}
+
+/** The rates every ranking should use in place of the programs' estimates, for this user. */
+export async function getPersonalRates(userId: string): Promise<PersonalRates> {
+  const records = await prisma.redemption.findMany({
+    where: { userId },
+    select: {
+      rewardsProgramId: true,
+      pointsSpent: true,
+      cashValueCents: true,
+      feesPaidCents: true,
+      rewardsProgram: { select: { type: true } },
+    },
+  });
+
+  return toPersonalRates(summarizeProgramRates(records.map(toPersonalRateRecord)));
 }
 
 /** The blended rate for the dashboard's stats strip. */
@@ -88,4 +119,20 @@ export async function getRedemptionSummary(userId: string): Promise<RedemptionSu
   });
 
   return summarizeRedemptions(records);
+}
+
+function toPersonalRateRecord(record: {
+  rewardsProgramId: string;
+  pointsSpent: number;
+  cashValueCents: number;
+  feesPaidCents: number;
+  rewardsProgram: { type: ProgramType };
+}): PersonalRateRecord {
+  return {
+    programId: record.rewardsProgramId,
+    programType: record.rewardsProgram.type,
+    pointsSpent: record.pointsSpent,
+    cashValueCents: record.cashValueCents,
+    feesPaidCents: record.feesPaidCents,
+  };
 }

@@ -16,7 +16,9 @@ import { SharedPointsNote } from "@/components/goals/shared-points-note";
 import type { RedemptionOption } from "@/lib/redemptions/compute-best-redemptions";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { getExpirationStatus } from "@/lib/points-expiration";
-import { getRedemptionSummary } from "@/lib/redemptions/get-redemptions";
+import { getPersonalRates, getRedemptionSummary } from "@/lib/redemptions/get-redemptions";
+import { personalRateFor, type ProgramRateStatus } from "@/lib/redemptions/personal-rates";
+import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
 import { riseInDelay, rowCardClass, rowCardFrameClass } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { RegionScene } from "@/components/regions/region-scene";
@@ -34,10 +36,11 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const userId = await requireSessionUserId();
 
-  const balances = await findBalances(userId);
+  const [balances, personalRates] = await Promise.all([findBalances(userId), getPersonalRates(userId)]);
 
   const topOptions = await getTopRedemptionOptionsForBalances(
-    balances.map((b) => ({ rewardsProgramId: b.rewardsProgramId, balance: b.balance }))
+    balances.map((b) => ({ rewardsProgramId: b.rewardsProgramId, balance: b.balance })),
+    personalRates
   );
 
   const allPrograms = await prisma.rewardsProgram.findMany({
@@ -118,14 +121,18 @@ export default async function Home() {
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
-            {balances.map((balance, index) => (
-              <BalanceRow
-                key={balance.id}
-                balance={balance}
-                top={topOptions.get(balance.rewardsProgramId) ?? null}
-                index={index}
-              />
-            ))}
+            {balances.map((balance, index) => {
+              const top = topOptions.get(balance.rewardsProgramId) ?? null;
+              return (
+                <BalanceRow
+                  key={balance.id}
+                  balance={balance}
+                  top={top}
+                  personalRate={top && personalRateFor(top, personalRates)}
+                  index={index}
+                />
+              );
+            })}
           </ul>
         )}
       </section>
@@ -230,10 +237,13 @@ function GoalCard({ progress, index }: { progress: GoalProgress; index: number }
 function BalanceRow({
   balance,
   top,
+  personalRate,
   index,
 }: {
   balance: DashboardBalance;
   top: RedemptionOption | null;
+  /** Set when the top pick is valued at the user's own rate. */
+  personalRate: ProgramRateStatus | null;
   index: number;
 }) {
   const { history, delta } = recentHistory(balance);
@@ -307,6 +317,7 @@ function BalanceRow({
                   {top.activeBonusPercent ? <BonusPill>+{top.activeBonusPercent}% bonus</BonusPill> : null}
                 </>
               )}
+              {personalRate && <PersonalRatePill rate={personalRate} />}
             </BreakdownItem>
           </>
         ) : (

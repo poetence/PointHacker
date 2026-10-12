@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { getRedemptionOptionsForProgram } from "@/lib/redemptions/get-redemption-options";
+import { getPersonalRates } from "@/lib/redemptions/get-redemptions";
+import { personalRateFor, type PersonalRates } from "@/lib/redemptions/personal-rates";
+import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
 import { formatCents, formatCentsPerPoint, formatSignedCount, unitLabel, unitSingular } from "@/lib/format";
 import type {
   RedemptionOption,
@@ -36,7 +39,9 @@ export default async function ProgramDetailPage({
   });
   const balance = pointsBalance?.balance ?? 0;
 
-  const options = await getRedemptionOptionsForProgram(id, balance);
+  const personalRates = await getPersonalRates(userId);
+  const personalRate = personalRates.get(id) ?? null;
+  const options = await getRedemptionOptionsForProgram(id, balance, personalRates);
 
   const cards = await prisma.creditCard.findMany({
     where: { userId, rewardsProgramId: id },
@@ -56,8 +61,19 @@ export default async function ProgramDetailPage({
         <div>
           <h1 className={pageTitleClass}>{program.name}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-400">
-            {balance.toLocaleString("en-US")} {program.pointsUnit} &middot; direct value{" "}
-            {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/{unitSingular(program.pointsUnit)}
+            {balance.toLocaleString("en-US")} {program.pointsUnit} &middot;{" "}
+            {personalRate ? (
+              <>
+                your rate {formatCentsPerPoint(personalRate.centsPerPoint)}/{unitSingular(program.pointsUnit)}{" "}
+                from {personalRate.bookings} bookings (estimate{" "}
+                {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))})
+              </>
+            ) : (
+              <>
+                direct value{" "}
+                {formatCentsPerPoint(Number(program.defaultRedemptionValueCents))}/{unitSingular(program.pointsUnit)}
+              </>
+            )}
             {pointsBalance && (
               <ExpirationPill
                 lastUpdatedAt={pointsBalance.lastUpdatedAt}
@@ -90,6 +106,7 @@ export default async function ProgramDetailPage({
               option={option}
               index={index}
               pointsUnit={program.pointsUnit}
+              personalRates={personalRates}
             />
           ))}
         </ul>
@@ -142,11 +159,14 @@ function OptionRow({
   option,
   index,
   pointsUnit,
+  personalRates,
 }: {
   option: RedemptionOption;
   index: number;
   pointsUnit: string;
+  personalRates: PersonalRates;
 }) {
+  const personalRate = personalRateFor(option, personalRates);
   return (
     <li
       className={`flex flex-wrap items-center justify-between gap-3 ${rowCardClass} ${
@@ -160,6 +180,7 @@ function OptionRow({
           {option.kind === "transfer" && option.activeBonusPercent && (
             <BonusPill>+{option.activeBonusPercent}% bonus</BonusPill>
           )}
+          {personalRate && <PersonalRatePill rate={personalRate} />}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {describeUsage(option, pointsUnit)}
