@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
 import { formatCalendarDate, formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { getRedemptions, type RedemptionRow } from "@/lib/redemptions/get-redemptions";
+import { MIN_BOOKINGS_FOR_PERSONAL_RATE, type ProgramRateStatus } from "@/lib/redemptions/personal-rates";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -23,11 +24,18 @@ export const dynamic = "force-dynamic";
 export default async function RedemptionsPage() {
   const userId = await requireSessionUserId();
 
-  const [{ rows, summary }, programs, balances, goals] = await Promise.all([
+  const [{ rows, summary, programRates }, programs, balances, goals] = await Promise.all([
     getRedemptions(userId),
     prisma.rewardsProgram.findMany({
       where: { isActive: true },
-      select: { id: true, name: true, shortName: true, type: true, pointsUnit: true },
+      select: {
+        id: true,
+        name: true,
+        shortName: true,
+        type: true,
+        pointsUnit: true,
+        defaultRedemptionValueCents: true,
+      },
     }),
     prisma.pointsBalance.findMany({ where: { userId }, select: { rewardsProgramId: true, balance: true } }),
     prisma.awardGoal.findMany({
@@ -39,6 +47,15 @@ export default async function RedemptionsPage() {
 
   const balanceByProgram = new Map(balances.map((b) => [b.rewardsProgramId, b.balance]));
   const programTypeById = new Map(programs.map((p) => [p.id, p.type]));
+  const programById = new Map(programs.map((p) => [p.id, p]));
+
+  // Rates already in use first, then the ones closest to switching on.
+  const rateRows = programRates
+    .flatMap((rate) => {
+      const program = programById.get(rate.programId);
+      return program ? [{ rate, program }] : [];
+    })
+    .sort((a, b) => Number(b.rate.active) - Number(a.rate.active) || b.rate.bookings - a.rate.bookings);
 
   // Programs the user actually holds come first, each group in catalog order.
   const prioritized = sortProgramsByPriority(programs);
@@ -90,6 +107,31 @@ export default async function RedemptionsPage() {
           </ul>
         )}
       </section>
+
+      {rows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className={sectionTitleClass}>Your rates</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              After {MIN_BOOKINGS_FOR_PERSONAL_RATE} bookings in an airline or hotel program, the rate
+              you actually got replaces the estimate in every ranking. Bookings with bank or cashback
+              points don&apos;t count — those were usually transfers.
+            </p>
+          </div>
+
+          {rateRows.length === 0 ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              No airline or hotel bookings logged yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {rateRows.map(({ rate, program }, index) => (
+                <RateItem key={rate.programId} rate={rate} program={program} index={index} />
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="flex flex-col gap-4 rounded-xl border border-dashed border-zinc-300 p-5 dark:border-zinc-700">
         <div>
@@ -187,3 +229,54 @@ function RedemptionItem({
   );
 }
 
+
+function RateItem({
+  rate,
+  program,
+  index,
+}: {
+  rate: ProgramRateStatus;
+  program: {
+    name: string;
+    shortName: string | null;
+    type: ProgramType;
+    defaultRedemptionValueCents: { toNumber(): number };
+  };
+  index: number;
+}) {
+  const estimate = program.defaultRedemptionValueCents.toNumber();
+  const remaining = MIN_BOOKINGS_FOR_PERSONAL_RATE - rate.bookings;
+  return (
+    <li className={`rise-in-item flex flex-col gap-3 ${rowCardClass}`} style={riseInDelay(index)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <ProgramBadge name={program.name} shortName={program.shortName} type={program.type} size="sm" />
+          <div className="min-w-0">
+            <p className="font-medium text-black dark:text-zinc-50">{programLabel(program)}</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {rate.active
+                ? "Used in your rankings"
+                : `${remaining} more ${remaining === 1 ? "booking" : "bookings"} until your rankings use it`}
+            </p>
+          </div>
+        </div>
+        <p
+          className={`font-display text-lg font-semibold ${
+            rate.active ? "text-black dark:text-zinc-50" : "text-zinc-400 dark:text-zinc-500"
+          }`}
+        >
+          {formatCentsPerPoint(rate.centsPerPoint)}
+        </p>
+      </div>
+
+      <Breakdown>
+        <BreakdownItem label="Bookings" valueClassName="text-zinc-700 dark:text-zinc-300">
+          {rate.bookings}
+        </BreakdownItem>
+        <BreakdownItem label="Estimate" valueClassName="text-zinc-700 dark:text-zinc-300">
+          {formatCentsPerPoint(estimate)}
+        </BreakdownItem>
+      </Breakdown>
+    </li>
+  );
+}
