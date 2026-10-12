@@ -7,14 +7,17 @@ import {
   type TransferPartnerOption,
 } from "./compute-best-redemptions";
 import { applyTransferBonus } from "./transfer-bonus";
+import { personalizePartner, personalizeProgram, type PersonalRates } from "./personal-rates";
 
 export function activeBonusFilter(now: Date) {
   return { where: { startsOn: { lte: now }, endsOn: { gte: now } } };
 }
 
+/** `personalRates` (from `getPersonalRates`) stand in for the program's estimates where the user has their own. */
 export async function getRedemptionOptionsForProgram(
   rewardsProgramId: string,
-  balance: number
+  balance: number,
+  personalRates: PersonalRates
 ): Promise<RedemptionOption[]> {
   const program = await prisma.rewardsProgram.findUniqueOrThrow({
     where: { id: rewardsProgramId },
@@ -26,9 +29,11 @@ export async function getRedemptionOptionsForProgram(
   });
 
   return computeBestRedemptions({
-    program: toRedemptionProgram(program),
+    program: personalizeProgram(toRedemptionProgram(program), personalRates),
     balance,
-    transferPartners: transferPartners.map(toTransferPartnerOption),
+    transferPartners: transferPartners.map((partner) =>
+      personalizePartner(toTransferPartnerOption(partner), personalRates)
+    ),
   });
 }
 
@@ -38,7 +43,8 @@ export async function getRedemptionOptionsForProgram(
  * come back too, for callers that filter on more than the ranking.
  */
 export async function rankRedemptionOptionsForBalances(
-  balances: { rewardsProgramId: string; balance: number }[]
+  balances: { rewardsProgramId: string; balance: number }[],
+  personalRates: PersonalRates
 ) {
   const programIds = balances.map((b) => b.rewardsProgramId);
 
@@ -60,10 +66,10 @@ export async function rankRedemptionOptionsForBalances(
       rewardsProgramId,
       program
         ? computeBestRedemptions({
-            program: toRedemptionProgram(program),
+            program: personalizeProgram(toRedemptionProgram(program), personalRates),
             balance,
-            transferPartners: (partnersByFromProgramId.get(rewardsProgramId) ?? []).map(
-              toTransferPartnerOption
+            transferPartners: (partnersByFromProgramId.get(rewardsProgramId) ?? []).map((partner) =>
+              personalizePartner(toTransferPartnerOption(partner), personalRates)
             ),
           })
         : null
@@ -75,9 +81,10 @@ export async function rankRedemptionOptionsForBalances(
 
 /** The single best option per balance, for the dashboard's "top pick". */
 export async function getTopRedemptionOptionsForBalances(
-  balances: { rewardsProgramId: string; balance: number }[]
+  balances: { rewardsProgramId: string; balance: number }[],
+  personalRates: PersonalRates
 ): Promise<Map<string, RedemptionOption | null>> {
-  const { optionsByProgramId } = await rankRedemptionOptionsForBalances(balances);
+  const { optionsByProgramId } = await rankRedemptionOptionsForBalances(balances, personalRates);
   return new Map([...optionsByProgramId].map(([id, options]) => [id, options?.[0] ?? null]));
 }
 

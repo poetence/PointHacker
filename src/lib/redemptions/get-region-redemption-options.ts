@@ -1,5 +1,6 @@
 import type { RedemptionOption } from "./compute-best-redemptions";
 import { rankRedemptionOptionsForBalances } from "./get-redemption-options";
+import type { PersonalRates } from "./personal-rates";
 import { isRegionRelevant, type RegionRelevanceProgramType } from "./region-relevance";
 
 type ProgramRelevanceInfo = { type: RegionRelevanceProgramType; regions: string[] };
@@ -7,10 +8,11 @@ type ProgramRelevanceInfo = { type: RegionRelevanceProgramType; regions: string[
 /** The best option per balance that's actually usable in `region`, or null if none is. */
 export async function getRegionRedemptionOptions(
   balances: { rewardsProgramId: string; balance: number }[],
-  region: string
+  region: string,
+  personalRates: PersonalRates
 ): Promise<Map<string, RedemptionOption | null>> {
   const { programs, transferPartners, optionsByProgramId } =
-    await rankRedemptionOptionsForBalances(balances);
+    await rankRedemptionOptionsForBalances(balances, personalRates);
 
   // Relevance is judged on where the points get spent: the program itself for a
   // direct redemption, the partner for a transfer.
