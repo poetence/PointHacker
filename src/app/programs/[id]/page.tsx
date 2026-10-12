@@ -89,7 +89,7 @@ export default async function ProgramDetailPage({
           </p>
           {pointsBalance === null && (
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              You don&apos;t have a balance tracked for this program yet — options below assume 0
+              You don&apos;t have a balance tracked for this program yet — options below assume 0{" "}
               {program.pointsUnit}. Add a balance from the dashboard to see real numbers.
             </p>
           )}
