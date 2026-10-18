@@ -15,6 +15,13 @@ export type RedemptionInput = {
    * balance change has to be something the user chose, not a hidden effect.
    */
   deductFromBalance: boolean;
+  /**
+   * Whether this booking completes `awardGoalId`'s trip, so the goal stops
+   * holding points. False unless sent: a goal can take more than one booking
+   * (an outbound and a return on different programs), and linking the first
+   * shouldn't release the points the second still needs.
+   */
+  markGoalBooked: boolean;
 };
 
 export const MAX_POINTS_SPENT = 100_000_000;
@@ -38,6 +45,7 @@ export function parseRedemptionInput(
     awardGoalId,
     notes,
     deductFromBalance,
+    markGoalBooked,
   } = body as Record<string, unknown>;
 
   if (typeof rewardsProgramId !== "string" || rewardsProgramId.length === 0) {
@@ -83,6 +91,15 @@ export function parseRedemptionInput(
     return { error: "deductFromBalance must be a boolean." };
   }
 
+  if (markGoalBooked !== undefined && typeof markGoalBooked !== "boolean") {
+    return { error: "markGoalBooked must be a boolean." };
+  }
+
+  const goalId = typeof awardGoalId === "string" && awardGoalId.length > 0 ? awardGoalId : null;
+  if (markGoalBooked === true && !goalId) {
+    return { error: "markGoalBooked needs an awardGoalId." };
+  }
+
   return {
     input: {
       rewardsProgramId,
@@ -91,9 +108,10 @@ export function parseRedemptionInput(
       cashValueCents,
       feesPaidCents: fees,
       bookedOn: bookedOnDate,
-      awardGoalId: typeof awardGoalId === "string" && awardGoalId.length > 0 ? awardGoalId : null,
+      awardGoalId: goalId,
       notes: typeof notes === "string" && notes.trim().length > 0 ? notes.trim() : null,
       deductFromBalance: deductFromBalance !== false,
+      markGoalBooked: markGoalBooked === true,
     },
   };
 }

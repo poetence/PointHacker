@@ -25,7 +25,7 @@ export type RedemptionRow = {
   bookedOn: Date;
   notes: string | null;
   program: { id: string; name: string; shortName: string | null; pointsUnit: string };
-  goal: { id: string; label: string } | null;
+  goal: { id: string; label: string; booked: boolean } | null;
   centsPerPoint: number;
   /** How it fared against the program's nominal rate — the app's own estimate. */
   vsBaseline: BaselineComparison;
@@ -54,7 +54,7 @@ export async function getRedemptions(userId: string): Promise<RedemptionHistory>
           defaultRedemptionValueCents: true,
         },
       },
-      awardGoal: { select: { id: true, label: true } },
+      awardGoal: { select: { id: true, label: true, bookedAt: true } },
     },
   });
 
@@ -79,7 +79,11 @@ export async function getRedemptions(userId: string): Promise<RedemptionHistory>
         shortName: record.rewardsProgram.shortName,
         pointsUnit: record.rewardsProgram.pointsUnit,
       },
-      goal: record.awardGoal,
+      goal: record.awardGoal && {
+        id: record.awardGoal.id,
+        label: record.awardGoal.label,
+        booked: record.awardGoal.bookedAt !== null,
+      },
       centsPerPoint: realizedCentsPerPoint(value),
       vsBaseline: compareToBaseline(
         value,

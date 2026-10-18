@@ -26,7 +26,13 @@ describe("parseRedemptionInput", () => {
   it("defaults fees to zero, goal to null, and opts into deducting the balance", () => {
     const result = parseRedemptionInput({ ...valid, feesPaidCents: undefined });
     expect(result).toMatchObject({
-      input: { feesPaidCents: 0, awardGoalId: null, notes: null, deductFromBalance: true },
+      input: {
+        feesPaidCents: 0,
+        awardGoalId: null,
+        notes: null,
+        deductFromBalance: true,
+        markGoalBooked: false,
+      },
     });
   });
 
@@ -40,6 +46,27 @@ describe("parseRedemptionInput", () => {
     expect(parseRedemptionInput({ ...valid, notes: "   ", awardGoalId: "" })).toMatchObject({
       input: { notes: null, awardGoalId: null },
     });
+  });
+
+  it("marks the linked goal booked only when asked", () => {
+    expect(parseRedemptionInput({ ...valid, awardGoalId: "goal_1" })).toMatchObject({
+      input: { awardGoalId: "goal_1", markGoalBooked: false },
+    });
+    expect(
+      parseRedemptionInput({ ...valid, awardGoalId: "goal_1", markGoalBooked: true })
+    ).toMatchObject({ input: { awardGoalId: "goal_1", markGoalBooked: true } });
+  });
+
+  it("refuses to mark a goal booked without naming one", () => {
+    expect(parseRedemptionInput({ ...valid, markGoalBooked: true })).toEqual({
+      error: "markGoalBooked needs an awardGoalId.",
+    });
+    expect(parseRedemptionInput({ ...valid, awardGoalId: "", markGoalBooked: true })).toEqual({
+      error: "markGoalBooked needs an awardGoalId.",
+    });
+    expect(
+      parseRedemptionInput({ ...valid, awardGoalId: "goal_1", markGoalBooked: "yes" })
+    ).toEqual({ error: "markGoalBooked must be a boolean." });
   });
 
   it("rejects a redemption that spent no points", () => {

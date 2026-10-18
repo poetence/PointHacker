@@ -41,7 +41,7 @@ export default async function RedemptionsPage() {
     prisma.awardGoal.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      select: { id: true, label: true },
+      select: { id: true, label: true, bookedAt: true },
     }),
   ]);
 
@@ -140,7 +140,10 @@ export default async function RedemptionsPage() {
             Record what you booked to see the rate you actually got.
           </p>
         </div>
-        <AddRedemptionForm programs={programOptions} goals={goals} />
+        <AddRedemptionForm
+          programs={programOptions}
+          goals={goals.map((g) => ({ id: g.id, label: g.label, booked: g.bookedAt !== null }))}
+        />
       </section>
     </div>
   );
@@ -189,7 +192,11 @@ function RedemptionItem({
           <DeleteButton
             url={`/api/redemptions/${row.id}`}
             itemLabel={`redemption: ${row.description}`}
-            confirmMessage="Remove this redemption? Your balance won't be changed back."
+            confirmMessage={
+              row.goal?.booked
+                ? `Remove this redemption? Your balance won't be changed back, and ${row.goal.label} stays booked.`
+                : "Remove this redemption? Your balance won't be changed back."
+            }
           />
         </div>
       </div>

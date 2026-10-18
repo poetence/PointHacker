@@ -47,6 +47,13 @@ export async function POST(request: NextRequest) {
     if (input.deductFromBalance) {
       await drawDownBalance(tx, userId, input.rewardsProgramId, input.pointsSpent);
     }
+    // updateMany with bookedAt: null keeps the date of a goal that was already booked.
+    if (input.markGoalBooked && input.awardGoalId) {
+      await tx.awardGoal.updateMany({
+        where: { id: input.awardGoalId, userId, bookedAt: null },
+        data: { bookedAt: new Date() },
+      });
+    }
     return redemption;
   });
 
