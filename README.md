@@ -62,6 +62,10 @@ Every visual is generated in code: airline, hotel, and issuer logos are trademar
 draws its own card art, program badges, icons, and per-region destination scenes rather than
 shipping real logos or photography.
 
+PointHacker's own logo — a P with a navigation arrow cut from its bowl, aimed up and to the
+right — lives in `brand/`: SVG masters, one-colour and web-icon exports, a presentation board, and
+usage guidelines (`brand/GUIDELINES.md`).
+
 ## Stack
 
 - Next.js (App Router) + TypeScript

@@ -134,11 +134,17 @@ export function TicketIcon(props: IconProps) {
   );
 }
 
+// The brand mark, not a stroke icon: a filled P with a navigation arrow cut
+// from its bowl. This is the small-size cut from brand/masters/symbol-small.svg
+// (bigger arrow, shorter stem), since it only ever renders at 20–32 px — the
+// standard symbol's arrow fills in below ~32 px. See brand/GUIDELINES.md.
 export function LogoMarkIcon(props: IconProps) {
   return (
-    <svg {...base} {...props}>
-      <path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z" />
-      <path d="m12 2 0 20M3 7l9 5 9-5" />
+    <svg aria-hidden viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path
+        fillRule="evenodd"
+        d="M44 232V24h92c43.47 0 77.5 34.03 77.5 76s-34.03 76-77.5 76h-32v56ZM164.77 59.23l-38.98 91.92-16.17-36.77-36.77-16.17Z"
+      />
     </svg>
   );
 }
