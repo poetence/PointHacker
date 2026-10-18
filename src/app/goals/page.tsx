@@ -1,13 +1,19 @@
 import Link from "next/link";
+import type { AwardGoal } from "@prisma/client";
 import { requireSessionUserId } from "@/lib/user";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
-import { getGoalsProgress, type GoalProgress, type GoalsProgress } from "@/lib/goals/get-goal-progress";
+import {
+  getGoalsProgress,
+  type BookedGoal,
+  type GoalProgress,
+  type GoalsProgress,
+} from "@/lib/goals/get-goal-progress";
 import { GoalForm } from "@/components/goals/goal-form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { TargetIcon } from "@/components/icons";
-import { riseInDelay, rowCardFrameClass } from "@/components/ui/card";
+import { riseInDelay, rowCardClass, rowCardFrameClass } from "@/components/ui/card";
 import { RegionScene } from "@/components/regions/region-scene";
 import { programLabel } from "@/lib/format";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
@@ -26,6 +32,7 @@ export default async function GoalsPage() {
 
   const progress = await getGoalsProgress(userId);
   const goals = progress.goals.map((p) => p.goal);
+  const allGoals = [...goals, ...progress.booked.map((b) => b.goal)];
 
   return (
     <div className={pageContainerClass}>
@@ -37,7 +44,7 @@ export default async function GoalsPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className={sectionTitleClass}>Set a goal</h2>
-        <GoalForm defaultOriginState={goals.find((g) => g.originState)?.originState ?? ""} />
+        <GoalForm defaultOriginState={newestOrigin(allGoals)} />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -45,7 +52,9 @@ export default async function GoalsPage() {
 
         {goals.length === 0 ? (
           <EmptyState icon={TargetIcon}>
-            No goals yet — set one above to see which of your balances get you there.
+            {progress.booked.length > 0
+              ? "Nothing left to save for — set your next trip above."
+              : "No goals yet — set one above to see which of your balances get you there."}
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -55,8 +64,29 @@ export default async function GoalsPage() {
           </ul>
         )}
       </section>
+
+      {progress.booked.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className={sectionTitleClass}>Booked</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Booked trips don&apos;t hold points back, so the goals above are planned without them.
+          </p>
+          <ul className="flex flex-col gap-3">
+            {progress.booked.map((booked, index) => (
+              <BookedGoalRow key={booked.goal.id} booked={booked} index={index} />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
+}
+
+/** The "Flying from" default: the newest goal that has one, booked or not. */
+function newestOrigin(goals: AwardGoal[]): string {
+  const withOrigin = goals.filter((g) => g.originState);
+  withOrigin.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return withOrigin[0]?.originState ?? "";
 }
 
 /**
@@ -163,6 +193,38 @@ function GoalRow({ progress, index }: { progress: GoalProgress; index: number })
           </p>
         )}
       </div>
+    </li>
+  );
+}
+
+function BookedGoalRow({ booked, index }: { booked: BookedGoal; index: number }) {
+  const { goal, redemptions } = booked;
+  // Points are only comparable within one unit, so a mixed miles/points trip shows a count.
+  const units = new Set(redemptions.map((r) => r.program.pointsUnit));
+  const spent = redemptions.reduce((sum, r) => sum + r.pointsSpent, 0);
+  return (
+    <li
+      className={`rise-in-item flex flex-wrap items-center justify-between gap-3 ${rowCardClass}`}
+      style={riseInDelay(index)}
+    >
+      <div className="min-w-0">
+        <Link
+          href={`/goals/${goal.id}`}
+          className="break-words font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
+        >
+          {booked.name}
+        </Link>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          {REGION_LABELS[goal.region]} · {describeGoal(goal)}
+        </p>
+      </div>
+      <p className="text-sm text-zinc-700 dark:text-zinc-300">
+        <span className="font-medium text-emerald-600 dark:text-emerald-400">Booked</span>
+        {redemptions.length > 0 &&
+          (units.size === 1
+            ? ` · ${spent.toLocaleString("en-US")} ${[...units][0]}`
+            : ` · ${redemptions.length} bookings`)}
+      </p>
     </li>
   );
 }

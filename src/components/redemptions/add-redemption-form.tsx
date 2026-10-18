@@ -20,7 +20,8 @@ export type RedemptionProgramOption = {
   balance: number | null;
 };
 
-export type RedemptionGoalOption = { id: string; label: string };
+/** `booked` goals can still take a booking (a return leg), but there's nothing left to mark. */
+export type RedemptionGoalOption = { id: string; label: string; booked: boolean };
 
 /** Today in the browser's time zone, as the YYYY-MM-DD a date input takes. */
 function localToday(): string {
@@ -54,11 +55,16 @@ export function AddRedemptionForm({
   const bookedOn = pickedBookedOn || today;
   const [awardGoalId, setAwardGoalId] = useState("");
   const [deductFromBalance, setDeductFromBalance] = useState(true);
+  // On by default since one booking usually is the whole trip; the box is there
+  // for the outbound-now, return-later case, where the goal should keep its points.
+  const [markGoalBooked, setMarkGoalBooked] = useState(true);
   const { submit, isSubmitting, error } = useJsonSubmit();
 
   useWarnOnLeave(Boolean(description || pointsSpent || cashValue || feesPaid));
 
   const program = programs.find((p) => p.id === rewardsProgramId) ?? null;
+  const goal = goals.find((g) => g.id === awardGoalId) ?? null;
+  const canMarkBooked = goal !== null && !goal.booked;
   const unit = program?.pointsUnit ?? "points";
 
   // Preview the rate as it's typed — the whole point of logging this is to see
@@ -79,6 +85,7 @@ export function AddRedemptionForm({
       bookedOn,
       awardGoalId: awardGoalId || null,
       deductFromBalance,
+      markGoalBooked: canMarkBooked && markGoalBooked,
     });
 
     if (!result.ok) return;
@@ -88,6 +95,7 @@ export function AddRedemptionForm({
     setCashValue("");
     setFeesPaid("");
     setAwardGoalId("");
+    setMarkGoalBooked(true);
     router.refresh();
   }
 
@@ -179,7 +187,7 @@ export function AddRedemptionForm({
               <option value="">Not linked to a goal</option>
               {goals.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.label}
+                  {g.booked ? `${g.label} (booked)` : g.label}
                 </option>
               ))}
             </Select>
@@ -207,6 +215,14 @@ export function AddRedemptionForm({
           </>
         }
       />
+
+      {canMarkBooked && (
+        <Checkbox
+          checked={markGoalBooked}
+          onChange={(e) => setMarkGoalBooked(e.target.checked)}
+          label={<>Mark {goal.label} as booked, so it stops holding points</>}
+        />
+      )}
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSubmitting}>

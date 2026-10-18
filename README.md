@@ -34,7 +34,8 @@ account only sees and manages its own cards and balances.
   rather than each counting all of them: the soonest trip is planned first and every goal after it
   works with what's left, so two trips can't both read "bookable" on the same balance. The goals
   page shows how many are bookable on their own vs. together and flags a balance the goals want
-  more of than you hold
+  more of than you hold. Once a trip is booked — from its page, or by ticking the box when you log
+  the redemption — it stops holding points, and the goals still ahead are planned without it
 - **Redemptions** — log what you actually booked (points spent, the cash price it replaced, any
   taxes and fees) and see the rate you really got, how it compares to what the app estimated
   those points were worth, and a blended rate across everything you've redeemed. Logging can

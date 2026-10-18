@@ -69,10 +69,29 @@ export type GoalProgress = {
   squeezedBy: GoalRef[];
 };
 
+/** A booking linked to a booked goal — what the trip actually cost. */
+export type BookedGoalRedemption = {
+  id: string;
+  description: string;
+  pointsSpent: number;
+  bookedOn: Date;
+  program: { name: string; shortName: string | null; pointsUnit: string };
+};
+
+/** A goal the user has booked: it's out of the allocation, so it has bookings rather than plans. */
+export type BookedGoal = {
+  goal: AwardGoal;
+  name: string;
+  /** Oldest booking first. Empty when it was marked booked without logging one. */
+  redemptions: BookedGoalRedemption[];
+};
+
 export type GoalsProgress = {
-  /** Newest first, the order goals are listed in. */
+  /** Open goals, newest first, the order goals are listed in. */
   goals: GoalProgress[];
   byId: Map<string, GoalProgress>;
+  /** Booked goals, most recently booked first. They hold no points, so they're not in `goals`. */
+  booked: BookedGoal[];
   /** Balances two or more goals want more of than the user holds, worst first. */
   contested: (Omit<ContestedBalance, "goalIds"> & { goals: GoalRef[] })[];
 };
@@ -80,16 +99,18 @@ export type GoalsProgress = {
 /**
  * Every goal's progress with one set of balances shared between them (see
  * `allocateGoals`) — a goal's figure depends on the goals ahead of it, so
- * there's deliberately no single-goal variant.
+ * there's deliberately no single-goal variant. Booked goals sit out the
+ * allocation: the trip is paid for, so it no longer holds points back.
  */
 export async function getGoalsProgress(userId: string): Promise<GoalsProgress> {
-  const [goals, balances] = await Promise.all([
+  const [allGoals, balances] = await Promise.all([
     prisma.awardGoal.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
     prisma.pointsBalance.findMany({
       where: { userId },
       include: { rewardsProgram: { select: { name: true, shortName: true } } },
     }),
   ]);
+  const goals = allGoals.filter((goal) => goal.bookedAt === null);
 
   const awardCosts = await Promise.all(goals.map(findAwardCosts));
   const transferRoutes = await findTransferRoutes(awardCosts.flat().map((c) => c.program.id));
@@ -111,7 +132,8 @@ export async function getGoalsProgress(userId: string): Promise<GoalsProgress> {
   });
 
   const goalById = new Map(goals.map((goal) => [goal.id, goal]));
-  const names = goalNames(goals);
+  // Named across every goal, booked too, so a name doesn't change when a sibling is booked.
+  const names = goalNames(allGoals);
   const toGoals = (ids: string[]): GoalRef[] => ids.map((id) => ({ id, name: names.get(id)! }));
 
   const byId = new Map<string, GoalProgress>();
@@ -132,8 +154,43 @@ export async function getGoalsProgress(userId: string): Promise<GoalsProgress> {
   return {
     goals: goals.map((goal) => byId.get(goal.id)!),
     byId,
+    booked: await findBookedGoals(allGoals, names),
     contested: contested.map(({ goalIds, ...balance }) => ({ ...balance, goals: toGoals(goalIds) })),
   };
+}
+
+async function findBookedGoals(allGoals: AwardGoal[], names: Map<string, string>): Promise<BookedGoal[]> {
+  const booked = allGoals
+    .filter((goal) => goal.bookedAt !== null)
+    .sort((a, b) => b.bookedAt!.getTime() - a.bookedAt!.getTime());
+  if (booked.length === 0) return [];
+
+  const redemptions = await prisma.redemption.findMany({
+    where: { awardGoalId: { in: booked.map((goal) => goal.id) } },
+    orderBy: { bookedOn: "asc" },
+    select: {
+      id: true,
+      description: true,
+      pointsSpent: true,
+      bookedOn: true,
+      awardGoalId: true,
+      rewardsProgram: { select: { name: true, shortName: true, pointsUnit: true } },
+    },
+  });
+
+  return booked.map((goal) => ({
+    goal,
+    name: names.get(goal.id)!,
+    redemptions: redemptions
+      .filter((r) => r.awardGoalId === goal.id)
+      .map((r) => ({
+        id: r.id,
+        description: r.description,
+        pointsSpent: r.pointsSpent,
+        bookedOn: r.bookedOn,
+        program: r.rewardsProgram,
+      })),
+  }));
 }
 
 /** Every active route into the given target programs, with active promos folded into the ratio. */

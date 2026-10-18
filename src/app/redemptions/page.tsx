@@ -6,6 +6,7 @@ import { getRedemptions, type RedemptionRow } from "@/lib/redemptions/get-redemp
 import { MIN_BOOKINGS_FOR_PERSONAL_RATE, type ProgramRateStatus } from "@/lib/redemptions/personal-rates";
 import { sortProgramsByPriority } from "@/lib/program-priority";
 import { AddRedemptionForm } from "@/components/redemptions/add-redemption-form";
+import { goalNames } from "@/lib/goals/cabins";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { ProgramBadge } from "@/components/programs/program-badge";
 import { TicketIcon } from "@/components/icons";
@@ -38,13 +39,11 @@ export default async function RedemptionsPage() {
       },
     }),
     prisma.pointsBalance.findMany({ where: { userId }, select: { rewardsProgramId: true, balance: true } }),
-    prisma.awardGoal.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: { id: true, label: true },
-    }),
+    prisma.awardGoal.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
   ]);
 
+  // Two "Tokyo" goals would be indistinguishable in the picker; this adds the cabin or tier.
+  const goalNameById = goalNames(goals);
   const balanceByProgram = new Map(balances.map((b) => [b.rewardsProgramId, b.balance]));
   const programTypeById = new Map(programs.map((p) => [p.id, p.type]));
   const programById = new Map(programs.map((p) => [p.id, p]));
@@ -140,7 +139,10 @@ export default async function RedemptionsPage() {
             Record what you booked to see the rate you actually got.
           </p>
         </div>
-        <AddRedemptionForm programs={programOptions} goals={goals} />
+        <AddRedemptionForm
+          programs={programOptions}
+          goals={goals.map((g) => ({ id: g.id, label: goalNameById.get(g.id)!, booked: g.bookedAt !== null }))}
+        />
       </section>
     </div>
   );
@@ -189,7 +191,11 @@ function RedemptionItem({
           <DeleteButton
             url={`/api/redemptions/${row.id}`}
             itemLabel={`redemption: ${row.description}`}
-            confirmMessage="Remove this redemption? Your balance won't be changed back."
+            confirmMessage={
+              row.goal?.booked
+                ? `Remove this redemption? Your balance won't be changed back, and ${row.goal.label} stays booked.`
+                : "Remove this redemption? Your balance won't be changed back."
+            }
           />
         </div>
       </div>

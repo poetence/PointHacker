@@ -123,6 +123,8 @@ model AwardGoal {
   /// First of the month the user wants to travel, if known
   targetMonth DateTime?
   notes       String?
+  /// When the user marked the trip booked; a booked goal stops holding points for the others
+  bookedAt    DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
