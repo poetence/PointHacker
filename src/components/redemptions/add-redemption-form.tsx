@@ -220,7 +220,7 @@ export function AddRedemptionForm({
         <Checkbox
           checked={markGoalBooked}
           onChange={(e) => setMarkGoalBooked(e.target.checked)}
-          label={<>This books {goal.label} — stop holding points for it</>}
+          label={<>Mark {goal.label} as booked, so it stops holding points</>}
         />
       )}
 
