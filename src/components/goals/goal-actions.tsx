@@ -4,9 +4,10 @@ import { useInlineEdit } from "@/components/ui/use-inline-edit";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
 import type { GoalFormValues } from "@/lib/goals/goal-form-values";
+import { BookedToggle } from "./booked-toggle";
 import { GoalForm } from "./goal-form";
 
-/** Edit/delete controls for a goal's detail page; the edit form replaces the buttons inline. */
+/** Book/edit/delete controls for an open goal's detail page; the edit form replaces the buttons inline. */
 export function GoalActions({ goalId, initial }: { goalId: string; initial: GoalFormValues }) {
   const { isEditing, setIsEditing, editButtonRef, editorRef } = useInlineEdit<HTMLDivElement>();
 
@@ -25,7 +26,8 @@ export function GoalActions({ goalId, initial }: { goalId: string; initial: Goal
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      <BookedToggle goalId={goalId} booked={false} />
       <Button
         ref={editButtonRef}
         size="sm"

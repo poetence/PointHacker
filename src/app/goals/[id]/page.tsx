@@ -3,15 +3,23 @@ import type { AwardGoal, ProgramType } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { programLabel } from "@/lib/format";
+import { formatCalendarDate, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal, describeGoalUnit } from "@/lib/goals/cabins";
 import { toGoalFormValues } from "@/lib/goals/goal-form-values";
-import { getGoalsProgress, goalOriginZone, type GoalProgress } from "@/lib/goals/get-goal-progress";
+import {
+  getGoalsProgress,
+  goalOriginZone,
+  type BookedGoal,
+  type GoalProgress,
+} from "@/lib/goals/get-goal-progress";
 import { percentCovered, type GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
 import { ORIGIN_ZONE_LABELS, originMultiplier } from "@/lib/goals/origin-adjustment";
 import { getGoalGapCards } from "@/lib/goals/get-goal-gap-cards";
 import { GoalActions } from "@/components/goals/goal-actions";
+import { BookedToggle } from "@/components/goals/booked-toggle";
+import { DeleteButton } from "@/components/ui/delete-button";
+import { LocalDate } from "@/components/ui/local-date";
 import { GoalProgressBar } from "@/components/goals/goal-progress-bar";
 import { GapCardItem } from "@/components/goals/gap-card-item";
 import { SharedPointsNote } from "@/components/goals/shared-points-note";
@@ -29,9 +37,12 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   const userId = await requireSessionUserId();
 
   // Fetched with every other goal: what this one can count depends on the goals ahead of it.
-  const goalProgress = (await getGoalsProgress(userId)).byId.get(id);
+  const allProgress = await getGoalsProgress(userId);
+  const goalProgress = allProgress.byId.get(id);
   if (!goalProgress) {
-    notFound();
+    const booked = allProgress.booked.find((b) => b.goal.id === id);
+    if (!booked) notFound();
+    return <BookedGoalDetail booked={booked} />;
   }
 
   const { goal, shared: progress } = goalProgress;
@@ -44,21 +55,8 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className={pageContainerClass}>
-      <div>
-        <Link href="/goals" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-          &larr; All goals
-        </Link>
-      </div>
-
-      <header className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
-        <RegionScene region={goal.region} className="h-36" />
-        <div className="bg-white px-5 py-4 dark:bg-zinc-900/50">
-          <h1 className={`break-words ${pageTitleClass}`}>{goal.label}</h1>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            {REGION_LABELS[goal.region]} · {describeGoal(goal)}
-          </p>
-        </div>
-      </header>
+      <BackToGoals />
+      <GoalHeader goal={goal} />
 
       <GoalActions goalId={goal.id} initial={toGoalFormValues(goal)} />
 
@@ -122,6 +120,88 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         and change constantly; availability, peak dates, and free-night perks aren&apos;t modeled. Verify with the program before moving points — transfers
         are one-way.
       </p>
+    </div>
+  );
+}
+
+function BackToGoals() {
+  return (
+    <div>
+      <Link href="/goals" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+        &larr; All goals
+      </Link>
+    </div>
+  );
+}
+
+function GoalHeader({ goal }: { goal: AwardGoal }) {
+  return (
+    <header className="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-800">
+      <RegionScene region={goal.region} className="h-36" />
+      <div className="bg-white px-5 py-4 dark:bg-zinc-900/50">
+        <h1 className={`break-words ${pageTitleClass}`}>{goal.label}</h1>
+        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+          {REGION_LABELS[goal.region]} · {describeGoal(goal)}
+        </p>
+      </div>
+    </header>
+  );
+}
+
+/** A booked goal has no plans to show — just what was booked, and a way to reopen it. */
+function BookedGoalDetail({ booked }: { booked: BookedGoal }) {
+  const { goal, redemptions } = booked;
+  return (
+    <div className={pageContainerClass}>
+      <BackToGoals />
+      <GoalHeader goal={goal} />
+
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+        <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">Booked.</p>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          Marked booked on <LocalDate iso={goal.bookedAt!.toISOString()} />. It no longer holds points
+          back, so your other goals are planned without it. Reopen it if the booking fell through.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <BookedToggle goalId={goal.id} booked />
+        <DeleteButton
+          url={`/api/goals/${goal.id}`}
+          itemLabel="this goal"
+          confirmMessage="Delete this goal? Its redemptions stay logged."
+          redirectTo="/goals"
+        />
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className={sectionTitleClass}>What you booked</h2>
+        {redemptions.length === 0 ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No redemption is linked to this goal.{" "}
+            <Link href="/redemptions" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">
+              Log one
+            </Link>{" "}
+            and pick this goal to see what the trip cost and the rate you got.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {redemptions.map((r) => (
+              <li key={r.id} className={`flex flex-wrap items-baseline justify-between gap-2 ${rowCardClass}`}>
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-black dark:text-zinc-50">{r.description}</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    {programLabel(r.program)} · {formatCalendarDate(r.bookedOn)}
+                  </p>
+                </div>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  {r.pointsSpent.toLocaleString("en-US")} {r.program.pointsUnit}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
