@@ -1,0 +1,45 @@
+{
+  "brand": "PointHacker",
+  "tagline": "Get more out of every point",
+  "brief": "A web app that shows people the highest-value way to use their credit-card points: transfer partners vs. portal, by destination, goal and promo. The mark should make the gain obvious, a constant rise, in the spirit of The Points Guy, using at most the P from the name.",
+  "adjectives": [
+    "savvy",
+    "rising",
+    "confident",
+    "travel-ready"
+  ],
+  "criteria": "Success: reads as gain and direction at a glance, uses only the P, recognisable at 16 px, works in one colour, sits on the site's emerald accent.",
+  "industry": "finance",
+  "nav": [
+    "Dashboard",
+    "Goals",
+    "Plan a Trip"
+  ],
+  "brand_color": "#059669",
+  "greyscale": false,
+  "final": true,
+  "designer": "PointHacker",
+  "concepts": [
+    {
+      "name": "Heading Up",
+      "symbol": "../masters/symbol.svg",
+      "lockup": "../masters/horizontal.svg",
+      "stacked": "../masters/stacked.svg",
+      "avatar": "../masters/symbol-small.svg",
+      "symbol_on_dark": "../masters/symbol-on-dark.svg",
+      "lockup_on_dark": "../masters/horizontal-reversed.svg",
+      "stacked_on_dark": "../masters/stacked-reversed.svg",
+      "idea": "A bold P with a navigation arrow cut from its bowl, aimed up and to the right: your points heading somewhere better.",
+      "rationale": [
+        "The arrow points to 45 degrees, the classic up-and-to-the-right of gain, and is also the travel-app 'navigate' arrow",
+        "Uses only the P; the wordmark is Space Grotesk 600, the site's own heading face, outlined",
+        "A dedicated small cut with a larger arrow keeps the idea alive at 16 px",
+        "One colour: emerald-600, the site's single accent, so the mark and the UI speak with one voice"
+      ],
+      "symbol_on_tile": "../masters/symbol-reversed.svg",
+      "lockup_on_tile": "../masters/horizontal-white.svg",
+      "stacked_on_tile": "../export/stacked/pointhacker-stacked-white.svg"
+    }
+  ],
+  "recommendation": "Use the horizontal lockup in the header, the symbol alone in tight spots, and the small cut for favicons and icons under 48 px."
+}
