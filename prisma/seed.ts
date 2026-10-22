@@ -54,7 +54,12 @@ async function seedPrograms(): Promise<ProgramIds> {
   return programIds;
 }
 
-async function seedTransferPartners(programIds: ProgramIds) {
+/**
+ * Upserts every listed relationship and marks the rest inactive — deleting
+ * would cascade away the promos logged against a route that has since ended.
+ */
+async function seedTransferPartners(programIds: ProgramIds): Promise<number> {
+  const seededIds: string[] = [];
   for (const partner of referenceTransferPartners) {
     const fromProgramId = programIds.get(partner.fromProgram);
     const toProgramId = programIds.get(partner.toProgram);
@@ -71,12 +76,36 @@ async function seedTransferPartners(programIds: ProgramIds) {
       transferFeeCents: partner.transferFeeCents,
       estimatedRedemptionValueCents: partner.estimatedRedemptionValueCents,
       notes: partner.notes,
+      isActive: true,
     };
-    await prisma.transferPartner.upsert({
+    const record = await prisma.transferPartner.upsert({
       where: { fromProgramId_toProgramId: { fromProgramId, toProgramId } },
       update: data,
       create: { fromProgramId, toProgramId, ...data },
     });
+    seededIds.push(record.id);
+  }
+
+  const retired = await prisma.transferPartner.updateMany({
+    where: { id: { notIn: seededIds }, isActive: true },
+    data: { isActive: false },
+  });
+  return retired.count;
+}
+
+const routesByFromProgram = new Map<string, Set<string>>();
+for (const partner of referenceTransferPartners) {
+  const routes = routesByFromProgram.get(partner.fromProgram) ?? new Set<string>();
+  routes.add(partner.toProgram);
+  routesByFromProgram.set(partner.fromProgram, routes);
+}
+
+/** A card-level ratio for a route its program doesn't have would never be read. */
+function assertOverridesMatchRoutes(card: (typeof referenceCards)[number]) {
+  for (const toProgram of Object.keys(card.transferRatioOverrides ?? {})) {
+    if (!routesByFromProgram.get(card.program)?.has(toProgram)) {
+      throw new Error(`Card ${card.issuer} ${card.name} overrides ${card.program} -> ${toProgram}, which isn't a route`);
+    }
   }
 }
 
@@ -87,6 +116,7 @@ async function seedCards(programIds: ProgramIds) {
       card.program,
       `Unknown program for card ${card.issuer} ${card.name}`
     );
+    assertOverridesMatchRoutes(card);
 
     const data = {
       rewardsProgramId,
@@ -96,6 +126,8 @@ async function seedCards(programIds: ProgramIds) {
       welcomeBonusMonths: card.welcomeBonusMonths ?? null,
       baseEarnRate: card.baseEarnRate,
       earnRates: card.earnRates ?? {},
+      soloTransferShare: card.soloTransferShare ?? 1,
+      transferRatioOverrides: card.transferRatioOverrides ?? {},
       notes: card.notes,
     };
     await prisma.cardProduct.upsert({
@@ -150,13 +182,13 @@ async function seedHotelAwardCosts(programIds: ProgramIds): Promise<number> {
 
 async function main() {
   const programIds = await seedPrograms();
-  await seedTransferPartners(programIds);
+  const retiredRoutes = await seedTransferPartners(programIds);
   await seedCards(programIds);
   const awardCostRows = await seedFlightAwardCosts(programIds);
   const hotelCostRows = await seedHotelAwardCosts(programIds);
 
   console.log(
-    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners, ${referenceCards.length} cards, ${awardCostRows} flight award costs, and ${hotelCostRows} hotel award costs.`
+    `Seeded ${referencePrograms.length} programs, ${referenceTransferPartners.length} transfer partners (${retiredRoutes} retired), ${referenceCards.length} cards, ${awardCostRows} flight award costs, and ${hotelCostRows} hotel award costs.`
   );
 }
 
