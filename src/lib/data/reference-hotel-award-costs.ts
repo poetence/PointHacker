@@ -11,7 +11,9 @@
 //
 // Checked against 2026 sources in October 2026 (Hyatt's May 2026 five-tier chart —
 // these match its "Low" tier — Wyndham's new tiers, and the typical ranges for
-// the dynamic programs). I Prefer has no current source and isn't verified.
+// the dynamic programs). I Prefer's rows sit on its six published reward-night
+// bands (15,000 to 150,000; AwardWallet, Sep 2025); which band a region's hotels
+// usually fall in isn't published, so the band choice is a judgment call.
 //
 // A program only gets rows for regions it's tagged with in `reference-programs`;
 // the seed throws if a row references an untagged region or unknown program.
@@ -92,9 +94,10 @@ export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
   { program: "Accor Live Limitless", region: "AFRICA", perNight: { STANDARD: 5_000, UPSCALE: 9_000, LUXURY: 20_000 } },
   { program: "Accor Live Limitless", region: "SOUTH_AMERICA", perNight: { STANDARD: 4_000, UPSCALE: 8_000, LUXURY: 18_000 } },
 
-  // I Prefer Hotel Rewards — certificates toward independent upscale and luxury hotels.
-  { program: "I Prefer Hotel Rewards", region: "NORTH_AMERICA", perNight: { UPSCALE: 50_000, LUXURY: 90_000 } },
-  { program: "I Prefer Hotel Rewards", region: "EUROPE", perNight: { UPSCALE: 50_000, LUXURY: 90_000 } },
-  { program: "I Prefer Hotel Rewards", region: "ASIA", perNight: { UPSCALE: 40_000, LUXURY: 80_000 } },
-  { program: "I Prefer Hotel Rewards", region: "CARIBBEAN", perNight: { UPSCALE: 60_000, LUXURY: 110_000 } },
+  // I Prefer Hotel Rewards — reward nights at independent upscale and luxury hotels, in bands
+  // of 15,000 / 30,000 / 50,000 / 75,000 / 100,000 / 150,000.
+  { program: "I Prefer Hotel Rewards", region: "NORTH_AMERICA", perNight: { UPSCALE: 50_000, LUXURY: 100_000 } },
+  { program: "I Prefer Hotel Rewards", region: "EUROPE", perNight: { UPSCALE: 50_000, LUXURY: 100_000 } },
+  { program: "I Prefer Hotel Rewards", region: "ASIA", perNight: { UPSCALE: 30_000, LUXURY: 75_000 } },
+  { program: "I Prefer Hotel Rewards", region: "CARIBBEAN", perNight: { UPSCALE: 50_000, LUXURY: 100_000 } },
 ];
