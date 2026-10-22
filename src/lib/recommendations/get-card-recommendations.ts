@@ -1,5 +1,6 @@
 import type { SpendingProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { PersonalRates } from "@/lib/redemptions/personal-rates";
 import {
   SPEND_CATEGORIES,
   SPEND_CENTS_FIELD,
@@ -34,7 +35,8 @@ export function findHeldCards(userId: string) {
 
 export async function getCardRecommendations(
   userId: string,
-  profile: SpendingProfile
+  profile: SpendingProfile,
+  personalRates: PersonalRates
 ): Promise<ScoreCardsResult> {
   const [cards, heldCards] = await Promise.all([
     prisma.cardProduct.findMany({
@@ -66,5 +68,6 @@ export async function getCardRecommendations(
       earnRates: (card.earnRates ?? {}) as EarnRates,
     })),
     ...indexHeldCards(heldCards),
+    personalRates,
   });
 }

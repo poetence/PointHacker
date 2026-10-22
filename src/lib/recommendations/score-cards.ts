@@ -2,6 +2,7 @@
 // Pure and DB-agnostic — callers map Prisma records into these input shapes.
 
 import type { ProgramType } from "@/lib/program-type";
+import type { PersonalRates, ProgramRateStatus } from "@/lib/redemptions/personal-rates";
 import {
   SPEND_CATEGORIES,
   type EarnRates,
@@ -46,6 +47,10 @@ export type CardRecommendation = {
   earnValueCents: number;
   welcomeBonusValueCents: number;
   bonusEarned: boolean;
+  /** What one of the card's points is worth here: the user's own rate in its program, else the estimate. */
+  centsPerPoint: number;
+  /** Set when `centsPerPoint` is the user's own rate. */
+  personalRate: ProgramRateStatus | null;
   firstYearValueCents: number;
   ongoingValueCents: number;
 };
@@ -97,11 +102,14 @@ export function scoreCards({
   cards,
   heldCardKeys,
   heldCardProductIds = new Set(),
+  personalRates,
 }: {
   profile: ScoringProfile;
   cards: ScoringCard[];
   heldCardKeys: Set<string>;
   heldCardProductIds?: Set<string>;
+  /** Required so no caller silently scores on estimates; pass `NO_PERSONAL_RATES` to opt out. */
+  personalRates: PersonalRates;
 }): ScoreCardsResult {
   const alreadyHeld: ScoringCard[] = [];
   const candidates: ScoringCard[] = [];
@@ -121,7 +129,7 @@ export function scoreCards({
   }
 
   const ranked = candidates
-    .map((card) => scoreCard(card, profile))
+    .map((card) => scoreCard(card, profile, personalRates))
     .sort((a, b) => b.firstYearValueCents - a.firstYearValueCents);
 
   const bestByCategory: Partial<Record<SpendCategory, CardRecommendation>> = {};
@@ -140,7 +148,7 @@ function bestCardForCategory(
   category: SpendCategory
 ): CardRecommendation | null {
   const centsPerDollar = (rec: CardRecommendation) =>
-    effectiveRate(rec.card, category) * rec.card.program.defaultRedemptionValueCents;
+    effectiveRate(rec.card, category) * rec.centsPerPoint;
 
   let best: CardRecommendation | null = null;
   for (const rec of ranked) {
@@ -155,7 +163,11 @@ function matchesPreference(type: ScoringProgramType, preference: RewardsPreferen
   return type === "BANK_TRANSFERABLE" || type === "AIRLINE" || type === "HOTEL";
 }
 
-function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendation {
+function scoreCard(
+  card: ScoringCard,
+  profile: ScoringProfile,
+  personalRates: PersonalRates
+): CardRecommendation {
   const pointsByCategory = {} as Record<SpendCategory, number>;
   let annualPoints = 0;
   let monthlySpendCents = 0;
@@ -168,7 +180,10 @@ function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendati
     annualPoints += points;
   }
 
-  const cpp = card.program.defaultRedemptionValueCents;
+  // Only airline and hotel programs carry personal rates, so this reaches co-brand
+  // cards; bank and cashback cards keep the program's estimate.
+  const personalRate = personalRates.get(card.program.id) ?? null;
+  const cpp = personalRate?.centsPerPoint ?? card.program.defaultRedemptionValueCents;
   const earnValueCents = annualPoints * cpp;
 
   const bonusEarned =
@@ -185,6 +200,8 @@ function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendati
     earnValueCents,
     welcomeBonusValueCents,
     bonusEarned,
+    centsPerPoint: cpp,
+    personalRate,
     firstYearValueCents: earnValueCents + welcomeBonusValueCents - card.annualFeeCents,
     ongoingValueCents: earnValueCents - card.annualFeeCents,
   };
