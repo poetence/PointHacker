@@ -48,7 +48,8 @@ account only sees and manages its own cards and balances.
   set your monthly spend by category (sliders) and preferences; a curated catalog of 19 popular
   cards is scored by estimated first-year value, each shown as a generated card-art tile with an
   explicit earns / welcome bonus / annual fee breakdown, the best card per category, and cards
-  you already hold excluded
+  you already hold excluded. An airline or hotel card's points are valued at your own rate once
+  you have one in that program
 - **Card wallet** — add the cards you hold by picking from the catalog (or as a custom entry),
   so they feed the right program balance and drop out of recommendations
 - **Catalog** — browse all 26 seeded reference programs (bank-transferable currencies, airlines,
