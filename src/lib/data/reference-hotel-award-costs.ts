@@ -9,6 +9,10 @@
 // price dynamically now, so treat these as "what a decent night costs", not a
 // quote. Verify with the program before booking.
 //
+// Checked against 2026 sources in October 2026 (Hyatt's May 2026 five-tier chart —
+// these match its "Low" tier — Wyndham's new tiers, and the typical ranges for
+// the dynamic programs). I Prefer has no current source and isn't verified.
+//
 // A program only gets rows for regions it's tagged with in `reference-programs`;
 // the seed throws if a row references an untagged region or unknown program.
 
@@ -28,7 +32,7 @@ export type ReferenceHotelAwardCost = {
 };
 
 export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
-  // World of Hyatt — fixed category chart; cat 1–2 / 4–5 / 6–7 standard rates.
+  // World of Hyatt — fixed category chart; cat 1–2 / 4–5 / 6–7 at the five-tier chart's "Low" rate.
   { program: "World of Hyatt", region: "NORTH_AMERICA", perNight: { STANDARD: 8_000, UPSCALE: 17_000, LUXURY: 30_000 } },
   { program: "World of Hyatt", region: "EUROPE", perNight: { STANDARD: 8_000, UPSCALE: 20_000, LUXURY: 35_000 } },
   { program: "World of Hyatt", region: "ASIA", perNight: { STANDARD: 6_000, UPSCALE: 15_000, LUXURY: 30_000 } },
@@ -48,7 +52,7 @@ export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
   { program: "Marriott Bonvoy", region: "CARIBBEAN", perNight: { STANDARD: 30_000, UPSCALE: 60_000, LUXURY: 100_000 } },
 
   // Hilton Honors — dynamic; big numbers, 5th night free on standard awards not modeled.
-  { program: "Hilton Honors", region: "NORTH_AMERICA", perNight: { STANDARD: 30_000, UPSCALE: 65_000, LUXURY: 120_000 } },
+  { program: "Hilton Honors", region: "NORTH_AMERICA", perNight: { STANDARD: 30_000, UPSCALE: 60_000, LUXURY: 120_000 } },
   { program: "Hilton Honors", region: "SOUTH_AMERICA", perNight: { STANDARD: 20_000, UPSCALE: 45_000, LUXURY: 90_000 } },
   { program: "Hilton Honors", region: "EUROPE", perNight: { STANDARD: 30_000, UPSCALE: 60_000, LUXURY: 110_000 } },
   { program: "Hilton Honors", region: "ASIA", perNight: { STANDARD: 20_000, UPSCALE: 45_000, LUXURY: 95_000 } },
@@ -70,12 +74,13 @@ export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
   // Choice Privileges — mostly economy/midscale; "luxury" is the Ascend/Cambria top end.
   { program: "Choice Privileges", region: "NORTH_AMERICA", perNight: { STANDARD: 10_000, UPSCALE: 20_000, LUXURY: 35_000 } },
   { program: "Choice Privileges", region: "EUROPE", perNight: { STANDARD: 12_000, UPSCALE: 25_000, LUXURY: 40_000 } },
-  { program: "Choice Privileges", region: "ASIA", perNight: { STANDARD: 8_000, UPSCALE: 15_000 }, notes: "Mostly Japan" },
+  { program: "Choice Privileges", region: "ASIA", perNight: { STANDARD: 8_000, UPSCALE: 20_000 }, notes: "Mostly Japan: regional hotels ~8,000; central Tokyo 20,000–30,000 since June 2026" },
 
-  // Wyndham Rewards — fixed chart: 7,500 / 15,000 / 30,000 a night.
-  { program: "Wyndham Rewards", region: "NORTH_AMERICA", perNight: { STANDARD: 7_500, UPSCALE: 15_000, LUXURY: 30_000 } },
-  { program: "Wyndham Rewards", region: "EUROPE", perNight: { STANDARD: 7_500, UPSCALE: 15_000, LUXURY: 30_000 } },
-  { program: "Wyndham Rewards", region: "ASIA", perNight: { STANDARD: 7_500, UPSCALE: 15_000 } },
+  // Wyndham Rewards — fixed four-tier chart since Sep 15, 2026: 5,000 / 15,000 / 30,000, plus
+  // 45,000 for a few top hotels. Hotels are being redistributed across the tiers.
+  { program: "Wyndham Rewards", region: "NORTH_AMERICA", perNight: { STANDARD: 5_000, UPSCALE: 15_000, LUXURY: 30_000 } },
+  { program: "Wyndham Rewards", region: "EUROPE", perNight: { STANDARD: 5_000, UPSCALE: 15_000, LUXURY: 30_000 } },
+  { program: "Wyndham Rewards", region: "ASIA", perNight: { STANDARD: 5_000, UPSCALE: 15_000 } },
   { program: "Wyndham Rewards", region: "CARIBBEAN", perNight: { STANDARD: 15_000, UPSCALE: 30_000 }, notes: "Mostly all-inclusive resorts and Vacasa rentals" },
 
   // Accor Live Limitless — revenue-based, so these follow typical cash rates (~2.1¢ a point).
