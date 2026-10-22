@@ -312,6 +312,10 @@ model CardProduct {
   baseEarnRate           Decimal        @db.Decimal(4, 2)
   /// { DINING: 4, GROCERIES: 4, ... } overrides keyed by SpendCategory
   earnRates              Json           @default("{}")
+  /// Share of each transfer ratio the card's points get without a full-transfer card in the same program; 0 = none
+  soloTransferShare      Decimal        @default(1) @db.Decimal(3, 2)
+  /// { "<destination program name>": { ratioFrom, ratioTo } } where this card's ratio differs from the program's
+  transferRatioOverrides Json           @default("{}")
   notes                  String?
   isActive               Boolean        @default(true)
   createdAt              DateTime       @default(now())

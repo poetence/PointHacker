@@ -159,6 +159,12 @@ export async function getGoalsProgress(userId: string): Promise<GoalsProgress> {
   };
 }
 
+/** Every program that prices at least one open goal — what the card recommender counts as useful. Null with no goals. */
+export function goalProgramIds({ goals }: GoalsProgress): ReadonlySet<string> | null {
+  if (goals.length === 0) return null;
+  return new Set(goals.flatMap((goal) => goal.standalonePlans.map((plan) => plan.program.id)));
+}
+
 async function findBookedGoals(allGoals: AwardGoal[], names: Map<string, string>): Promise<BookedGoal[]> {
   const booked = allGoals
     .filter((goal) => goal.bookedAt !== null)

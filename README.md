@@ -48,10 +48,14 @@ account only sees and manages its own cards and balances.
   set your monthly spend by category (sliders) and preferences; a curated catalog of 19 popular
   cards is scored by estimated first-year value, each shown as a generated card-art tile with an
   explicit earns / welcome bonus / annual fee breakdown, the best card per category, and cards
-  you already hold excluded
+  you already hold excluded. Each card's points are valued at their best use — directly or
+  through any of its bank's transfer partners, at your own rate where you have one — and, once
+  you've set goals, partners that can't book any of them count for half, so a card that only
+  reaches airlines you aren't flying drops down the list. Card-level transfer rules are modeled
+  too (a Freedom Unlimited transfers only alongside a Sapphire; Citi's no-fee cards get 70%)
 - **Card wallet** — add the cards you hold by picking from the catalog (or as a custom entry),
   so they feed the right program balance and drop out of recommendations
-- **Catalog** — browse all 26 seeded reference programs (bank-transferable currencies, airlines,
+- **Catalog** — browse all 44 seeded reference programs (bank-transferable currencies, airlines,
   hotels, cashback) without needing a balance first
 
 All valuations, earn rates, transfer ratios, award prices, and expiration policies are

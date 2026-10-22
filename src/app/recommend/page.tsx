@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents, programLabel } from "@/lib/format";
+import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
-import { getGoalsProgress, type GoalProgress } from "@/lib/goals/get-goal-progress";
+import { getGoalsProgress, goalProgramIds, type GoalProgress } from "@/lib/goals/get-goal-progress";
 import { SharedPointsNote } from "@/components/goals/shared-points-note";
 import { getGoalGapCards, type GoalGapCardsResult } from "@/lib/goals/get-goal-gap-cards";
 import type { GoalTargetPlan } from "@/lib/goals/compute-goal-progress";
@@ -20,6 +20,9 @@ import {
   toScoringProfile,
 } from "@/lib/recommendations/get-card-recommendations";
 import { effectiveRate, type CardRecommendation } from "@/lib/recommendations/score-cards";
+import { OFF_PLAN_VALUE_SHARE, type TransferAccess } from "@/lib/recommendations/card-point-value";
+import { getPersonalRates } from "@/lib/redemptions/get-redemptions";
+import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
@@ -41,12 +44,16 @@ export default async function RecommendPage({
   const { goal: goalParam } = await searchParams;
   const userId = await requireSessionUserId();
 
-  const [profile, goalsProgress] = await Promise.all([
+  const [profile, goalsProgress, personalRates] = await Promise.all([
     prisma.spendingProfile.findUnique({ where: { userId } }),
     getGoalsProgress(userId),
+    getPersonalRates(userId),
   ]);
   const goals = goalsProgress.goals.map((p) => p.goal);
-  const result = profile ? await getCardRecommendations(userId, profile) : null;
+  const hasGoals = goalsProgress.goals.length > 0;
+  const result = profile
+    ? await getCardRecommendations(userId, profile, personalRates, goalProgramIds(goalsProgress))
+    : null;
   const top = result?.ranked.slice(0, 8) ?? [];
 
   const activeGoal = goals.find((g) => g.id === goalParam) ?? goals[0] ?? null;
@@ -116,6 +123,7 @@ export default async function RecommendPage({
                     key={rec.card.id}
                     rec={rec}
                     index={index}
+                    hasGoals={hasGoals}
                     contribution={gapCards?.byCardId.get(rec.card.id)}
                   />
                 ))}
@@ -163,8 +171,13 @@ export default async function RecommendPage({
 
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
             Estimates only: earn rates, fees, and bonuses are snapshots of public offers and change
-            often. Statement credits, lounge access, and category caps aren&apos;t modeled. Verify
-            with the issuer before applying.
+            often. Points are valued at their best use, directly or through a transfer partner
+            (promos left out — they last weeks, a card lasts years), at your own rate where
+            you&apos;ve logged enough bookings.
+            {hasGoals &&
+              ` A use that can't book any of your goals counts at ${OFF_PLAN_VALUE_SHARE * 100}%.`}{" "}
+            Statement credits, lounge access, and category caps aren&apos;t modeled. Verify with the
+            issuer before applying.
           </p>
         </>
       )}
@@ -250,12 +263,19 @@ function GoalGap({
 function RecommendationRow({
   rec,
   index,
+  hasGoals,
   contribution,
 }: {
   rec: CardRecommendation;
   index: number;
+  hasGoals: boolean;
   contribution: CardGapContribution | undefined;
 }) {
+  const { best } = rec.pointValue;
+  const notes = [transferAccessNote(rec.pointValue.access), hasGoals ? goalFitNote(rec) : null].filter(
+    (note) => note !== null
+  );
+
   return (
     <li
       className={`flex flex-col gap-3 ${rowCardClass} ${
@@ -271,8 +291,22 @@ function RecommendationRow({
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
             {programLabel(rec.card.program)}{" "}
-            {rec.card.program.pointsUnit}/yr
+            {rec.card.program.pointsUnit}/yr ·{" "}
+            <span className="whitespace-nowrap">
+              {formatCentsPerPoint(rec.pointValue.centsPerPoint)} each
+            </span>
+            {best.kind === "transfer" && (
+              <>
+                {" "}
+                <span className="whitespace-nowrap">via {programLabel(best.program)}</span>
+              </>
+            )}
+            <wbr />
+            {best.personalRate && <PersonalRatePill rate={best.personalRate} />}
           </p>
+          {notes.length > 0 && (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{notes.join(" ")}</p>
+          )}
         </div>
         <div className="w-full sm:w-auto sm:text-right">
           <p className="font-display text-xl font-semibold text-black dark:text-zinc-50">
@@ -320,6 +354,46 @@ function RecommendationRow({
       </Breakdown>
     </li>
   );
+}
+
+function cardNames(cards: { issuer: string; name: string }[]): string {
+  return cards.map((card) => `${card.issuer} ${card.name}`).join(" or ");
+}
+
+/** Says when a card's points can't move on their own — or move on another card's terms. */
+function transferAccessNote(access: TransferAccess): string | null {
+  switch (access.kind) {
+    case "full":
+      return null;
+    case "pooled":
+      return `Pooled with your ${cardNames(access.withCards)}, its points transfer on that card's terms.`;
+    case "reduced":
+      return `Transfers at ${Math.round(access.share * 100)}% of the usual ratio${
+        access.fullCards.length > 0 ? ` unless pooled with a ${cardNames(access.fullCards)}` : ""
+      }.`;
+    case "none":
+      return `Transfers only alongside a ${cardNames(access.fullCards)}.`;
+  }
+}
+
+/** Which of the card's uses book the user's goals — the ones counted in full. Null for a cash card. */
+function goalFitNote(rec: CardRecommendation): string | null {
+  const tripUses = rec.pointValue.uses.filter(
+    (use) => use.program.type === "AIRLINE" || use.program.type === "HOTEL"
+  );
+  const booking = tripUses.filter((use) => use.servesGoals).map((use) => programLabel(use.program));
+  if (booking.length > 0) {
+    const shown = booking.slice(0, 3).join(", ");
+    const more = booking.length > 3 ? ` and ${booking.length - 3} more` : "";
+    return `Books your goals through ${shown}${more}.`;
+  }
+  if (tripUses.length === 0) return null;
+  // Nothing it reaches prices a goal, so cash (a bank card's direct use) or a discounted trip program wins.
+  if (rec.pointValue.best.servesGoals) {
+    return "None of its partners price your goals, so its points are valued as cash.";
+  }
+  const subject = tripUses.length === 1 ? `${programLabel(tripUses[0].program)} doesn't` : "None of its programs";
+  return `${subject} price any of your goals, so its points count at ${OFF_PLAN_VALUE_SHARE * 100}%.`;
 }
 
 /** The welcome-bonus cell: its value when the spending earns it, else what it would take. */

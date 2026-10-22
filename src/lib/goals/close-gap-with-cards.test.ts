@@ -68,6 +68,20 @@ describe("closeGapWithCards", () => {
     });
   });
 
+  it("follows the card's own transfer terms: none alone, or a share of the ratio", () => {
+    const result = closeGapWithCards({
+      plans: [plan(united, 100_000, 100_000)],
+      cards: [
+        { id: "freedom", programId: "chase", welcomeBonusPoints: 20_000, transferFactor: () => 0 },
+        { id: "reduced", programId: "chase", welcomeBonusPoints: 20_000, transferFactor: () => 0.7 },
+      ],
+      transferRoutes: [chaseToUnited],
+    });
+
+    expect(result.has("freedom")).toBe(false);
+    expect(result.get("reduced")?.pointsContributed).toBe(14_000);
+  });
+
   it("prefers a plan it closes outright over one it merely dents, then the cheaper trip", () => {
     const result = closeGapWithCards({
       plans: [plan(united, 176_000, 10_000), plan(virgin, 190_000, 200_000)],

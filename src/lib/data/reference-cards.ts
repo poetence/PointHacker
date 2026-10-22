@@ -19,6 +19,19 @@ export type ReferenceCard = {
   earnRates?: EarnRates;
   /** Drives the generated card-art tile; premium cards get a dark metallic treatment. */
   tier?: "premium";
+  /**
+   * Share of each transfer ratio this card's points get on their own, when the
+   * wallet holds no card in the same program that transfers in full: 0 means
+   * no transfers at all (Freedom Unlimited), 0.7 is Citi's no-fee rate.
+   * Defaults to 1. Pooled with a full-transfer card, the points move on that
+   * card's terms instead.
+   */
+  soloTransferShare?: number;
+  /**
+   * Where this card's ratio differs from the program's, keyed by the
+   * destination program's `name` — e.g. the Sapphire Preferred's 4:3 to Hyatt.
+   */
+  transferRatioOverrides?: Record<string, { ratioFrom: number; ratioTo: number }>;
   notes?: string;
 };
 
@@ -34,7 +47,8 @@ export const referenceCards: ReferenceCard[] = [
     welcomeBonusMonths: 3,
     baseEarnRate: 1,
     earnRates: { DINING: 3, TRAVEL: 2, ONLINE: 3 },
-    notes: "3x on dining and select streaming; 2x on travel; 5x on Chase Travel.",
+    transferRatioOverrides: { "World of Hyatt": { ratioFrom: 4, ratioTo: 3 } },
+    notes: "3x on dining and select streaming; 2x on travel; 5x on Chase Travel. Hyatt transfers are 4:3 since Oct 1, 2026.",
   },
   {
     issuer: "Chase",
@@ -59,6 +73,8 @@ export const referenceCards: ReferenceCard[] = [
     welcomeBonusMonths: 3,
     baseEarnRate: 1.5,
     earnRates: { DINING: 3 },
+    soloTransferShare: 0,
+    notes: "Points transfer only once combined with a Sapphire card's.",
   },
   {
     issuer: "Chase",
@@ -213,6 +229,8 @@ export const referenceCards: ReferenceCard[] = [
     welcomeBonusSpendCents: 150000,
     welcomeBonusMonths: 6,
     baseEarnRate: 2,
+    soloTransferShare: 0.7,
+    notes: "Transfers at 70% of the usual ratio unless combined with a Strata Premier's points.",
   },
 
   // Others

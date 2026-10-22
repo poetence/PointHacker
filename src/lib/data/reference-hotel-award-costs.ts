@@ -33,6 +33,9 @@ export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
   { program: "World of Hyatt", region: "EUROPE", perNight: { STANDARD: 8_000, UPSCALE: 20_000, LUXURY: 35_000 } },
   { program: "World of Hyatt", region: "ASIA", perNight: { STANDARD: 6_000, UPSCALE: 15_000, LUXURY: 30_000 } },
   { program: "World of Hyatt", region: "CARIBBEAN", perNight: { STANDARD: 12_000, UPSCALE: 25_000, LUXURY: 40_000 } },
+  { program: "World of Hyatt", region: "MIDDLE_EAST", perNight: { STANDARD: 8_000, UPSCALE: 15_000, LUXURY: 25_000 } },
+  { program: "World of Hyatt", region: "OCEANIA", perNight: { STANDARD: 12_000, UPSCALE: 20_000, LUXURY: 40_000 } },
+  { program: "World of Hyatt", region: "SOUTH_AMERICA", perNight: { STANDARD: 8_000, UPSCALE: 15_000, LUXURY: 25_000 } },
 
   // Marriott Bonvoy — dynamic; typical off-peak-ish nights.
   { program: "Marriott Bonvoy", region: "NORTH_AMERICA", perNight: { STANDARD: 20_000, UPSCALE: 45_000, LUXURY: 85_000 } },
@@ -61,8 +64,32 @@ export const referenceHotelAwardCosts: ReferenceHotelAwardCost[] = [
   { program: "IHG One Rewards", region: "AFRICA", perNight: { STANDARD: 20_000, UPSCALE: 40_000, LUXURY: 70_000 } },
   { program: "IHG One Rewards", region: "MIDDLE_EAST", perNight: { STANDARD: 20_000, UPSCALE: 40_000, LUXURY: 70_000 } },
   { program: "IHG One Rewards", region: "CARIBBEAN", perNight: { STANDARD: 30_000, UPSCALE: 55_000, LUXURY: 90_000 } },
+  { program: "IHG One Rewards", region: "SOUTH_AMERICA", perNight: { STANDARD: 15_000, UPSCALE: 30_000, LUXURY: 60_000 } },
+  { program: "IHG One Rewards", region: "OCEANIA", perNight: { STANDARD: 20_000, UPSCALE: 45_000, LUXURY: 80_000 } },
 
   // Choice Privileges — mostly economy/midscale; "luxury" is the Ascend/Cambria top end.
   { program: "Choice Privileges", region: "NORTH_AMERICA", perNight: { STANDARD: 10_000, UPSCALE: 20_000, LUXURY: 35_000 } },
   { program: "Choice Privileges", region: "EUROPE", perNight: { STANDARD: 12_000, UPSCALE: 25_000, LUXURY: 40_000 } },
+  { program: "Choice Privileges", region: "ASIA", perNight: { STANDARD: 8_000, UPSCALE: 15_000 }, notes: "Mostly Japan" },
+
+  // Wyndham Rewards — fixed chart: 7,500 / 15,000 / 30,000 a night.
+  { program: "Wyndham Rewards", region: "NORTH_AMERICA", perNight: { STANDARD: 7_500, UPSCALE: 15_000, LUXURY: 30_000 } },
+  { program: "Wyndham Rewards", region: "EUROPE", perNight: { STANDARD: 7_500, UPSCALE: 15_000, LUXURY: 30_000 } },
+  { program: "Wyndham Rewards", region: "ASIA", perNight: { STANDARD: 7_500, UPSCALE: 15_000 } },
+  { program: "Wyndham Rewards", region: "CARIBBEAN", perNight: { STANDARD: 15_000, UPSCALE: 30_000 }, notes: "Mostly all-inclusive resorts and Vacasa rentals" },
+
+  // Accor Live Limitless — revenue-based, so these follow typical cash rates (~2.1¢ a point).
+  { program: "Accor Live Limitless", region: "NORTH_AMERICA", perNight: { STANDARD: 7_000, UPSCALE: 13_000, LUXURY: 30_000 } },
+  { program: "Accor Live Limitless", region: "EUROPE", perNight: { STANDARD: 6_000, UPSCALE: 11_000, LUXURY: 25_000 } },
+  { program: "Accor Live Limitless", region: "ASIA", perNight: { STANDARD: 4_000, UPSCALE: 8_000, LUXURY: 20_000 } },
+  { program: "Accor Live Limitless", region: "OCEANIA", perNight: { STANDARD: 6_000, UPSCALE: 11_000, LUXURY: 25_000 } },
+  { program: "Accor Live Limitless", region: "MIDDLE_EAST", perNight: { STANDARD: 5_000, UPSCALE: 10_000, LUXURY: 22_000 } },
+  { program: "Accor Live Limitless", region: "AFRICA", perNight: { STANDARD: 5_000, UPSCALE: 9_000, LUXURY: 20_000 } },
+  { program: "Accor Live Limitless", region: "SOUTH_AMERICA", perNight: { STANDARD: 4_000, UPSCALE: 8_000, LUXURY: 18_000 } },
+
+  // I Prefer Hotel Rewards — certificates toward independent upscale and luxury hotels.
+  { program: "I Prefer Hotel Rewards", region: "NORTH_AMERICA", perNight: { UPSCALE: 50_000, LUXURY: 90_000 } },
+  { program: "I Prefer Hotel Rewards", region: "EUROPE", perNight: { UPSCALE: 50_000, LUXURY: 90_000 } },
+  { program: "I Prefer Hotel Rewards", region: "ASIA", perNight: { UPSCALE: 40_000, LUXURY: 80_000 } },
+  { program: "I Prefer Hotel Rewards", region: "CARIBBEAN", perNight: { UPSCALE: 60_000, LUXURY: 110_000 } },
 ];

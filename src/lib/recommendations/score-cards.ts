@@ -2,12 +2,20 @@
 // Pure and DB-agnostic — callers map Prisma records into these input shapes.
 
 import type { ProgramType } from "@/lib/program-type";
+import type { PersonalRates } from "@/lib/redemptions/personal-rates";
 import {
   SPEND_CATEGORIES,
   type EarnRates,
   type MonthlySpendCents,
   type SpendCategory,
 } from "@/lib/spend-categories";
+import {
+  resolveCardTransfers,
+  valueCardPoints,
+  type CardPointValue,
+  type PointRoute,
+  type Ratio,
+} from "./card-point-value";
 
 export type RewardsPreference = "ANY" | "TRAVEL" | "CASHBACK";
 
@@ -37,6 +45,12 @@ export type ScoringCard = {
   welcomeBonusMonths: number | null;
   baseEarnRate: number;
   earnRates: EarnRates;
+  /** Share of each route's ratio the card gets on its own; 0 = no transfers, 1 = full. */
+  soloTransferShare: number;
+  /** Keyed by destination program id. */
+  transferRatioOverrides: Record<string, Ratio>;
+  /** The program's transfer routes, at its own ratios. */
+  routes: PointRoute[];
 };
 
 export type CardRecommendation = {
@@ -46,6 +60,8 @@ export type CardRecommendation = {
   earnValueCents: number;
   welcomeBonusValueCents: number;
   bonusEarned: boolean;
+  /** What one of the card's points is worth to this user, and the use that gets it. */
+  pointValue: CardPointValue;
   firstYearValueCents: number;
   ongoingValueCents: number;
 };
@@ -97,11 +113,17 @@ export function scoreCards({
   cards,
   heldCardKeys,
   heldCardProductIds = new Set(),
+  personalRates,
+  goalProgramIds,
 }: {
   profile: ScoringProfile;
   cards: ScoringCard[];
   heldCardKeys: Set<string>;
   heldCardProductIds?: Set<string>;
+  /** Required so no caller silently scores on estimates; pass `NO_PERSONAL_RATES` to opt out. */
+  personalRates: PersonalRates;
+  /** Programs that price at least one open goal; null when the user has none. */
+  goalProgramIds: ReadonlySet<string> | null;
 }): ScoreCardsResult {
   const alreadyHeld: ScoringCard[] = [];
   const candidates: ScoringCard[] = [];
@@ -120,8 +142,18 @@ export function scoreCards({
     candidates.push(card);
   }
 
+  const heldCardIds = new Set(alreadyHeld.map((card) => card.id));
   const ranked = candidates
-    .map((card) => scoreCard(card, profile))
+    .map((card) => {
+      const pointValue = valueCardPoints({
+        program: card.program,
+        routes: card.routes,
+        transfers: resolveCardTransfers(card, cards, heldCardIds),
+        personalRates,
+        goalProgramIds,
+      });
+      return scoreCard(card, profile, pointValue);
+    })
     .sort((a, b) => b.firstYearValueCents - a.firstYearValueCents);
 
   const bestByCategory: Partial<Record<SpendCategory, CardRecommendation>> = {};
@@ -140,7 +172,7 @@ function bestCardForCategory(
   category: SpendCategory
 ): CardRecommendation | null {
   const centsPerDollar = (rec: CardRecommendation) =>
-    effectiveRate(rec.card, category) * rec.card.program.defaultRedemptionValueCents;
+    effectiveRate(rec.card, category) * rec.pointValue.centsPerPoint;
 
   let best: CardRecommendation | null = null;
   for (const rec of ranked) {
@@ -155,7 +187,11 @@ function matchesPreference(type: ScoringProgramType, preference: RewardsPreferen
   return type === "BANK_TRANSFERABLE" || type === "AIRLINE" || type === "HOTEL";
 }
 
-function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendation {
+function scoreCard(
+  card: ScoringCard,
+  profile: ScoringProfile,
+  pointValue: CardPointValue
+): CardRecommendation {
   const pointsByCategory = {} as Record<SpendCategory, number>;
   let annualPoints = 0;
   let monthlySpendCents = 0;
@@ -168,7 +204,7 @@ function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendati
     annualPoints += points;
   }
 
-  const cpp = card.program.defaultRedemptionValueCents;
+  const cpp = pointValue.centsPerPoint;
   const earnValueCents = annualPoints * cpp;
 
   const bonusEarned =
@@ -185,6 +221,7 @@ function scoreCard(card: ScoringCard, profile: ScoringProfile): CardRecommendati
     earnValueCents,
     welcomeBonusValueCents,
     bonusEarned,
+    pointValue,
     firstYearValueCents: earnValueCents + welcomeBonusValueCents - card.annualFeeCents,
     ongoingValueCents: earnValueCents - card.annualFeeCents,
   };
