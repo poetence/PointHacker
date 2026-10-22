@@ -10,11 +10,17 @@ import {
   type GoalTransferRoute,
 } from "./compute-goal-progress";
 import { programLabel } from "@/lib/format";
+import { scaleRatio } from "@/lib/recommendations/card-point-value";
 
 export type GapCard = {
   id: string;
   programId: string;
   welcomeBonusPoints: number | null;
+  /**
+   * Multiplier on a route's ratio for this card (`resolveCardTransfers`): 0 for
+   * a card that can't transfer on its own, below 1 for a reduced one. Omitted = 1.
+   */
+  transferFactor?: (toProgramId: string) => number;
 };
 
 export type CardGapContribution = {
@@ -96,9 +102,10 @@ function bonusReachingTarget(
     return { pointsContributed: bonus, viaTransfer: null };
   }
 
-  const route = transferRoutes.find(
+  const programRoute = transferRoutes.find(
     (r) => r.fromProgramId === card.programId && r.toProgramId === targetProgramId
   );
+  const route = programRoute && scaleRatio(programRoute, card.transferFactor?.(targetProgramId) ?? 1);
   if (!route) return null;
   const sendable = transferablePoints(bonus, route);
   if (sendable === 0) return null;

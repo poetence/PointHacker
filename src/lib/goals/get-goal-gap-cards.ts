@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
-import { findHeldCards } from "@/lib/recommendations/get-card-recommendations";
+import { findCatalogCards, findHeldCards } from "@/lib/recommendations/get-card-recommendations";
 import { indexHeldCards, isHeldCard } from "@/lib/recommendations/score-cards";
+import { resolveCardTransfers } from "@/lib/recommendations/card-point-value";
 import { closeGapWithCards, type CardGapContribution } from "./close-gap-with-cards";
 import type { GoalProgressResult } from "./get-goal-progress";
 
@@ -28,23 +28,19 @@ export async function getGoalGapCards(
   userId: string,
   progress: GoalProgressResult
 ): Promise<GoalGapCardsResult> {
-  const [cards, heldCards] = await Promise.all([
-    prisma.cardProduct.findMany({
-      where: { isActive: true },
-      include: { rewardsProgram: { select: { name: true, shortName: true, pointsUnit: true } } },
-    }),
-    findHeldCards(userId),
-  ]);
+  const [cards, heldCards] = await Promise.all([findCatalogCards(), findHeldCards(userId)]);
 
   const held = indexHeldCards(heldCards);
-  const candidates = cards.filter((card) => !isHeldCard(card, held));
+  const heldCardIds = new Set(cards.filter((card) => isHeldCard(card, held)).map((card) => card.id));
+  const candidates = cards.filter((card) => !heldCardIds.has(card.id));
 
   const byCardId = closeGapWithCards({
     plans: progress.plans,
     cards: candidates.map((card) => ({
       id: card.id,
-      programId: card.rewardsProgramId,
+      programId: card.program.id,
       welcomeBonusPoints: card.welcomeBonusPoints,
+      transferFactor: resolveCardTransfers(card, cards, heldCardIds).factor,
     })),
     transferRoutes: progress.transferRoutes,
   });
@@ -63,7 +59,7 @@ export async function getGoalGapCards(
             welcomeBonusPoints: card.welcomeBonusPoints,
             welcomeBonusSpendCents: card.welcomeBonusSpendCents,
             welcomeBonusMonths: card.welcomeBonusMonths,
-            program: card.rewardsProgram,
+            program: card.program,
           },
           contribution,
         },
