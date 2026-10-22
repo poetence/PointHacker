@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents, programLabel } from "@/lib/format";
+import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalsProgress, type GoalProgress } from "@/lib/goals/get-goal-progress";
@@ -20,6 +20,8 @@ import {
   toScoringProfile,
 } from "@/lib/recommendations/get-card-recommendations";
 import { effectiveRate, type CardRecommendation } from "@/lib/recommendations/score-cards";
+import { getPersonalRates } from "@/lib/redemptions/get-redemptions";
+import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
 import { SpendingProfileForm } from "@/components/recommendations/spending-profile-form";
 import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
@@ -41,12 +43,13 @@ export default async function RecommendPage({
   const { goal: goalParam } = await searchParams;
   const userId = await requireSessionUserId();
 
-  const [profile, goalsProgress] = await Promise.all([
+  const [profile, goalsProgress, personalRates] = await Promise.all([
     prisma.spendingProfile.findUnique({ where: { userId } }),
     getGoalsProgress(userId),
+    getPersonalRates(userId),
   ]);
   const goals = goalsProgress.goals.map((p) => p.goal);
-  const result = profile ? await getCardRecommendations(userId, profile) : null;
+  const result = profile ? await getCardRecommendations(userId, profile, personalRates) : null;
   const top = result?.ranked.slice(0, 8) ?? [];
 
   const activeGoal = goals.find((g) => g.id === goalParam) ?? goals[0] ?? null;
@@ -163,8 +166,9 @@ export default async function RecommendPage({
 
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
             Estimates only: earn rates, fees, and bonuses are snapshots of public offers and change
-            often. Statement credits, lounge access, and category caps aren&apos;t modeled. Verify
-            with the issuer before applying.
+            often. Points are valued at the program&apos;s estimate, or at your own rate where
+            you&apos;ve logged enough bookings in it. Statement credits, lounge access, and category
+            caps aren&apos;t modeled. Verify with the issuer before applying.
           </p>
         </>
       )}
@@ -271,7 +275,10 @@ function RecommendationRow({
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {Math.round(rec.annualPoints).toLocaleString("en-US")}{" "}
             {programLabel(rec.card.program)}{" "}
-            {rec.card.program.pointsUnit}/yr
+            {rec.card.program.pointsUnit}/yr ·{" "}
+            <span className="whitespace-nowrap">{formatCentsPerPoint(rec.centsPerPoint)} each</span>
+            <wbr />
+            {rec.personalRate && <PersonalRatePill rate={rec.personalRate} />}
           </p>
         </div>
         <div className="w-full sm:w-auto sm:text-right">
