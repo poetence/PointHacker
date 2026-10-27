@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { LogoMarkIcon, SignOutIcon } from "@/components/icons";
@@ -10,17 +11,12 @@ const links: NavLink[] = [
   { href: "/programs", label: "Catalog" },
   { href: "/goals", label: "Goals" },
   { href: "/redemptions", label: "Redemptions" },
-  { href: "/plan", label: "Plan a Trip" },
+  { href: "/plan", label: "Plan a trip" },
   { href: "/promos", label: "Promos" },
   { href: "/recommend", label: "Recommend" },
 ];
 
-export async function Nav() {
-  const session = await auth();
-  const user = session?.user;
-  const displayName = user?.name ?? user?.email ?? "";
-  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
-
+export function Nav() {
   return (
     <nav className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/80 text-sm backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80">
       {/* The link strip takes the slack between the wordmark and the account
@@ -35,34 +31,53 @@ export async function Nav() {
           <span className="hidden sm:inline">PointHacker</span>
         </Link>
 
-        {user && <NavLinks links={links} />}
-
-        {user && (
-          <div className="ml-auto flex shrink-0 items-center gap-2 border-l border-zinc-200 pl-3 dark:border-zinc-800 sm:pl-4">
-            {/* Decorative: the initial alone tells a screen reader nothing. */}
-            <span
-              aria-hidden="true"
-              title={user.email ?? undefined}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-semibold text-white shadow-sm"
-            >
-              {initial}
-            </span>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/sign-in" });
-              }}
-            >
-              {/* Drops to the icon alone on phones, where the label's ~70px is
-                  the difference between one visible link and three. */}
-              <Button size="sm" variant="link" type="submit" aria-label="Sign out">
-                <SignOutIcon className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </form>
-          </div>
-        )}
+        {/* The session read is runtime data, and in the root layout it blocked every
+            navigation until the next page had rendered in full, so `loading.tsx` never
+            showed. Behind its own boundary the layout streams at once. The fallback
+            holds the avatar's height so the bar doesn't jump. */}
+        <Suspense fallback={<div className="h-8 flex-1" aria-hidden="true" />}>
+          <NavSession />
+        </Suspense>
       </div>
     </nav>
+  );
+}
+
+/** The links and account block, which only a signed-in visitor gets. */
+async function NavSession() {
+  const session = await auth();
+  const user = session?.user;
+  if (!user) return null;
+  const displayName = user.name ?? user.email ?? "";
+  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
+
+  return (
+    <>
+      <NavLinks links={links} />
+
+      <div className="ml-auto flex shrink-0 items-center gap-2 border-l border-zinc-200 pl-3 dark:border-zinc-800 sm:pl-4">
+        {/* Decorative: the initial alone tells a screen reader nothing. */}
+        <span
+          aria-hidden="true"
+          title={user.email ?? undefined}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-semibold text-white shadow-sm"
+        >
+          {initial}
+        </span>
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/sign-in" });
+          }}
+        >
+          {/* Drops to the icon alone on phones, where the label's ~70px is
+              the difference between one visible link and three. */}
+          <Button size="sm" variant="link" type="submit" aria-label="Sign out">
+            <SignOutIcon className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Sign out</span>
+          </Button>
+        </form>
+      </div>
+    </>
   );
 }
