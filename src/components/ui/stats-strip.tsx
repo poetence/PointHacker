@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 const STAT_TONES = {
   default: "text-black dark:text-zinc-50",
-  positive: "text-emerald-600 dark:text-emerald-400",
-  warning: "text-amber-600 dark:text-amber-400",
+  positive: "text-emerald-700 dark:text-emerald-400",
+  warning: "text-amber-700 dark:text-amber-400",
 } as const;
 
 /**

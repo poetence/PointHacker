@@ -17,7 +17,7 @@ import { ExpirationPill } from "@/components/balances/expiration-pill";
 import { rowCardClass } from "@/components/ui/card";
 import { LocalDate } from "@/components/ui/local-date";
 import { pageContainerClass } from "@/components/ui/page-header";
-import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
+import { pageTitleClass, quietLinkClass, sectionTitleClass } from "@/components/ui/text";
 import { BonusPill } from "@/components/promos/bonus-pill";
 
 export default async function ProgramDetailPage({
@@ -51,8 +51,8 @@ export default async function ProgramDetailPage({
   return (
     <div className={pageContainerClass}>
       <div>
-        <Link href="/" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-          &larr; Back to dashboard
+        <Link href="/programs" className={quietLinkClass}>
+          &larr; Program catalog
         </Link>
       </div>
 
@@ -186,7 +186,7 @@ function OptionRow({
           {describeUsage(option, pointsUnit)}
         </p>
         {option.kind === "transfer" && !option.isViable && (
-          <p className="text-sm text-amber-600 dark:text-amber-400">
+          <p className="text-sm text-amber-700 dark:text-amber-400">
             {nonViableReason(option, pointsUnit)}
           </p>
         )}
@@ -243,8 +243,8 @@ function HistoryRow({
           <span
             className={
               change > 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-zinc-400 dark:text-zinc-500"
+                ? "text-emerald-700 dark:text-emerald-400"
+                : "text-zinc-500 dark:text-zinc-400"
             }
           >
             {formatSignedCount(change)}

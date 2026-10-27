@@ -40,13 +40,13 @@ export function Input({
   return (
     <span className="relative block">
       {prefix && (
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-500 dark:text-zinc-400">
           {prefix}
         </span>
       )}
       {input}
       {suffix && (
-        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-zinc-400">
+        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-zinc-500 dark:text-zinc-400">
           {suffix}
         </span>
       )}

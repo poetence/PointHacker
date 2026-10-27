@@ -180,7 +180,7 @@ function RedemptionItem({
           <p
             className={`font-display text-lg font-semibold ${
               row.vsBaseline.beatBaseline
-                ? "text-emerald-600 dark:text-emerald-400"
+                ? "text-emerald-700 dark:text-emerald-400"
                 : "text-zinc-700 dark:text-zinc-300"
             }`}
           >
@@ -209,7 +209,7 @@ function RedemptionItem({
         </BreakdownItem>
         <BreakdownItem
           label="Worth"
-          valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+          valueClassName="font-medium text-emerald-700 dark:text-emerald-400"
         >
           {formatCents(row.cashValueCents)}
         </BreakdownItem>
@@ -222,7 +222,7 @@ function RedemptionItem({
           label="vs. estimate"
           valueClassName={
             row.vsBaseline.beatBaseline
-              ? "font-medium text-emerald-600 dark:text-emerald-400"
+              ? "font-medium text-emerald-700 dark:text-emerald-400"
               : "text-zinc-500 dark:text-zinc-400"
           }
         >
@@ -268,7 +268,7 @@ function RateItem({
         </div>
         <p
           className={`font-display text-lg font-semibold ${
-            rate.active ? "text-black dark:text-zinc-50" : "text-zinc-400 dark:text-zinc-500"
+            rate.active ? "text-black dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
           }`}
         >
           {formatCentsPerPoint(rate.centsPerPoint)}

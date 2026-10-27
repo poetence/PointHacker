@@ -169,7 +169,7 @@ export default async function RecommendPage({
             </section>
           )}
 
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Estimates only: earn rates, fees, and bonuses are snapshots of public offers and change
             often. Points are valued at their best use, directly or through a transfer partner
             (promos left out — they last weeks, a card lasts years), at your own rate where
@@ -220,7 +220,7 @@ function GoalGap({
   if (bestPlan.isReachable) {
     return (
       <p className="text-sm text-zinc-700 dark:text-zinc-300">
-        <span className="font-medium text-emerald-600 dark:text-emerald-400">Already bookable</span>{" "}
+        <span className="font-medium text-emerald-700 dark:text-emerald-400">Already bookable</span>{" "}
         via {programLabel(bestPlan.program)} — the ranking below is pure
         spending value.{" "}
         <Link href={`/goals/${activeGoal.id}`} className="text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400">
@@ -327,7 +327,7 @@ function RecommendationRow({
       <Breakdown>
         <BreakdownItem
           label="Earns"
-          valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+          valueClassName="font-medium text-emerald-700 dark:text-emerald-400"
         >
           +{formatCents(rec.earnValueCents)}
         </BreakdownItem>
@@ -335,8 +335,8 @@ function RecommendationRow({
           label="Welcome bonus"
           valueClassName={
             rec.bonusEarned
-              ? "font-medium text-emerald-600 dark:text-emerald-400"
-              : "text-zinc-400 dark:text-zinc-500"
+              ? "font-medium text-emerald-700 dark:text-emerald-400"
+              : "text-zinc-500 dark:text-zinc-400"
           }
         >
           {welcomeBonusLabel(rec)}
@@ -346,7 +346,7 @@ function RecommendationRow({
           valueClassName={
             rec.card.annualFeeCents > 0
               ? "font-medium text-red-600 dark:text-red-400"
-              : "text-zinc-400 dark:text-zinc-500"
+              : "text-zinc-500 dark:text-zinc-400"
           }
         >
           {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
