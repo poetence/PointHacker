@@ -87,7 +87,7 @@ export default async function SignInPage({
         </div>
       </div>
 
-      <p className="text-center text-xs text-zinc-500 dark:text-zinc-500">
+      <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
         Your balances and cards are private to your account.
       </p>
     </div>

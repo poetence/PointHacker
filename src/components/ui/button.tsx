@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 // variant can accidentally ship without one.
 const variantClass = {
   primary:
-    "rounded-lg bg-emerald-600 px-4 text-white shadow-sm hover:bg-emerald-500 hover:shadow active:bg-emerald-700 active:shadow-none dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400 dark:active:bg-emerald-600",
+    "rounded-lg bg-emerald-700 px-4 text-white shadow-sm hover:bg-emerald-800 hover:shadow active:bg-emerald-900 active:shadow-none dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400 dark:active:bg-emerald-600",
   secondary:
     "rounded-lg border border-zinc-300 bg-white px-4 text-zinc-700 shadow-sm hover:border-zinc-400 hover:bg-zinc-50 active:bg-zinc-100 active:shadow-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-800 dark:active:bg-zinc-700",
   danger:

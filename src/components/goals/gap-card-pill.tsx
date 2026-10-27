@@ -22,7 +22,7 @@ export function GapCardPill({ contribution }: { contribution: CardGapContributio
           ? "Closes the gap"
           : `Leaves ${contribution.shortfallAfter.toLocaleString("en-US")} short`}
       </span>
-      <span className="opacity-80">
+      <span>
         +{contribution.pointsContributed.toLocaleString("en-US")} {contribution.targetProgramName}
         {viaLabel(contribution.viaTransfer)}
       </span>

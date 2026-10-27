@@ -198,7 +198,7 @@ export function AddRedemptionForm({
       {centsPerPoint !== null && (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           That works out to{" "}
-          <span className="font-display font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="font-display font-semibold text-emerald-700 dark:text-emerald-400">
             {formatCentsPerPoint(centsPerPoint)}
           </span>{" "}
           per {unitSingular(unit)}.
