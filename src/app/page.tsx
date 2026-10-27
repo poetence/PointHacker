@@ -23,7 +23,7 @@ import { riseInDelay, rowCardClass, rowCardFrameClass } from "@/components/ui/ca
 import { CountUp } from "@/components/ui/count-up";
 import { RegionScene } from "@/components/regions/region-scene";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
-import { sectionTitleClass } from "@/components/ui/text";
+import { quietLinkClass, sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatsStrip } from "@/components/ui/stats-strip";
 import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
@@ -99,7 +99,7 @@ export default async function Home() {
             <h2 className={sectionTitleClass}>Your goals</h2>
             <Link
               href="/goals"
-              className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
+              className={quietLinkClass}
             >
               All goals &rarr;
             </Link>
@@ -193,7 +193,7 @@ function GoalCard({ progress, index }: { progress: GoalProgress; index: number }
             href={`/goals/${goal.id}`}
             className="break-words font-medium text-black underline-offset-2 hover:underline dark:text-zinc-50"
           >
-            {goal.label}
+            {progress.name}
           </Link>
           <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
             {describeGoal(goal)}
@@ -205,11 +205,11 @@ function GoalCard({ progress, index }: { progress: GoalProgress; index: number }
               heldPoints={best.heldPoints}
               pointsCovered={best.pointsCovered}
               pointsNeeded={best.pointsNeeded}
-              label={`${goal.label} via ${programLabel(best.program)}`}
+              label={`${progress.name} via ${programLabel(best.program)}`}
             />
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               {best.isReachable ? (
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                <span className="font-medium text-emerald-700 dark:text-emerald-400">
                   Bookable via {programLabel(best.program)}
                 </span>
               ) : (
@@ -304,7 +304,7 @@ function BalanceRow({
           <>
             <BreakdownItem
               label="Worth up to"
-              valueClassName="font-medium text-emerald-600 dark:text-emerald-400"
+              valueClassName="font-medium text-emerald-700 dark:text-emerald-400"
             >
               {formatCents(top.totalValueCents)}
             </BreakdownItem>

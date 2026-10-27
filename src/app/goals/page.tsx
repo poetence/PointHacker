@@ -145,7 +145,7 @@ function GoalRow({ progress, index }: { progress: GoalProgress; index: number })
               href={`/goals/${goal.id}`}
               className="break-words font-display text-xl font-semibold text-black underline-offset-2 hover:underline dark:text-zinc-50"
             >
-              {goal.label}
+              {progress.name}
             </Link>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {REGION_LABELS[goal.region]} · {describeGoal(goal)}
@@ -164,12 +164,12 @@ function GoalRow({ progress, index }: { progress: GoalProgress; index: number })
               heldPoints={best.heldPoints}
               pointsCovered={best.pointsCovered}
               pointsNeeded={best.pointsNeeded}
-              label={`${goal.label} via ${programLabel(best.program)}`}
+              label={`${progress.name} via ${programLabel(best.program)}`}
             />
             <p className="text-sm text-zinc-700 dark:text-zinc-300">
               {best.isReachable ? (
                 <>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-400">
                     Bookable now
                   </span>{" "}
                   via {programLabel(best.program)} —{" "}
@@ -219,7 +219,7 @@ function BookedGoalRow({ booked, index }: { booked: BookedGoal; index: number })
         </p>
       </div>
       <p className="text-sm text-zinc-700 dark:text-zinc-300">
-        <span className="font-medium text-emerald-600 dark:text-emerald-400">Booked</span>
+        <span className="font-medium text-emerald-700 dark:text-emerald-400">Booked</span>
         {redemptions.length > 0 &&
           (units.size === 1
             ? ` · ${spent.toLocaleString("en-US")} ${[...units][0]}`

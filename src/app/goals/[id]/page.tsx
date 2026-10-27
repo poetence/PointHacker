@@ -28,7 +28,7 @@ import { RegionScene } from "@/components/regions/region-scene";
 import { TargetIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 import { pageContainerClass } from "@/components/ui/page-header";
-import { pageTitleClass, sectionTitleClass } from "@/components/ui/text";
+import { pageTitleClass, quietLinkClass, sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
@@ -50,6 +50,12 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
   const best = plans[0] ?? null;
 
   const programTypeById = await findProgramTypes(plans.map((p) => p.program.id));
+  const planType = (plan: GoalTargetPlan): ProgramType =>
+    programTypeById.get(plan.program.id) ?? (goal.kind === "HOTEL" ? "HOTEL" : "AIRLINE");
+  // Every program that prices the trip gets a row, which for a big region is twenty-odd
+  // rows of "Held 0". The cheapest few stay in view as options to earn toward, and so does
+  // anything the user's points already reach; the rest fold away.
+  const { shownPlans, foldedPlans } = splitPlans(plans);
 
   const gapCards = best && !best.isReachable ? await getGoalGapCards(userId, progress) : null;
 
@@ -74,16 +80,38 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         <section className="flex flex-col gap-3">
           <h2 className={sectionTitleClass}>Ways to book it</h2>
           <ul className="flex flex-col gap-3">
-            {plans.map((plan, index) => (
+            {shownPlans.map((plan) => (
               <PlanRow
                 key={plan.program.id}
                 plan={plan}
                 heldInAll={heldInTarget(goalProgress, plan)}
-                index={index}
-                programType={programTypeById.get(plan.program.id) ?? (goal.kind === "HOTEL" ? "HOTEL" : "AIRLINE")}
+                highlight={plan === best && plan.isReachable}
+                programType={planType(plan)}
               />
             ))}
           </ul>
+          {foldedPlans.length > 0 && (
+            <details className="group">
+              <summary className={`cursor-pointer list-none [&::-webkit-details-marker]:hidden ${quietLinkClass}`}>
+                <span className="group-open:hidden">
+                  Show {foldedPlans.length} more {foldedPlans.length === 1 ? "program" : "programs"} you hold
+                  nothing toward &darr;
+                </span>
+                <span className="hidden group-open:inline">Hide the programs you hold nothing toward &uarr;</span>
+              </summary>
+              <ul className="mt-3 flex flex-col gap-3">
+                {foldedPlans.map((plan) => (
+                  <PlanRow
+                    key={plan.program.id}
+                    plan={plan}
+                    heldInAll={heldInTarget(goalProgress, plan)}
+                    highlight={false}
+                    programType={planType(plan)}
+                  />
+                ))}
+              </ul>
+            </details>
+          )}
         </section>
       )}
 
@@ -93,7 +121,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
             <h2 className={sectionTitleClass}>Close the gap with a card</h2>
             <Link
               href={`/recommend?goal=${goal.id}`}
-              className="text-sm text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400"
+              className={quietLinkClass}
             >
               Full recommendations &rarr;
             </Link>
@@ -113,7 +141,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         </section>
       )}
 
-      <p className="text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
         {goal.kind === "FLIGHT"
           ? "Flight award prices are rough saver-level estimates from North America"
           : "Hotel award prices are rough standard-room estimates per tier"}{" "}
@@ -127,7 +155,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
 function BackToGoals() {
   return (
     <div>
-      <Link href="/goals" className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+      <Link href="/goals" className={quietLinkClass}>
         &larr; All goals
       </Link>
     </div>
@@ -227,6 +255,7 @@ function BestRouteSummary({
 }) {
   const originZone = goalOriginZone(goal);
   const originPct = originZone ? Math.round((originMultiplier(goal.region, originZone) - 1) * 100) : 0;
+  const transferable = best.potentialPoints - best.heldPoints;
   return (
     <div
       className={`rounded-xl border p-4 ${
@@ -245,14 +274,16 @@ function BestRouteSummary({
         {describeGoalUnit(goal)} · you hold {heldInTarget(goalProgress, best).toLocaleString("en-US")}{" "}
         there
         {best.heldPoints < heldInTarget(goalProgress, best) &&
-          ` (${best.heldPoints.toLocaleString("en-US")} not set aside for other goals)`}{" "}
-        and can transfer in{" "}
-        {(best.potentialPoints - best.heldPoints).toLocaleString("en-US")} more.
+          ` (${best.heldPoints.toLocaleString("en-US")} not set aside for other goals)`}
+        {transferable > 0
+          ? ` and can transfer in ${transferable.toLocaleString("en-US")} more.`
+          : ", and none of your other balances transfer there."}
         {originZone && originPct !== 0 && (
           <>
             {" "}
-            Prices {originPct < 0 ? "trimmed" : "bumped"} {Math.abs(originPct)}% for a{" "}
-            {ORIGIN_ZONE_LABELS[originZone]} departure.
+            Prices {originPct < 0 ? "trimmed" : "bumped"} {Math.abs(originPct)}% for{" "}
+            {/^[AEIOU]/.test(ORIGIN_ZONE_LABELS[originZone]) ? "an" : "a"} {ORIGIN_ZONE_LABELS[originZone]}{" "}
+            departure.
           </>
         )}
       </p>
@@ -265,6 +296,19 @@ function BestRouteSummary({
   );
 }
 
+/** How many of the cheapest plans stay in view even when the user's points reach none of them. */
+const ALWAYS_SHOWN_PLANS = 5;
+
+/** Plans in their ranked order, split into what to show and what to fold behind a toggle. */
+function splitPlans(plans: GoalTargetPlan[]) {
+  const shownPlans: GoalTargetPlan[] = [];
+  const foldedPlans: GoalTargetPlan[] = [];
+  plans.forEach((plan, index) => {
+    (index < ALWAYS_SHOWN_PLANS || plan.pointsCovered > 0 ? shownPlans : foldedPlans).push(plan);
+  });
+  return { shownPlans, foldedPlans };
+}
+
 /** Everything the user holds in a plan's target program, before other goals take their share. */
 function heldInTarget(goalProgress: GoalProgress, plan: GoalTargetPlan): number {
   return goalProgress.standalonePlans.find((p) => p.program.id === plan.program.id)?.heldPoints ?? plan.heldPoints;
@@ -273,18 +317,19 @@ function heldInTarget(goalProgress: GoalProgress, plan: GoalTargetPlan): number 
 function PlanRow({
   plan,
   heldInAll,
-  index,
+  highlight,
   programType,
 }: {
   plan: GoalTargetPlan;
   heldInAll: number;
-  index: number;
+  /** Rings the row: the best route, when it's bookable now. */
+  highlight: boolean;
   programType: ProgramType;
 }) {
   return (
     <li
       className={`flex flex-col gap-3 ${rowCardClass} ${
-        index === 0 && plan.isReachable ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
+        highlight ? "ring-1 ring-emerald-300 dark:ring-emerald-800" : ""
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -310,7 +355,7 @@ function PlanRow({
         <p
           className={`text-sm font-medium ${
             plan.isReachable
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-emerald-700 dark:text-emerald-400"
               : "text-zinc-700 dark:text-zinc-300"
           }`}
         >
@@ -332,8 +377,8 @@ function PlanRow({
           label="Held"
           valueClassName={
             plan.heldPoints > 0
-              ? "font-medium text-emerald-600 dark:text-emerald-400"
-              : "text-zinc-400 dark:text-zinc-500"
+              ? "font-medium text-emerald-700 dark:text-emerald-400"
+              : "text-zinc-500 dark:text-zinc-400"
           }
         >
           {plan.heldPoints.toLocaleString("en-US")}
@@ -342,7 +387,7 @@ function PlanRow({
         {plan.transfers.map((step) => (
           <BreakdownItem key={step.fromProgramId}
             label="Transfer"
-            valueClassName="font-medium text-sky-600 dark:text-sky-400"
+            valueClassName="font-medium text-sky-700 dark:text-sky-400"
           >
             {step.pointsToTransfer.toLocaleString("en-US")} {step.fromProgramName} →{" "}
             {step.pointsReceived.toLocaleString("en-US")}
@@ -354,7 +399,7 @@ function PlanRow({
           valueClassName={
             plan.shortfall > 0
               ? "font-medium text-red-600 dark:text-red-400"
-              : "text-zinc-400 dark:text-zinc-500"
+              : "text-zinc-500 dark:text-zinc-400"
           }
         >
           {plan.shortfall > 0 ? plan.shortfall.toLocaleString("en-US") : "nothing"}

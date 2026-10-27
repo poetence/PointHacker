@@ -18,7 +18,9 @@ export function GapCardItem({
   return (
     <li className={`flex flex-wrap items-center gap-4 ${rowCardClass} ${ring}`}>
       <CardArt issuer={card.issuer} name={card.name} />
-      <div className="min-w-0 flex-1">
+      {/* basis-40 keeps the text a readable column: below it the pill wraps to its own line
+          instead of squeezing the terms to a word per line on a phone. */}
+      <div className="min-w-0 flex-1 basis-40">
         <p className="font-medium text-black dark:text-zinc-50">
           {card.issuer} {card.name}
         </p>
