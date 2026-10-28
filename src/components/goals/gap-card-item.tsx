@@ -28,7 +28,9 @@ export function GapCardItem({
           {card.welcomeBonusPoints?.toLocaleString("en-US")} {programLabel(card.program)}{" "}
           {card.program.pointsUnit} after {formatCents(card.welcomeBonusSpendCents ?? 0)} in{" "}
           {card.welcomeBonusMonths} mo ·{" "}
-          {card.annualFeeCents > 0 ? `${formatCents(card.annualFeeCents)} fee` : "no fee"}
+          {card.annualFeeCents === 0
+            ? "no fee"
+            : `${formatCents(card.annualFeeCents)} fee${card.firstYearFeeWaived ? ", first year free" : ""}`}
         </p>
       </div>
       <GapCardPill contribution={contribution} />

@@ -78,7 +78,10 @@ export type CardEligibility =
     }
   | { status: "likely_denied"; rule: "five_twenty_four"; count: number; until: Date | null };
 
-export const ELIGIBLE: CardEligibility = { status: "eligible", undatedMayBlock: false };
+export const ELIGIBLE = { status: "eligible", undatedMayBlock: false } as const satisfies CardEligibility;
+
+/** An empty index: every card eligible. For callers that deliberately skip the checks. */
+export const NO_ELIGIBILITY_CHECKS: ReadonlyMap<string, CardEligibility> = new Map();
 
 function issuerRules(issuer: string): IssuerRules | null {
   const key = issuer.trim().toLowerCase();

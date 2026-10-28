@@ -2,6 +2,7 @@
 // Pure and DB-agnostic — callers map Prisma records into these input shapes.
 
 import type { ProgramType } from "@/lib/program-type";
+import { ELIGIBLE, type CardEligibility } from "@/lib/cards/card-eligibility";
 import type { PersonalRates } from "@/lib/redemptions/personal-rates";
 import {
   SPEND_CATEGORIES,
@@ -40,6 +41,8 @@ export type ScoringCard = {
     defaultRedemptionValueCents: number;
   };
   annualFeeCents: number;
+  /** The first year's fee is $0. */
+  firstYearFeeWaived: boolean;
   welcomeBonusPoints: number | null;
   welcomeBonusSpendCents: number | null;
   welcomeBonusMonths: number | null;
@@ -60,15 +63,24 @@ export type CardRecommendation = {
   earnValueCents: number;
   welcomeBonusValueCents: number;
   bonusEarned: boolean;
+  /** Whether the user can get the card and its bonus; `no_bonus` scores the bonus at 0. */
+  eligibility: Exclude<CardEligibility, { status: "likely_denied" }>;
   /** What one of the card's points is worth to this user, and the use that gets it. */
   pointValue: CardPointValue;
   firstYearValueCents: number;
   ongoingValueCents: number;
 };
 
+export type IneligibleCard = {
+  card: ScoringCard;
+  eligibility: Extract<CardEligibility, { status: "likely_denied" }>;
+};
+
 export type ScoreCardsResult = {
   ranked: CardRecommendation[];
   alreadyHeld: ScoringCard[];
+  /** Cards that pass the profile's filters but the issuer would likely decline. */
+  ineligible: IneligibleCard[];
   bestByCategory: Partial<Record<SpendCategory, CardRecommendation>>;
 };
 
@@ -82,10 +94,11 @@ export type HeldCardIndex = {
   heldCardProductIds: Set<string>;
 };
 
-/** Indexes wallet cards for `isHeldCard`. */
+/** Indexes wallet cards for `isHeldCard`; a closed card isn't held. */
 export function indexHeldCards(
-  heldCards: { issuer: string; productName: string; cardProductId: string | null }[]
+  walletCards: { issuer: string; productName: string; cardProductId: string | null; closedOn?: Date | null }[]
 ): HeldCardIndex {
+  const heldCards = walletCards.filter((card) => !card.closedOn);
   return {
     heldCardKeys: new Set(heldCards.map((c) => cardKey(c.issuer, c.productName))),
     heldCardProductIds: new Set(heldCards.flatMap((c) => (c.cardProductId ? [c.cardProductId] : []))),
@@ -115,6 +128,7 @@ export function scoreCards({
   heldCardProductIds = new Set(),
   personalRates,
   goalProgramIds,
+  eligibility,
 }: {
   profile: ScoringProfile;
   cards: ScoringCard[];
@@ -124,9 +138,16 @@ export function scoreCards({
   personalRates: PersonalRates;
   /** Programs that price at least one open goal; null when the user has none. */
   goalProgramIds: ReadonlySet<string> | null;
+  /**
+   * Keyed by card id (`indexCardEligibility`); a missing card is eligible.
+   * Required so no caller silently ignores the wallet's history; pass
+   * `NO_ELIGIBILITY_CHECKS` to opt out.
+   */
+  eligibility: ReadonlyMap<string, CardEligibility>;
 }): ScoreCardsResult {
   const alreadyHeld: ScoringCard[] = [];
-  const candidates: ScoringCard[] = [];
+  const ineligible: IneligibleCard[] = [];
+  const candidates: { card: ScoringCard; eligibility: CardRecommendation["eligibility"] }[] = [];
 
   for (const card of cards) {
     if (isHeldCard(card, { heldCardKeys, heldCardProductIds })) {
@@ -139,12 +160,17 @@ export function scoreCards({
     if (!matchesPreference(card.program.type, profile.rewardsPreference)) {
       continue;
     }
-    candidates.push(card);
+    const cardEligibility = eligibility.get(card.id) ?? ELIGIBLE;
+    if (cardEligibility.status === "likely_denied") {
+      ineligible.push({ card, eligibility: cardEligibility });
+      continue;
+    }
+    candidates.push({ card, eligibility: cardEligibility });
   }
 
   const heldCardIds = new Set(alreadyHeld.map((card) => card.id));
   const ranked = candidates
-    .map((card) => {
+    .map(({ card, eligibility: cardEligibility }) => {
       const pointValue = valueCardPoints({
         program: card.program,
         routes: card.routes,
@@ -152,7 +178,7 @@ export function scoreCards({
         personalRates,
         goalProgramIds,
       });
-      return scoreCard(card, profile, pointValue);
+      return scoreCard(card, profile, pointValue, cardEligibility);
     })
     .sort((a, b) => b.firstYearValueCents - a.firstYearValueCents);
 
@@ -163,7 +189,7 @@ export function scoreCards({
     if (best) bestByCategory[category] = best;
   }
 
-  return { ranked, alreadyHeld, bestByCategory };
+  return { ranked, alreadyHeld, ineligible, bestByCategory };
 }
 
 /** The card worth the most per dollar in one category; ties go to the higher-ranked card. */
@@ -190,7 +216,8 @@ function matchesPreference(type: ScoringProgramType, preference: RewardsPreferen
 function scoreCard(
   card: ScoringCard,
   profile: ScoringProfile,
-  pointValue: CardPointValue
+  pointValue: CardPointValue,
+  eligibility: CardRecommendation["eligibility"]
 ): CardRecommendation {
   const pointsByCategory = {} as Record<SpendCategory, number>;
   let annualPoints = 0;
@@ -208,11 +235,13 @@ function scoreCard(
   const earnValueCents = annualPoints * cpp;
 
   const bonusEarned =
+    eligibility.status === "eligible" &&
     card.welcomeBonusPoints !== null &&
     card.welcomeBonusSpendCents !== null &&
     card.welcomeBonusMonths !== null &&
     monthlySpendCents * card.welcomeBonusMonths >= card.welcomeBonusSpendCents;
   const welcomeBonusValueCents = bonusEarned ? (card.welcomeBonusPoints ?? 0) * cpp : 0;
+  const firstYearFeeCents = card.firstYearFeeWaived ? 0 : card.annualFeeCents;
 
   return {
     card,
@@ -221,8 +250,9 @@ function scoreCard(
     earnValueCents,
     welcomeBonusValueCents,
     bonusEarned,
+    eligibility,
     pointValue,
-    firstYearValueCents: earnValueCents + welcomeBonusValueCents - card.annualFeeCents,
+    firstYearValueCents: earnValueCents + welcomeBonusValueCents - firstYearFeeCents,
     ongoingValueCents: earnValueCents - card.annualFeeCents,
   };
 }

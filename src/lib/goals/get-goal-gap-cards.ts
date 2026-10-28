@@ -1,4 +1,5 @@
-import { findCatalogCards, findHeldCards } from "@/lib/recommendations/get-card-recommendations";
+import { findCatalogCards, findWalletHistory } from "@/lib/recommendations/get-card-recommendations";
+import { indexCardEligibility } from "@/lib/cards/card-eligibility";
 import { indexHeldCards, isHeldCard } from "@/lib/recommendations/score-cards";
 import { resolveCardTransfers } from "@/lib/recommendations/card-point-value";
 import { closeGapWithCards, type CardGapContribution } from "./close-gap-with-cards";
@@ -10,6 +11,7 @@ export type GapCardRow = {
     issuer: string;
     name: string;
     annualFeeCents: number;
+    firstYearFeeWaived: boolean;
     welcomeBonusPoints: number | null;
     welcomeBonusSpendCents: number | null;
     welcomeBonusMonths: number | null;
@@ -19,7 +21,7 @@ export type GapCardRow = {
 };
 
 export type GoalGapCardsResult = {
-  /** Cards not already in the wallet whose bonus moves the needle, best first. */
+  /** Cards not in the wallet whose bonus the user can likely get and that moves the needle, best first. */
   ranked: GapCardRow[];
   byCardId: Map<string, CardGapContribution>;
 };
@@ -28,11 +30,15 @@ export async function getGoalGapCards(
   userId: string,
   progress: GoalProgressResult
 ): Promise<GoalGapCardsResult> {
-  const [cards, heldCards] = await Promise.all([findCatalogCards(), findHeldCards(userId)]);
+  const [cards, wallet] = await Promise.all([findCatalogCards(), findWalletHistory(userId)]);
 
-  const held = indexHeldCards(heldCards);
+  const held = indexHeldCards(wallet);
   const heldCardIds = new Set(cards.filter((card) => isHeldCard(card, held)).map((card) => card.id));
-  const candidates = cards.filter((card) => !heldCardIds.has(card.id));
+  // A bonus the issuer won't pay (or a card it would likely decline) can't close a gap.
+  const eligibility = indexCardEligibility(cards, wallet, new Date());
+  const candidates = cards.filter(
+    (card) => !heldCardIds.has(card.id) && eligibility.get(card.id)?.status === "eligible"
+  );
 
   const byCardId = closeGapWithCards({
     plans: progress.plans,
@@ -56,6 +62,7 @@ export async function getGoalGapCards(
             issuer: card.issuer,
             name: card.name,
             annualFeeCents: card.annualFeeCents,
+            firstYearFeeWaived: card.firstYearFeeWaived,
             welcomeBonusPoints: card.welcomeBonusPoints,
             welcomeBonusSpendCents: card.welcomeBonusSpendCents,
             welcomeBonusMonths: card.welcomeBonusMonths,
