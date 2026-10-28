@@ -261,6 +261,17 @@ model CreditCard {
   cardProduct      CardProduct?   @relation(fields: [cardProductId], references: [id], onDelete: SetNull)
   annualFeeCents   Int?
   openedOn         DateTime?
+  /// Set when the card is closed; closed cards stay so they still count toward 5/24 and bonus rules
+  closedOn         DateTime?
+  /// Most business cards don't count toward Chase 5/24 (see `card-eligibility.ts`)
+  isBusiness       Boolean        @default(false)
+  /// The welcome offer the card was opened under, copied from the catalog and editable; null = no bonus
+  bonusPoints      Int?
+  bonusSpendCents  Int?
+  bonusMonths      Int?
+  /// Spend toward the bonus so far, entered by hand
+  bonusSpentCents  Int?
+  bonusReceivedOn  DateTime?
   notes            String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -305,6 +316,8 @@ model CardProduct {
   rewardsProgramId       String
   rewardsProgram         RewardsProgram @relation(fields: [rewardsProgramId], references: [id])
   annualFeeCents         Int            @default(0)
+  /// The first year's fee is $0; `annualFeeCents` applies from the first anniversary
+  firstYearFeeWaived     Boolean        @default(false)
   welcomeBonusPoints     Int?
   welcomeBonusSpendCents Int?
   welcomeBonusMonths     Int?

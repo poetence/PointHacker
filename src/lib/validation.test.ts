@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isIntInRange, isNonNegativeInteger, parseOptionalDate, toValidDate } from "./validation";
+import { isIntInRange, isNonNegativeInteger, parseBonusFields, parseOptionalDate, toValidDate } from "./validation";
 
 describe("isIntInRange", () => {
   it("accepts whole numbers inside the bounds, inclusive", () => {
@@ -52,5 +52,29 @@ describe("parseOptionalDate", () => {
 
   it("returns the parsed date", () => {
     expect(parseOptionalDate("2024-01-15", "openedOn")).toEqual({ value: new Date("2024-01-15") });
+  });
+});
+
+describe("parseBonusFields", () => {
+  const none = { bonusPoints: undefined, bonusSpendCents: undefined, bonusMonths: undefined, bonusSpentCents: undefined };
+
+  it("passes absent, null and whole-number fields through", () => {
+    expect(parseBonusFields(none)).toEqual({ value: none });
+    expect(parseBonusFields({ ...none, bonusPoints: null, bonusMonths: 3, bonusSpentCents: 0 })).toEqual({
+      value: { ...none, bonusPoints: null, bonusMonths: 3, bonusSpentCents: 0 },
+    });
+  });
+
+  it("names the first field that isn't a non-negative whole number", () => {
+    expect(parseBonusFields({ ...none, bonusSpendCents: -1 })).toEqual({
+      error: "bonusSpendCents must be a non-negative integer.",
+    });
+    expect(parseBonusFields({ ...none, bonusPoints: "60000" })).toEqual({
+      error: "bonusPoints must be a non-negative integer.",
+    });
+  });
+
+  it("rejects a zero-month window", () => {
+    expect(parseBonusFields({ ...none, bonusMonths: 0 })).toEqual({ error: "bonusMonths must be at least 1." });
   });
 });
