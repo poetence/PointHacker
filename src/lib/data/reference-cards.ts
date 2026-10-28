@@ -11,6 +11,8 @@ export type ReferenceCard = {
   /** `name` of the RewardsProgram this card earns into (must appear in referencePrograms). */
   program: string;
   annualFeeCents: number;
+  /** The first year's fee is $0 and `annualFeeCents` applies from the first anniversary. */
+  firstYearFeeWaived?: boolean;
   welcomeBonusPoints?: number;
   welcomeBonusSpendCents?: number;
   welcomeBonusMonths?: number;
@@ -91,12 +93,14 @@ export const referenceCards: ReferenceCard[] = [
     issuer: "Chase",
     name: "United Explorer",
     program: "United MileagePlus",
-    annualFeeCents: 9500,
+    annualFeeCents: 15000,
+    firstYearFeeWaived: true,
     welcomeBonusPoints: 60000,
     welcomeBonusSpendCents: 300000,
     welcomeBonusMonths: 3,
     baseEarnRate: 1,
     earnRates: { DINING: 2, TRAVEL: 2 },
+    notes: "$0 the first year, then $150 (raised from $95 in 2025).",
   },
   {
     issuer: "Chase",
@@ -164,6 +168,7 @@ export const referenceCards: ReferenceCard[] = [
     name: "Delta SkyMiles Gold",
     program: "Delta SkyMiles",
     annualFeeCents: 15000,
+    firstYearFeeWaived: true,
     welcomeBonusPoints: 50000,
     welcomeBonusSpendCents: 200000,
     welcomeBonusMonths: 6,

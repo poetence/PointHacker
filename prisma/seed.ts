@@ -121,6 +121,7 @@ async function seedCards(programIds: ProgramIds) {
     const data = {
       rewardsProgramId,
       annualFeeCents: card.annualFeeCents,
+      firstYearFeeWaived: card.firstYearFeeWaived ?? false,
       welcomeBonusPoints: card.welcomeBonusPoints ?? null,
       welcomeBonusSpendCents: card.welcomeBonusSpendCents ?? null,
       welcomeBonusMonths: card.welcomeBonusMonths ?? null,

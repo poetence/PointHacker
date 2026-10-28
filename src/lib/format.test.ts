@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  calendarDateInputValue,
+  localDateInputValue,
   dollarsToCents,
   formatCalendarDate,
   formatCents,
@@ -50,6 +52,16 @@ describe("formatSignedCount", () => {
 describe("formatCalendarDate", () => {
   it("reads a UTC-midnight date in UTC", () => {
     expect(formatCalendarDate(new Date("2026-09-12T00:00:00Z"))).toBe("Sep 12, 2026");
+  });
+});
+
+describe("calendarDateInputValue / localDateInputValue", () => {
+  it("writes a UTC calendar date without shifting it", () => {
+    expect(calendarDateInputValue(new Date("2026-03-01T00:00:00Z"))).toBe("2026-03-01");
+  });
+
+  it("writes the reader's local date, zero-padded", () => {
+    expect(localDateInputValue(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
   });
 });
 

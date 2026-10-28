@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/user";
 import { NOT_A_JSON_OBJECT, badRequest, readJsonObject, unauthorized } from "@/lib/api-response";
-import { isNonNegativeInteger, parseOptionalDate } from "@/lib/validation";
+import { isNonNegativeInteger, parseBonusFields, parseOptionalDate } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   const userId = await getSessionUserId();
@@ -11,8 +11,9 @@ export async function POST(request: NextRequest) {
   const body = await readJsonObject(request);
   if (!body) return badRequest(NOT_A_JSON_OBJECT);
 
-  const { cardProductId, nickname, openedOn, notes } = body;
-  let { issuer, productName, rewardsProgramId, annualFeeCents } = body;
+  const { cardProductId, nickname, openedOn, notes, isBusiness, bonusSpentCents, bonusReceivedOn } = body;
+  let { issuer, productName, rewardsProgramId, annualFeeCents, bonusPoints, bonusSpendCents, bonusMonths } =
+    body;
 
   // Picking from the catalog fills in everything the user would otherwise type.
   if (cardProductId !== undefined) {
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest) {
     productName = product.name;
     rewardsProgramId = product.rewardsProgramId;
     annualFeeCents = annualFeeCents ?? product.annualFeeCents;
+    // The offer the card is opened under, so a later catalog change doesn't rewrite it.
+    bonusPoints = bonusPoints ?? product.welcomeBonusPoints;
+    bonusSpendCents = bonusSpendCents ?? product.welcomeBonusSpendCents;
+    bonusMonths = bonusMonths ?? product.welcomeBonusMonths;
   }
 
   if (typeof issuer !== "string" || issuer.length === 0) {
@@ -48,6 +53,13 @@ export async function POST(request: NextRequest) {
   if (notes !== undefined && typeof notes !== "string") {
     return badRequest("notes must be a string.");
   }
+  if (isBusiness !== undefined && typeof isBusiness !== "boolean") {
+    return badRequest("isBusiness must be a boolean.");
+  }
+  const bonus = parseBonusFields({ bonusPoints, bonusSpendCents, bonusMonths, bonusSpentCents });
+  if ("error" in bonus) return badRequest(bonus.error);
+  const bonusReceived = parseOptionalDate(bonusReceivedOn, "bonusReceivedOn", { nullable: true });
+  if ("error" in bonusReceived) return badRequest(bonusReceived.error);
 
   const program = await prisma.rewardsProgram.findUnique({ where: { id: rewardsProgramId } });
   if (!program) return badRequest("rewardsProgramId does not exist.");
@@ -62,6 +74,12 @@ export async function POST(request: NextRequest) {
       cardProductId: typeof cardProductId === "string" ? cardProductId : undefined,
       annualFeeCents,
       openedOn: opened.value,
+      isBusiness,
+      bonusPoints: bonus.value.bonusPoints ?? null,
+      bonusSpendCents: bonus.value.bonusSpendCents ?? null,
+      bonusMonths: bonus.value.bonusMonths ?? null,
+      bonusSpentCents: bonus.value.bonusSpentCents ?? null,
+      bonusReceivedOn: bonusReceived.value,
       notes,
     },
     include: { rewardsProgram: true },

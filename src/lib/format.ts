@@ -38,6 +38,17 @@ export function formatCalendarDate(date: Date): string {
   return calendarDate.format(date);
 }
 
+/** A calendar date stored as UTC midnight, as the `YYYY-MM-DD` a date input takes. */
+export function calendarDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/** Today (or any instant) as the reader's own `YYYY-MM-DD`, for "closed today" style actions. */
+export function localDateInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 /**
  * A dollar amount typed into a money field, in whole cents. Blank counts as
  * zero. Money fields take dollars and convert here, at the fetch boundary.

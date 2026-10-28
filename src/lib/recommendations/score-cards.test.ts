@@ -7,6 +7,7 @@ import {
   type ScoringCard,
   type ScoringProfile,
 } from "./score-cards";
+import { ELIGIBLE, NO_ELIGIBILITY_CHECKS, type CardEligibility } from "@/lib/cards/card-eligibility";
 import { NO_PERSONAL_RATES, type ProgramRateStatus } from "@/lib/redemptions/personal-rates";
 
 const ur = {
@@ -38,6 +39,7 @@ function card(overrides: Partial<ScoringCard>): ScoringCard {
     name: "Card",
     program: ur,
     annualFeeCents: 0,
+    firstYearFeeWaived: false,
     welcomeBonusPoints: null,
     welcomeBonusSpendCents: null,
     welcomeBonusMonths: null,
@@ -75,6 +77,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     // $500 × 12 × 3 = 18,000 dining; $500 × 12 × 1.5 = 9,000 other
     expect(ranked[0].pointsByCategory.DINING).toBe(18000);
@@ -91,6 +94,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     }).ranked[0];
     expect(reachable.bonusEarned).toBe(false);
     expect(reachable.welcomeBonusValueCents).toBe(0);
@@ -101,6 +105,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     }).ranked[0];
     expect(bigSpender.bonusEarned).toBe(true);
     expect(bigSpender.welcomeBonusValueCents).toBe(60000);
@@ -114,6 +119,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     expect(ranked[0].ongoingValueCents).toBe(12000 - 9500);
     expect(ranked[0].firstYearValueCents).toBe(12000 - 9500);
@@ -125,13 +131,13 @@ describe("scoreCards", () => {
       card({ id: "fee", name: "Fee", annualFeeCents: 55000 }),
       card({ id: "cash", name: "Cash", program: cash }),
     ];
-    const capped = scoreCards({ profile: profile({ maxAnnualFeeCents: 10000 }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null });
+    const capped = scoreCards({ profile: profile({ maxAnnualFeeCents: 10000 }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null, eligibility: NO_ELIGIBILITY_CHECKS });
     expect(capped.ranked.map((r) => r.card.id)).toEqual(["free", "cash"]);
 
-    const travelOnly = scoreCards({ profile: profile({ rewardsPreference: "TRAVEL" }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null });
+    const travelOnly = scoreCards({ profile: profile({ rewardsPreference: "TRAVEL" }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null, eligibility: NO_ELIGIBILITY_CHECKS });
     expect(travelOnly.ranked.map((r) => r.card.id)).toEqual(["free", "fee"]);
 
-    const cashOnly = scoreCards({ profile: profile({ rewardsPreference: "CASHBACK" }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null });
+    const cashOnly = scoreCards({ profile: profile({ rewardsPreference: "CASHBACK" }), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null, eligibility: NO_ELIGIBILITY_CHECKS });
     expect(cashOnly.ranked.map((r) => r.card.id)).toEqual(["cash"]);
   });
 
@@ -147,6 +153,7 @@ describe("scoreCards", () => {
       heldCardProductIds: new Set(["held-by-id"]),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     expect(alreadyHeld.map((c) => c.id)).toEqual(["held-by-name", "held-by-id"]);
     expect(ranked.map((r) => r.card.id)).toEqual(["new"]);
@@ -162,6 +169,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: NO_PERSONAL_RATES,
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     // dining: 24,000 + 6,000 = 30,000; flat: 12,000 + 12,000 = 24,000
     expect(ranked.map((r) => r.card.id)).toEqual(["dining", "flat"]);
@@ -187,6 +195,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: new Map([["united", unitedRate]]),
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     const [unitedCard, urCard] = ranked;
     // 12,000 miles × 2¢, and the 50,000-mile bonus at the same 2¢
@@ -204,7 +213,7 @@ describe("scoreCards", () => {
       card({ id: "ur-card", baseEarnRate: 1.5 }),
     ];
     // At the 1.2¢ estimate: United 24,000 × 1.2 = 28,800¢ beats UR 18,000 × 1¢.
-    const estimated = scoreCards({ profile: profile(), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null });
+    const estimated = scoreCards({ profile: profile(), cards, heldCardKeys: new Set(), personalRates: NO_PERSONAL_RATES, goalProgramIds: null, eligibility: NO_ELIGIBILITY_CHECKS });
     expect(estimated.ranked.map((r) => r.card.id)).toEqual(["united-card", "ur-card"]);
     expect(estimated.bestByCategory.DINING?.card.id).toBe("united-card");
 
@@ -215,6 +224,7 @@ describe("scoreCards", () => {
       heldCardKeys: new Set(),
       personalRates: new Map([["united", rate("united", 0.4)]]),
       goalProgramIds: null,
+      eligibility: NO_ELIGIBILITY_CHECKS,
     });
     expect(personal.ranked.map((r) => r.card.id)).toEqual(["ur-card", "united-card"]);
     expect(personal.bestByCategory.DINING?.card.id).toBe("ur-card");
@@ -237,6 +247,7 @@ describe("scoreCards", () => {
         heldCardKeys: new Set(),
         personalRates: NO_PERSONAL_RATES,
         goalProgramIds,
+        eligibility: NO_ELIGIBILITY_CHECKS,
       }).ranked;
 
     // No goals: 12,000 points at Hyatt's 1.7¢ beat United's 1.2¢.
@@ -260,7 +271,7 @@ describe("scoreCards", () => {
       card({ id: "freedom", name: "Freedom Unlimited", routes, soloTransferShare: 0 }),
     ];
     const freedomValue = (heldCardKeys: Set<string>) =>
-      scoreCards({ profile: profile(), cards, heldCardKeys, personalRates: NO_PERSONAL_RATES, goalProgramIds: null })
+      scoreCards({ profile: profile(), cards, heldCardKeys, personalRates: NO_PERSONAL_RATES, goalProgramIds: null, eligibility: NO_ELIGIBILITY_CHECKS })
         .ranked.find((r) => r.card.id === "freedom")!.pointValue;
 
     expect(freedomValue(new Set()).centsPerPoint).toBe(1);
@@ -268,6 +279,48 @@ describe("scoreCards", () => {
     const pooled = freedomValue(new Set([cardKey("Chase", "Sapphire Reserve")]));
     expect(pooled.centsPerPoint).toBe(1.7);
     expect(pooled.access.kind).toBe("pooled");
+  });
+});
+
+describe("scoreCards — eligibility and fees", () => {
+  const bonus = { welcomeBonusPoints: 60000, welcomeBonusSpendCents: 100000, welcomeBonusMonths: 3 };
+  const score = (cards: ScoringCard[], eligibility: Map<string, CardEligibility>) =>
+    scoreCards({
+      profile: profile(),
+      cards,
+      heldCardKeys: new Set(),
+      personalRates: NO_PERSONAL_RATES,
+      goalProgramIds: null,
+      eligibility,
+    });
+
+  it("sets a card the issuer would likely decline aside instead of ranking it", () => {
+    const denied = { status: "likely_denied", rule: "five_twenty_four", count: 5, until: null } as const;
+    const result = score([card({ id: "csp" }), card({ id: "dc", issuer: "Citi" })], new Map([["csp", denied]]));
+    expect(result.ranked.map((r) => r.card.id)).toEqual(["dc"]);
+    expect(result.ineligible).toEqual([{ card: expect.objectContaining({ id: "csp" }), eligibility: denied }]);
+  });
+
+  it("scores a card whose bonus the user can't get without the bonus", () => {
+    const noBonus: CardEligibility = {
+      status: "no_bonus",
+      rule: { kind: "ever_held" },
+      blockedBy: { issuer: "Chase", name: "Card" },
+      until: null,
+      undated: false,
+      verified: true,
+    };
+    const [rec] = score([card(bonus)], new Map([["c", noBonus]])).ranked;
+    expect(rec.bonusEarned).toBe(false);
+    expect(rec.welcomeBonusValueCents).toBe(0);
+    expect(rec.eligibility).toBe(noBonus);
+    expect(score([card(bonus)], new Map()).ranked[0].eligibility).toEqual(ELIGIBLE);
+  });
+
+  it("leaves a waived first-year fee out of first-year value only", () => {
+    const [rec] = score([card({ annualFeeCents: 15000, firstYearFeeWaived: true })], new Map()).ranked;
+    expect(rec.firstYearValueCents).toBe(12000);
+    expect(rec.ongoingValueCents).toBe(12000 - 15000);
   });
 });
 
@@ -287,5 +340,12 @@ describe("indexHeldCards / isHeldCard", () => {
 
   it("leaves other cards alone", () => {
     expect(isHeldCard({ id: "venture", issuer: "Capital One", name: "Venture X" }, held)).toBe(false);
+  });
+
+  it("doesn't count a closed card as held", () => {
+    const closed = indexHeldCards([
+      { issuer: "Chase", productName: "Sapphire Preferred", cardProductId: "csp", closedOn: new Date("2026-01-01") },
+    ]);
+    expect(isHeldCard({ id: "csp", issuer: "Chase", name: "Sapphire Preferred" }, closed)).toBe(false);
   });
 });

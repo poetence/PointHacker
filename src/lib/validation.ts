@@ -32,3 +32,26 @@ export function parseOptionalDate(
   const date = toValidDate(value);
   return date ? { value: date } : { error: `${field} must be a valid date.` };
 }
+
+/** Field names a card's welcome-bonus terms and progress are sent under. */
+const BONUS_INT_FIELDS = ["bonusPoints", "bonusSpendCents", "bonusMonths", "bonusSpentCents"] as const;
+type BonusField = (typeof BONUS_INT_FIELDS)[number];
+
+/**
+ * A card's bonus fields from a JSON body: each absent (leave it alone), null
+ * (clear it), or a non-negative whole number; months, when given, at least 1.
+ */
+export function parseBonusFields(
+  fields: Record<BonusField, unknown>
+): { value: Record<BonusField, number | null | undefined> } | { error: string } {
+  const value = {} as Record<BonusField, number | null | undefined>;
+  for (const field of BONUS_INT_FIELDS) {
+    const raw = fields[field];
+    if (raw !== undefined && raw !== null && !isNonNegativeInteger(raw)) {
+      return { error: `${field} must be a non-negative integer.` };
+    }
+    value[field] = raw;
+  }
+  if (value.bonusMonths === 0) return { error: "bonusMonths must be at least 1." };
+  return { value };
+}

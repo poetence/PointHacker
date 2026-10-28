@@ -16,6 +16,7 @@ import {
   type ScoringProfile,
 } from "./score-cards";
 import type { Ratio } from "./card-point-value";
+import { indexCardEligibility } from "@/lib/cards/card-eligibility";
 
 export function toScoringProfile(profile: SpendingProfile): ScoringProfile {
   return {
@@ -27,11 +28,24 @@ export function toScoringProfile(profile: SpendingProfile): ScoringProfile {
   };
 }
 
-/** The wallet cards that `isHeldCard` matches catalog cards against. */
-export function findHeldCards(userId: string) {
+/**
+ * Every wallet card, closed ones included: `indexHeldCards` keeps the open ones
+ * for `isHeldCard`, and `indexCardEligibility` reads the whole history.
+ */
+export function findWalletHistory(userId: string) {
   return prisma.creditCard.findMany({
     where: { userId },
-    select: { issuer: true, productName: true, cardProductId: true },
+    select: {
+      issuer: true,
+      productName: true,
+      cardProductId: true,
+      openedOn: true,
+      closedOn: true,
+      isBusiness: true,
+      bonusPoints: true,
+      bonusMonths: true,
+      bonusReceivedOn: true,
+    },
   });
 }
 
@@ -91,6 +105,7 @@ export async function findCatalogCards(): Promise<ScoringCard[]> {
       name: card.name,
       program: { ...program, defaultRedemptionValueCents: program.defaultRedemptionValueCents.toNumber() },
       annualFeeCents: card.annualFeeCents,
+      firstYearFeeWaived: card.firstYearFeeWaived,
       welcomeBonusPoints: card.welcomeBonusPoints,
       welcomeBonusSpendCents: card.welcomeBonusSpendCents,
       welcomeBonusMonths: card.welcomeBonusMonths,
@@ -110,13 +125,14 @@ export async function getCardRecommendations(
   /** Programs that price at least one open goal (`goalProgramIds`); null when there are none. */
   goalProgramIds: ReadonlySet<string> | null
 ): Promise<ScoreCardsResult> {
-  const [cards, heldCards] = await Promise.all([findCatalogCards(), findHeldCards(userId)]);
+  const [cards, wallet] = await Promise.all([findCatalogCards(), findWalletHistory(userId)]);
 
   return scoreCards({
     profile: toScoringProfile(profile),
     cards,
-    ...indexHeldCards(heldCards),
+    ...indexHeldCards(wallet),
     personalRates,
     goalProgramIds,
+    eligibility: indexCardEligibility(cards, wallet, new Date()),
   });
 }

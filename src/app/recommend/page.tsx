@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { AwardGoal } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUserId } from "@/lib/user";
-import { formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
+import { formatCalendarDate, formatCents, formatCentsPerPoint, programLabel } from "@/lib/format";
 import { REGION_LABELS } from "@/lib/regions";
 import { describeGoal } from "@/lib/goals/cabins";
 import { getGoalsProgress, goalProgramIds, type GoalProgress } from "@/lib/goals/get-goal-progress";
@@ -19,7 +19,12 @@ import {
   getCardRecommendations,
   toScoringProfile,
 } from "@/lib/recommendations/get-card-recommendations";
-import { effectiveRate, type CardRecommendation } from "@/lib/recommendations/score-cards";
+import {
+  effectiveRate,
+  type CardRecommendation,
+  type IneligibleCard,
+} from "@/lib/recommendations/score-cards";
+import { FIVE_TWENTY_FOUR_LIMIT, type CardEligibility } from "@/lib/cards/card-eligibility";
 import { OFF_PLAN_VALUE_SHARE, type TransferAccess } from "@/lib/recommendations/card-point-value";
 import { getPersonalRates } from "@/lib/redemptions/get-redemptions";
 import { PersonalRatePill } from "@/components/redemptions/personal-rate-pill";
@@ -28,7 +33,7 @@ import { CardArt } from "@/components/recommendations/card-art";
 import { CashIcon } from "@/components/icons";
 import { rowCardClass } from "@/components/ui/card";
 import { PageHeader, pageContainerClass } from "@/components/ui/page-header";
-import { sectionTitleClass } from "@/components/ui/text";
+import { quietLinkClass, sectionTitleClass } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Breakdown, BreakdownItem } from "@/components/ui/breakdown";
 
@@ -130,6 +135,8 @@ export default async function RecommendPage({
               </ul>
             )}
           </section>
+
+          {result.ineligible.length > 0 && <IneligibleCards cards={result.ineligible} />}
 
           {Object.keys(result.bestByCategory).length > 0 && (
             <section className="flex flex-col gap-3">
@@ -272,9 +279,11 @@ function RecommendationRow({
   contribution: CardGapContribution | undefined;
 }) {
   const { best } = rec.pointValue;
-  const notes = [transferAccessNote(rec.pointValue.access), hasGoals ? goalFitNote(rec) : null].filter(
-    (note) => note !== null
-  );
+  const notes = [
+    eligibilityNote(rec.eligibility),
+    transferAccessNote(rec.pointValue.access),
+    hasGoals ? goalFitNote(rec) : null,
+  ].filter((note) => note !== null);
 
   return (
     <li
@@ -349,7 +358,7 @@ function RecommendationRow({
               : "text-zinc-500 dark:text-zinc-400"
           }
         >
-          {rec.card.annualFeeCents > 0 ? `−${formatCents(rec.card.annualFeeCents)}` : "none"}
+          {annualFeeLabel(rec.card)}
         </BreakdownItem>
       </Breakdown>
     </li>
@@ -396,9 +405,79 @@ function goalFitNote(rec: CardRecommendation): string | null {
   return `${subject} price any of your goals, so its points count at ${OFF_PLAN_VALUE_SHARE * 100}%.`;
 }
 
+/** The annual-fee cell, saying so when the first year is free. */
+function annualFeeLabel(card: CardRecommendation["card"]): string {
+  if (card.annualFeeCents === 0) return "none";
+  const fee = `−${formatCents(card.annualFeeCents)}`;
+  return card.firstYearFeeWaived ? `$0 first year, then ${fee}` : fee;
+}
+
 /** The welcome-bonus cell: its value when the spending earns it, else what it would take. */
 function welcomeBonusLabel(rec: CardRecommendation): string {
   if (rec.card.welcomeBonusPoints === null) return "none";
+  if (rec.eligibility.status === "no_bonus") return "not for you";
   if (rec.bonusEarned) return `+${formatCents(rec.welcomeBonusValueCents)}`;
   return `needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`;
+}
+
+/**
+ * Cards the issuer would likely decline, folded away. Every such card is held
+ * back by the same 5/24 count, so the reason is said once above the list.
+ */
+function IneligibleCards({ cards }: { cards: IneligibleCard[] }) {
+  const { count, until } = cards[0].eligibility;
+  return (
+    <section className="flex flex-col gap-3">
+      <details className="group">
+        <summary className={`cursor-pointer list-none [&::-webkit-details-marker]:hidden ${quietLinkClass}`}>
+          <span className="group-open:hidden">
+            Show {cards.length} {cards.length === 1 ? "card" : "cards"} you likely can&apos;t get right now &darr;
+          </span>
+          <span className="hidden group-open:inline">Hide the cards you likely can&apos;t get &uarr;</span>
+        </summary>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          You&apos;ve opened {count} cards in the last 24 months, and Chase usually declines anyone at{" "}
+          {FIVE_TWENTY_FOUR_LIMIT} or more (the 5/24 rule).
+          {until && ` You drop back under on ${formatCalendarDate(until)}.`}
+        </p>
+        <ul className="mt-3 flex flex-col gap-3">
+          {cards.map(({ card }) => (
+            <li key={card.id} className={`flex flex-wrap items-center gap-4 ${rowCardClass}`}>
+              <CardArt issuer={card.issuer} name={card.name} />
+              <p className="min-w-0 flex-1 basis-40 font-medium text-black dark:text-zinc-50">
+                {card.issuer} {card.name}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+}
+
+/** Why a ranked card's bonus is out of reach, or the 5/24 caveat when undated cards might apply. */
+function eligibilityNote(eligibility: CardRecommendation["eligibility"]): string | null {
+  if (eligibility.status === "eligible") {
+    return eligibility.undatedMayBlock
+      ? "Some of your cards have no opened date, so you may already be at 5/24 — add them on Cards."
+      : null;
+  }
+  return `${noBonusReason(eligibility)}${eligibility.verified ? "" : " (Rule not confirmed.)"}`;
+}
+
+function noBonusReason(eligibility: Extract<CardEligibility, { status: "no_bonus" }>): string {
+  const { rule, blockedBy, until, undated } = eligibility;
+  const card = `your ${blockedBy.name}`;
+  if (undated) return `No welcome bonus for now because of ${card} — add when it was opened to see when that changes.`;
+  const back = until ? ` until ${formatCalendarDate(until)}` : "";
+  switch (rule.kind) {
+    case "ever_held":
+      return `No welcome bonus: ${blockedBy.issuer} doesn't pay it to anyone who has had the ${blockedBy.name}.`;
+    case "bonus_within":
+      return rule.months === null
+        ? `No welcome bonus: it's paid once per card, and ${card} already earned it.`
+        : `No welcome bonus${back}: it's paid once every ${rule.months / 12} years, and ${card} earned it.`;
+    case "opened_within":
+      return `No welcome bonus${back}: it isn't paid within ${rule.months / 12} years of opening ${card}.`;
+  }
 }

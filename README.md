@@ -52,9 +52,16 @@ account only sees and manages its own cards and balances.
   through any of its bank's transfer partners, at your own rate where you have one — and, once
   you've set goals, partners that can't book any of them count for half, so a card that only
   reaches airlines you aren't flying drops down the list. Card-level transfer rules are modeled
-  too (a Freedom Unlimited transfers only alongside a Sapphire; Citi's no-fee cards get 70%)
+  too (a Freedom Unlimited transfers only alongside a Sapphire; Citi's no-fee cards get 70%).
+  Cards you likely can't get are set aside: Chase cards at 5/24 fold away with the date you
+  drop back under, and a card whose bonus an issuer rule rules out (Amex once-per-lifetime and
+  family language, Chase's once-per-Sapphire, Citi/Capital One/Wells Fargo windows) is scored
+  without it, saying why. A waived first-year fee counts as $0 in year one
 - **Card wallet** — add the cards you hold by picking from the catalog (or as a custom entry),
-  so they feed the right program balance and drop out of recommendations
+  so they feed the right program balance and drop out of recommendations. Each card shows its
+  next annual fee, how long it counts toward Chase 5/24, and a welcome-bonus spend bar with its
+  deadline; a strip up top gives your 5/24 count, fees due soon, and bonuses in progress. Closed
+  cards are kept (folded away) because they still count toward 5/24 and bonus rules
 - **Catalog** — browse all 44 seeded reference programs (bank-transferable currencies, airlines,
   hotels, cashback) without needing a balance first
 
@@ -78,7 +85,7 @@ usage guidelines (`brand/GUIDELINES.md`).
 - Postgres (Supabase) via Prisma ORM
 - Auth.js (`next-auth` v5) with the Prisma adapter, Google OAuth
 - Vitest for the pure logic (redemption ranking, region relevance, transfer bonuses, points
-  expiration, card scoring, goal progress and descriptions, sharing points across goals,
+  expiration, card scoring, card timelines and issuer eligibility, goal progress and descriptions, sharing points across goals,
   gap-closing cards, origin adjustment,
   target months, realized redemption value, personal rates, input validation, formatting helpers, the client
   request helper, the sign-in allowlist)
