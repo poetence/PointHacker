@@ -420,8 +420,12 @@ function welcomeBonusLabel(rec: CardRecommendation): string {
   return `needs ${formatCents(rec.card.welcomeBonusSpendCents ?? 0)} in ${rec.card.welcomeBonusMonths} mo`;
 }
 
-/** Cards the issuer would likely decline, folded away with the reason and when that changes. */
+/**
+ * Cards the issuer would likely decline, folded away. Every such card is held
+ * back by the same 5/24 count, so the reason is said once above the list.
+ */
 function IneligibleCards({ cards }: { cards: IneligibleCard[] }) {
+  const { count, until } = cards[0].eligibility;
   return (
     <section className="flex flex-col gap-3">
       <details className="group">
@@ -431,27 +435,24 @@ function IneligibleCards({ cards }: { cards: IneligibleCard[] }) {
           </span>
           <span className="hidden group-open:inline">Hide the cards you likely can&apos;t get &uarr;</span>
         </summary>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          You&apos;ve opened {count} cards in the last 24 months, and Chase usually declines anyone at{" "}
+          {FIVE_TWENTY_FOUR_LIMIT} or more (the 5/24 rule).
+          {until && ` You drop back under on ${formatCalendarDate(until)}.`}
+        </p>
         <ul className="mt-3 flex flex-col gap-3">
-          {cards.map(({ card, eligibility }) => (
+          {cards.map(({ card }) => (
             <li key={card.id} className={`flex flex-wrap items-center gap-4 ${rowCardClass}`}>
               <CardArt issuer={card.issuer} name={card.name} />
-              <div className="min-w-0 flex-1 basis-40">
-                <p className="font-medium text-black dark:text-zinc-50">
-                  {card.issuer} {card.name}
-                </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">{deniedNote(card.issuer, eligibility)}</p>
-              </div>
+              <p className="min-w-0 flex-1 basis-40 font-medium text-black dark:text-zinc-50">
+                {card.issuer} {card.name}
+              </p>
             </li>
           ))}
         </ul>
       </details>
     </section>
   );
-}
-
-function deniedNote(issuer: string, eligibility: IneligibleCard["eligibility"]): string {
-  const back = eligibility.until ? ` You drop back under on ${formatCalendarDate(eligibility.until)}.` : "";
-  return `You've opened ${eligibility.count} cards in the last 24 months, and ${issuer} usually declines anyone at ${FIVE_TWENTY_FOUR_LIMIT} or more (the 5/24 rule).${back}`;
 }
 
 /** Why a ranked card's bonus is out of reach, or the 5/24 caveat when undated cards might apply. */

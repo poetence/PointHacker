@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   CatalogCardPicker,
   type PickableCard,
@@ -38,6 +39,10 @@ export function AddCardForm({
   );
   const [annualFee, setAnnualFee] = useState("");
   const [openedOn, setOpenedOn] = useState("");
+  const [isBusiness, setIsBusiness] = useState(false);
+  const [bonusPoints, setBonusPoints] = useState("");
+  const [bonusSpend, setBonusSpend] = useState("");
+  const [bonusMonths, setBonusMonths] = useState("");
   const { submit, isSubmitting, error, setError } = useJsonSubmit();
   const cardLabelId = useId();
 
@@ -70,6 +75,10 @@ export function AddCardForm({
             productName,
             rewardsProgramId,
             annualFeeCents: annualFee === "" ? undefined : dollarsToCents(annualFee),
+            isBusiness,
+            bonusPoints: bonusPoints === "" ? undefined : Number(bonusPoints),
+            bonusSpendCents: bonusSpend === "" ? undefined : dollarsToCents(bonusSpend),
+            bonusMonths: bonusMonths === "" ? undefined : Number(bonusMonths),
           };
 
     const result = await submit("/api/cards", "POST", payload);
@@ -81,6 +90,10 @@ export function AddCardForm({
     setNickname("");
     setAnnualFee("");
     setOpenedOn("");
+    setIsBusiness(false);
+    setBonusPoints("");
+    setBonusSpend("");
+    setBonusMonths("");
     router.refresh();
   }
 
@@ -174,6 +187,45 @@ export function AddCardForm({
                 onChange={(e) => setAnnualFee(e.target.value)}
               />
             </Field>
+
+            <Field label="Bonus points" className="w-28">
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                placeholder="None"
+                value={bonusPoints}
+                onChange={(e) => setBonusPoints(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Bonus spend" className="w-28">
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                prefix="$"
+                value={bonusSpend}
+                onChange={(e) => setBonusSpend(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Months" className="w-20">
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={bonusMonths}
+                onChange={(e) => setBonusMonths(e.target.value)}
+              />
+            </Field>
+
+            <Checkbox
+              label="Business card"
+              checked={isBusiness}
+              onChange={(e) => setIsBusiness(e.target.checked)}
+              className="pb-2.5"
+            />
           </>
         )}
 

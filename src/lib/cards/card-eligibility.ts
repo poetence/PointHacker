@@ -38,16 +38,28 @@ export type FiveTwentyFour = {
   underLimitOn: Date | null;
 };
 
-function countsToward524(card: WalletHistoryCard): boolean {
+export function countsToward524(card: Pick<WalletHistoryCard, "issuer" | "isBusiness">): boolean {
   return !card.isBusiness || BUSINESS_CARDS_COUNT_TOWARD_524.includes(card.issuer);
+}
+
+/** When a card stops counting toward 5/24; null if it doesn't count now (or has no opened date). */
+export function fiveTwentyFourUntil(
+  card: Pick<WalletHistoryCard, "issuer" | "isBusiness" | "openedOn">,
+  now: Date
+): Date | null {
+  if (!card.openedOn || !countsToward524(card)) return null;
+  const until = addMonthsUTC(card.openedOn, FIVE_TWENTY_FOUR_MONTHS);
+  return until.getTime() > now.getTime() ? until : null;
 }
 
 /** Chase's count: personal cards (closed ones too) opened in the last 24 months. */
 export function countFiveTwentyFour(cards: WalletHistoryCard[], now: Date): FiveTwentyFour {
   const counting = cards.filter(countsToward524);
   const dropDates = counting
-    .flatMap((card) => (card.openedOn ? [addMonthsUTC(card.openedOn, FIVE_TWENTY_FOUR_MONTHS)] : []))
-    .filter((dropOn) => dropOn.getTime() > now.getTime())
+    .flatMap((card) => {
+      const until = fiveTwentyFourUntil(card, now);
+      return until ? [until] : [];
+    })
     .sort((a, b) => a.getTime() - b.getTime());
 
   const count = dropDates.length;

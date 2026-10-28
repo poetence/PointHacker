@@ -6,6 +6,7 @@ import {
   ELIGIBLE,
   checkCardEligibility,
   countFiveTwentyFour,
+  fiveTwentyFourUntil,
   indexCardEligibility,
   type WalletHistoryCard,
 } from "./card-eligibility";
@@ -76,6 +77,18 @@ describe("countFiveTwentyFour", () => {
       count: 0,
       undated: 1,
     });
+  });
+});
+
+describe("fiveTwentyFourUntil", () => {
+  it("is 24 months after opening while that's still ahead", () => {
+    expect(fiveTwentyFourUntil(held("Citi", "B", { openedOn: day("2026-05-01") }), NOW)).toEqual(day("2028-05-01"));
+    expect(fiveTwentyFourUntil(held("Citi", "B", { openedOn: day("2024-05-01") }), NOW)).toBeNull();
+  });
+
+  it("is null for a card that doesn't count or has no date", () => {
+    expect(fiveTwentyFourUntil(held("Chase", "Ink", { openedOn: day("2026-05-01"), isBusiness: true }), NOW)).toBeNull();
+    expect(fiveTwentyFourUntil(held("Citi", "B", { openedOn: null }), NOW)).toBeNull();
   });
 });
 
